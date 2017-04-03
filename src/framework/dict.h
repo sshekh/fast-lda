@@ -1,6 +1,13 @@
 #ifndef DICT_H
 #define DICT_H
 
+/* An entry of the dictionary, containing one word - index association. */
+struct dict_entry_t {
+    int id;
+    char* word;
+};
+typedef struct dict_entry_t dict_entry_t;
+
 /* A two-way hash-table-like structure, that stores associations between words
  * and their indices.
  */
@@ -10,10 +17,16 @@ struct dict_t {
 
     /* Table of word indices; the ith element is the word index associated with
      * the word that has hash i. */
-    int* indices_by_word;
+    dict_entry_t* indices_by_word;
 
     /* Size of the 'indices_by_word' table. */
     int indices_cap;
+
+    /* If this dict has a default capacity, which one is it.
+     * We keep track of this to use prime capacities for as long
+     * as possible. */
+    int default_cap_index;
+
 };
 typedef struct dict_t dict_t;
 
