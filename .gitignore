@@ -1,6 +1,22 @@
+# Results folders
+*/results/*
+
+# Profiling
+profiling/*
+**/callgrind.out.*
+**/lda.dSYM/*
+
+# CodeBlocks
 bin/*
 obj/*
-
 *.cbp
 *.layout
 *.depend
+
+# Compile output
+**/*.o
+**/lda
+**/lda.exe
+
+
+
