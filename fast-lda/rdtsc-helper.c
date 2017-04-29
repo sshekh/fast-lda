@@ -10,7 +10,7 @@ timer start_timer(int id){
 
 void stop_timer(timer t){
 	CPUID(); RDTSC(t.end);
-    t.cycles = (double)(COUNTER_DIFF(t.end, t.start))/t.num_runs;
+    t.cycles = (long long) ((COUNTER_DIFF(t.end, t.start))/t.num_runs);
     timing_infrastructure[t.id].sum += t.cycles;
     timing_infrastructure[t.id].counter += 1;
     // printf("Run EM - Runtime [cycles]: %f\n", t.cycles);
@@ -26,6 +26,11 @@ void init_timing_infrastructure(){
 
 void print_timings(){
 	for (int i=0;i<N_ACCUMULATORS;i++){
-		printf("%s - Runtime [cycles]: %lld\n", timer_names[i], timing_infrastructure[i].sum / timing_infrastructure[i].counter);
+		printf("%s - Total Runtime sum[cycles]: %lld\n", timer_names[i], timing_infrastructure[i].sum);
+		if (timing_infrastructure[i].counter == 0){
+			printf("ERROR. Denominaotr zero\n");
+		}else {
+			printf("%s - Runtime [cycles]: %lld\n", timer_names[i], timing_infrastructure[i].sum / timing_infrastructure[i].counter);
+		}
 	}
 }

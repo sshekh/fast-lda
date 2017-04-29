@@ -30,7 +30,7 @@
 double doc_e_step(document* doc, double* gamma, double** phi,
                   lda_model* model, lda_suffstats* ss)
 {
-    timer rdtsc = start_timer(timer_ids["DOC_E_STEP"]);
+    timer rdtsc = start_timer(DOC_E_STEP);
 
     double likelihood;
     int n, k;
@@ -114,7 +114,7 @@ void run_em(char* start, char* directory, corpus* corpus)
     save_lda_model(model, filename);
 
 
-    timer rdtsc = start_timer(timer_ids["RUM_EM"]);
+    timer rdtsc = start_timer(RUN_EM);
 
     // run expectation maximization
     int i = 0;

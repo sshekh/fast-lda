@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
             init_timing_infrastructure();
             run_em(argv[7], argv[8], corpus);
 
-
+            print_timings();
 
         }
     }

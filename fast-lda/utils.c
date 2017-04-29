@@ -8,7 +8,7 @@
 
 double log_sum(double log_a, double log_b)
 {
-  timer rdtsc = start_timer(timer_ids["LOG_SUM"]);
+  timer rdtsc = start_timer(LOG_SUM);
 
   double v;
   if (log_a < log_b)
@@ -58,7 +58,7 @@ double trigamma(double x)
 
 double digamma(double x)
 {
-    timer rdtsc = start_timer(timer_ids["DIGAMMA"]);
+    timer rdtsc = start_timer(DIGAMMA);
 
     double p;
     x=x+6;
@@ -74,7 +74,7 @@ double digamma(double x)
 
 double log_gamma(double x)
 {
-    timer rdtsc = start_timer(timer_ids["LOG_GAMMA"]);
+    timer rdtsc = start_timer(LOG_GAMMA);
     
      double z=1/(x*x);
 

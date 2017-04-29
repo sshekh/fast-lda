@@ -29,7 +29,7 @@ double lda_inference(document* doc, lda_model* model, double* var_gamma, double*
     int k, n, var_iter;
     double digamma_gam[model->num_topics];
 
-    timer rdtsc = start_timer(timer_ids["LDA_INFERENCE"]);
+    timer rdtsc = start_timer(LDA_INFERENCE);
 
     // Initialize the phi for all topics and all words in the doc
     // and compute digamma of the sum of variational gammas over all the topics.
@@ -92,7 +92,7 @@ double compute_likelihood(document* doc, lda_model* model, double** phi, double*
     double likelihood = 0, digsum = 0, var_gamma_sum = 0, dig[model->num_topics];
     int k, n;
 
-    timer rdtsc = start_timer(timer_ids["LIKELIHOOD"]);
+    timer rdtsc = start_timer(LIKELIHOOD);
 
     for (k = 0; k < model->num_topics; k++)
     {
