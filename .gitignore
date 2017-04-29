@@ -13,10 +13,17 @@ obj/*
 *.layout
 *.depend
 
+# Vim
+*.swp
+
 # Compile output
 **/*.o
 **/lda
 **/lda.exe
 
-
+# Output files from running
+**/*.gamma
+**/*.beta
+**/*.other
+**/*.dat
 

@@ -8,7 +8,7 @@
 
 #define OFFSET 0;                  // offset for reading data
 
-corpus* read_data(char* data_filename);
+corpus* read_data(char* data_filename, int);
 int max_corpus_length(corpus* c);
 
 #endif
