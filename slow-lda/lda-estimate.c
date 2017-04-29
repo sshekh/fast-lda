@@ -319,23 +319,24 @@ int main(int argc, char* argv[])
     {
         if (strcmp(argv[1], "est")==0)
         {
-            INITIAL_ALPHA = atof(argv[2]);
-            NTOPICS = atoi(argv[3]);
-            read_settings(argv[4]);
-            corpus = read_data(argv[5]);
-            make_directory(argv[7]);
-            run_em(argv[6], argv[7], corpus);
+            int doc_limit = atoi(argv[2]);
+            INITIAL_ALPHA = atof(argv[3]);
+            NTOPICS = atoi(argv[4]);
+            read_settings(argv[5]);
+            corpus = read_data(argv[6], doc_limit);
+            run_em(argv[7], argv[8], corpus);
+            make_directory(argv[8]);
         }
         if (strcmp(argv[1], "inf")==0)
         {
             read_settings(argv[2]);
-            corpus = read_data(argv[4]);
+            corpus = read_data(argv[4], -1);
             infer(argv[3], argv[5], corpus);
         }
     }
     else
     {
-        printf("usage : lda est [initial alpha] [k] [settings] [data] [random/seeded/*] [directory]\n");
+        printf("usage : lda est [ndocs] [initial alpha] [k] [settings] [data] [random/seeded/*] [directory]\n");
         printf("        lda inf [settings] [model] [data] [name]\n");
     }
     return(0);
