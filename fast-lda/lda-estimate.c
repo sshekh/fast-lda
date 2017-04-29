@@ -29,6 +29,8 @@
 double doc_e_step(document* doc, double* gamma, double** phi,
                   lda_model* model, lda_suffstats* ss)
 {
+    //TODO timer
+    //
     double likelihood;
     int n, k;
 
@@ -108,6 +110,9 @@ void run_em(char* start, char* directory, corpus* corpus)
     sprintf(filename,"%s/000",directory);
     save_lda_model(model, filename);
 
+
+    //TODO timer
+
     // run expectation maximization
     int i = 0;
     double likelihood, likelihood_old = 0, converged = 1;
@@ -150,6 +155,8 @@ void run_em(char* start, char* directory, corpus* corpus)
             save_gamma(filename, var_gamma, corpus->num_docs, model->num_topics);
         }
     }
+
+    //TODO timer
 
     // output the final model
     sprintf(filename,"%s/final",directory);

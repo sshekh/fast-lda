@@ -21,6 +21,8 @@
 
 double lda_inference(document* doc, lda_model* model, double* var_gamma, double** phi)
 {
+    //TODO timer
+
     double converged = 1;
     double phisum = 0, likelihood = 0;
     double likelihood_old = 0, oldphi[model->num_topics];
@@ -81,9 +83,10 @@ double lda_inference(document* doc, lda_model* model, double* var_gamma, double*
     return(likelihood);
 }
 
-double
-compute_likelihood(document* doc, lda_model* model, double** phi, double* var_gamma)
+double compute_likelihood(document* doc, lda_model* model, double** phi, double* var_gamma)
 {
+    //TODO timer
+    //
     double likelihood = 0, digsum = 0, var_gamma_sum = 0, dig[model->num_topics];
     int k, n;
 
@@ -94,6 +97,7 @@ compute_likelihood(document* doc, lda_model* model, double** phi, double* var_ga
    }
    digsum = digamma(var_gamma_sum);
 
+   // <BG>: lgamma is a math library function
    likelihood = lgamma(model->alpha * model -> num_topics) 
                 - model -> num_topics * lgamma(model->alpha) 
                 - (lgamma(var_gamma_sum));

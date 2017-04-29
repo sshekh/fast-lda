@@ -7,6 +7,7 @@
 
 double log_sum(double log_a, double log_b)
 {
+  //TODO timer
   double v;
 
   if (log_a < log_b)
@@ -54,6 +55,7 @@ double trigamma(double x)
 
 double digamma(double x)
 {
+    //TODO timer
     double p;
     x=x+6;
     p=1/(x*x);
@@ -66,6 +68,7 @@ double digamma(double x)
 
 double log_gamma(double x)
 {
+  //TODO timer
      double z=1/(x*x);
 
     x=x+6;
