@@ -1,11 +1,12 @@
 0) Rip out useless code
     saving the model, etc.
-1) Parametrize by number of documents and number of topics
-2) Generate reference outputs from the various parameter ranges decided upon
-3) Create a validator that checks against the reference outputs,
-    given the parameters for that run.
-4) Add instrumentation code to measure cycles of various parts of the code
-
-
-
-
+2) Generate smaller reference outputs from the various parameter ranges decided upon
+3) Iteration count for converging variables - FRED
+3) Include parameter that suppresses all prints for measurement
+3) Format timing outputs to CSV format
+4) Copy timing infrastructure to the slow version
+5) Do the flop counts
+	RUN_EM, DOC_E_STEP <- Saurav 
+	LDA_INFERENCE <- Ben
+	DIGAMMA, LOG_SUM, LOG_GAMMA <- Cristina
+	LIKELIHOOD <- Fred
