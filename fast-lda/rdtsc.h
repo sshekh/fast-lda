@@ -3,6 +3,8 @@
  * Time Stamp Counter. The Intel manuals contain more information.
  */
 
+#undef WIN32
+
 #ifndef RDTSC_H_INCLUDED
 #define RDTSC_H_INCLUDED
 
@@ -26,7 +28,7 @@
 /* if we're neither compiling with gcc or under linux, we can hope
  * the following lines work, they probably won't */
 #define ASM asm
-#define VOLATILE 
+#define VOLATILE
 #endif
 
 #define myInt64 unsigned long long
