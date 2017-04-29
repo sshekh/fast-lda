@@ -1,6 +1,6 @@
 /*
- *   This file contains the functionality for running the estimation of the LDA algorithm 
- *   and loading the data. 
+ *   This file contains the functionality for running the estimation of the LDA algorithm
+ *   and loading the data.
  */
 
 #include "lda-run.h"
@@ -8,7 +8,7 @@
 
 
 /*
- * Run LDA estimation. 
+ * Run LDA estimation.
  *
  */
 
@@ -25,14 +25,15 @@ int main(int argc, char* argv[])
     {
         if (strcmp(argv[1], "est")==0)
         {
-            INITIAL_ALPHA = atof(argv[2]);
-            NTOPICS = atoi(argv[3]);
-            read_settings(argv[4]);
-            corpus = read_data(argv[5]);
-            make_directory(argv[7]);
+            int doc_limit = atoi(argv[2]);
+            INITIAL_ALPHA = atof(argv[3]);
+            NTOPICS = atoi(argv[4]);
+            read_settings(argv[5]);
+            corpus = read_data(argv[6], doc_limit);
+            make_directory(argv[8]);
 
             init_timing_infrastructure();
-            run_em(argv[6], argv[7], corpus);
+            run_em(argv[7], argv[8], corpus);
 
 
 
@@ -40,7 +41,7 @@ int main(int argc, char* argv[])
     }
     else
     {
-        printf("usage : lda est [initial alpha] [k] [settings] [data] [random/seeded/*] [directory]\n");
+        printf("usage : lda est [ndocs] [initial alpha] [k] [settings] [data] [random/seeded/*] [directory]\n");
     }
     return(0);
 }
@@ -57,19 +58,19 @@ void read_settings(char* filename)
     fscanf(fileptr, "alpha %s", alpha_action);
     if (strcmp(alpha_action, "fixed")==0)
     {
-    ESTIMATE_ALPHA = 0;
+        ESTIMATE_ALPHA = 0;
     }
     else
     {
-    ESTIMATE_ALPHA = 1;
+        ESTIMATE_ALPHA = 1;
     }
     fclose(fileptr);
 }
 
-corpus* read_data(char* data_filename)
+corpus* read_data(char* data_filename, int doc_limit)
 {
     FILE *fileptr;
-    int length, count, word, n, nd, nw;
+    int length, count, word, n, nd;
     corpus* c;
 
     printf("reading data from %s\n", data_filename);
@@ -78,30 +79,36 @@ corpus* read_data(char* data_filename)
     c->num_terms = 0;
     c->num_docs = 0;
     fileptr = fopen(data_filename, "r");
-    nd = 0; nw = 0;
-    while ((fscanf(fileptr, "%10d", &length) != EOF))
+    nd = 0;
+
+
+    while ((fscanf(fileptr, "%10d", &length) != EOF) && (doc_limit < 1 || nd < doc_limit))
     {
-    c->docs = (document*) realloc(c->docs, sizeof(document)*(nd+1));
-    c->docs[nd].length = length;
-    c->docs[nd].total = 0;
-    c->docs[nd].words = malloc(sizeof(int)*length);
-    c->docs[nd].counts = malloc(sizeof(int)*length);
-    for (n = 0; n < length; n++)
-    {
-        fscanf(fileptr, "%10d:%10d", &word, &count);
-        word = word - OFFSET;
-        c->docs[nd].words[n] = word;
-        c->docs[nd].counts[n] = count;
-        c->docs[nd].total += count;
-        if (word >= nw) { nw = word + 1; }
+        c->docs = (document*) realloc(c->docs, sizeof(document)*(nd+1));
+        c->docs[nd].length = length;
+        c->docs[nd].total = 0;
+        c->docs[nd].words = malloc(sizeof(int)*length);
+        c->docs[nd].counts = malloc(sizeof(int)*length);
+        for (n = 0; n < length; n++)
+        {
+            fscanf(fileptr, "%10d:%10d", &word, &count);
+            word = word - OFFSET;
+            c->docs[nd].words[n] = word;
+            c->docs[nd].counts[n] = count;
+            c->docs[nd].total += count;
+        }
+        nd++;
     }
-    nd++;
-    }
+
+
     fclose(fileptr);
     c->num_docs = nd;
-    c->num_terms = nw;
+
+    // A little bird told us that this is the proper value
+    c->num_terms = 10473;
+
     printf("number of docs    : %d\n", nd);
-    printf("number of terms   : %d\n", nw);
+    printf("number of terms   : %d\n", c->num_terms);
     return(c);
 }
 

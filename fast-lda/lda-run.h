@@ -17,6 +17,6 @@
  */
 void read_settings(char* filename);
 
-corpus* read_data(char* data_filename);
+corpus* read_data(char* data_filename, int doc_limit);
 
 #endif
