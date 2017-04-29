@@ -1,16 +1,20 @@
 #include "rdtsc-helper.h"
 #include "stdio.h"
 
+char* timer_names[] = {"RUN_EM", "LDA_INFERENCE", "DIGAMMA", "LOG_SUM", "LOG_GAMMA", "DOC_E_STEP", "LIKELIHOOD"};
+
 timer start_timer(int id){
 	timer t;
 	t.id = id;
-	CPUID(); RDTSC(t.start);
+	// CPUID();
+	RDTSC(t.start);
 	return t;
 }
 
 void stop_timer(timer t){
-	CPUID(); RDTSC(t.end);
-    t.cycles = (long long) ((COUNTER_DIFF(t.end, t.start))/t.num_runs);
+	// CPUID();
+	RDTSC(t.end);
+    t.cycles = (long long) ((COUNTER_DIFF(t.end, t.start)));
     timing_infrastructure[t.id].sum += t.cycles;
     timing_infrastructure[t.id].counter += 1;
     // printf("Run EM - Runtime [cycles]: %f\n", t.cycles);
