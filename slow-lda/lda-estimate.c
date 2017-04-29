@@ -18,6 +18,7 @@
 // USA
 
 #include "lda-estimate.h"
+#include "rdtsc-helper.h"
 
 /*
  * perform inference on a document and update sufficient statistics
@@ -31,6 +32,7 @@ double doc_e_step(document* doc, double* gamma, double** phi,
     int n, k;
 
     // posterior inference
+    timer rdtsc = start_timer(timer_ids["DOC_E_STEP"]);
 
     likelihood = lda_inference(doc, model, gamma, phi);
 
@@ -54,6 +56,8 @@ double doc_e_step(document* doc, double* gamma, double** phi,
     }
 
     ss->num_docs = ss->num_docs + 1;
+
+    stop_timer(rdtsc);
 
     return(likelihood);
 }
@@ -159,6 +163,8 @@ void run_em(char* start, char* directory, corpus* corpus)
 
     // run expectation maximization
 
+    timer rdtsc = start_timer(timer_ids["RUM_EM"]);
+
     int i = 0;
     double likelihood, likelihood_old = 0, converged = 1;
     sprintf(filename, "%s/likelihood.dat", directory);
@@ -204,6 +210,8 @@ void run_em(char* start, char* directory, corpus* corpus)
             save_gamma(filename, var_gamma, corpus->num_docs, model->num_topics);
         }
     }
+
+    stop_timer(rdtsc);
 
     // output the final model
 
@@ -339,5 +347,8 @@ int main(int argc, char* argv[])
         printf("usage : lda est [ndocs] [initial alpha] [k] [settings] [data] [random/seeded/*] [directory]\n");
         printf("        lda inf [settings] [model] [data] [name]\n");
     }
+
+    print_timings();
+
     return(0);
 }
