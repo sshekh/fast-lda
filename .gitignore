@@ -13,6 +13,9 @@ obj/*
 *.layout
 *.depend
 
+# Vim
+*.swp
+
 # Compile output
 **/*.o
 **/lda
