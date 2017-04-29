@@ -18,6 +18,7 @@
 // USA
 
 #include "lda-inference.h"
+#include "rdtsc-helper.h"
 
 /*
  * variational inference
@@ -32,6 +33,7 @@ double lda_inference(document* doc, lda_model* model, double* var_gamma, double*
     int k, n, var_iter;
     double digamma_gam[model->num_topics];
 
+    timer rdtsc = start_timer(timer_ids["LDA_INFERENCE"]);
     // compute posterior dirichlet
 
     for (k = 0; k < model->num_topics; k++)
@@ -78,6 +80,9 @@ double lda_inference(document* doc, lda_model* model, double* var_gamma, double*
 
         // printf("[LDA INF] %8.5f %1.3e\n", likelihood, converged);
     }
+
+    stop_timer(rdtsc);
+
     return(likelihood);
 }
 
@@ -92,6 +97,8 @@ compute_likelihood(document* doc, lda_model* model, double** phi, double* var_ga
 {
     double likelihood = 0, digsum = 0, var_gamma_sum = 0, dig[model->num_topics];
     int k, n;
+
+    timer rdtsc = start_timer(timer_ids["LIKELIHOOD"]);
 
     for (k = 0; k < model->num_topics; k++)
     {
@@ -108,13 +115,15 @@ compute_likelihood(document* doc, lda_model* model, double** phi, double* var_ga
 
        for (n = 0; n < doc->length; n++)
        {
-        if (phi[n][k] > 0)
-        {
-            likelihood += doc->counts[n]*
-            (phi[n][k]*((dig[k] - digsum) - log(phi[n][k])
-                + model->log_prob_w[k][doc->words[n]]));
-        }
-    }
-}
-return(likelihood);
+            if (phi[n][k] > 0)
+            {
+                likelihood += doc->counts[n]*
+                    (phi[n][k]*((dig[k] - digsum) - log(phi[n][k])
+                    + model->log_prob_w[k][doc->words[n]]));
+            }
+       }
+   }
+
+   stop_timer(rdtsc);
+   return(likelihood);
 }

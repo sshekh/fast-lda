@@ -22,9 +22,9 @@ CC= gcc
 CFLAGS= -O3 -Wall -g
 LDFLAGS= -lm
 
-LOBJECTS= lda-data.o lda-estimate.o lda-model.o lda-inference.o utils.o cokus.o lda-alpha.o
+LOBJECTS= rdtsc-helper.o lda-data.o lda-estimate.o lda-model.o lda-inference.o utils.o cokus.o lda-alpha.o
 
-LSOURCE= lda-data.c lda-estimate.c lda-model.c lda-inference.c utils.c cokus.c lda-alpha.c
+LSOURCE= rdtsc-helper.c lda-data.c lda-estimate.c lda-model.c lda-inference.c utils.c cokus.c lda-alpha.c
 
 lda:	$(LOBJECTS)
 	$(CC) $(CFLAGS) $(LOBJECTS) -o lda $(LDFLAGS)
