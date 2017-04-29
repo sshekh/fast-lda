@@ -23,14 +23,15 @@
 
 #include "lda-estimate.h"
 #include "lda-estimate-helper.h"
+#include "rdtsc-helper.h"
 
 #define LAG 5
 
 double doc_e_step(document* doc, double* gamma, double** phi,
                   lda_model* model, lda_suffstats* ss)
 {
-    //TODO timer
-    //
+    timer rdtsc = start_timer(timer_ids["DOC_E_STEP"]);
+
     double likelihood;
     int n, k;
 
@@ -57,6 +58,8 @@ double doc_e_step(document* doc, double* gamma, double** phi,
     }
 
     ss->num_docs = ss->num_docs + 1;
+
+    stop_timer(rdtsc);
 
     return(likelihood);
 }
@@ -111,7 +114,7 @@ void run_em(char* start, char* directory, corpus* corpus)
     save_lda_model(model, filename);
 
 
-    //TODO timer
+    timer rdtsc = start_timer(timer_ids["RUM_EM"]);
 
     // run expectation maximization
     int i = 0;
@@ -156,7 +159,7 @@ void run_em(char* start, char* directory, corpus* corpus)
         }
     }
 
-    //TODO timer
+    stop_timer(rdtsc);
 
     // output the final model
     sprintf(filename,"%s/final",directory);

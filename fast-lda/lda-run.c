@@ -6,6 +6,7 @@
 #include "lda-run.h"
 #include "rdtsc-helper.h"
 
+
 /*
  * Run LDA estimation. 
  *
@@ -30,26 +31,10 @@ int main(int argc, char* argv[])
             corpus = read_data(argv[5]);
             make_directory(argv[7]);
 
-            // // <BG> time the whole algorithm
-            // tsc_counter start, end;
-            // double cycles = 0.;
-            // size_t num_runs = 1;
-
-            // CPUID(); RDTSC(start);
-            timer rdtsc = start_timer();
-
-
+            init_timing_infrastructure();
             run_em(argv[6], argv[7], corpus);
 
-            stop_timer(rdtsc);
 
-            
-            // CPUID(); RDTSC(end);
-
-            // cycles = (double)(COUNTER_DIFF(end, start))/num_runs;
-            // printf("Run EM - Runtime [cycles]: %f\n", cycles);
-            // // double flops = 1000;
-            // // printf("Run EM - Performance [flops/cycle]: %f\n", flops/cycles);
 
         }
     }
