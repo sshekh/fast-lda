@@ -18,5 +18,9 @@ obj/*
 **/lda
 **/lda.exe
 
-
+# Output files from running
+**/*.gamma
+**/*.beta
+**/*.other
+**/*.dat
 
