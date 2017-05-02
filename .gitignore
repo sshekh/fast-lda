@@ -27,3 +27,5 @@ obj/*
 **/*.other
 **/*.dat
 
+#OS X indexing files
+*DS_Store
