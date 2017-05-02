@@ -18,7 +18,7 @@
 // USA
 
 #include "lda-estimate.h"
-#include "rdtsc-helper.h"
+#include "../fast-lda/rdtsc-helper.h"
 
 /*
  * perform inference on a document and update sufficient statistics
@@ -32,7 +32,7 @@ double doc_e_step(document* doc, double* gamma, double** phi,
     int n, k;
 
     // posterior inference
-    timer rdtsc = start_timer(timer_ids["DOC_E_STEP"]);
+    timer rdtsc = start_timer(DOC_E_STEP);
 
     likelihood = lda_inference(doc, model, gamma, phi);
 
@@ -163,7 +163,7 @@ void run_em(char* start, char* directory, corpus* corpus)
 
     // run expectation maximization
 
-    timer rdtsc = start_timer(timer_ids["RUM_EM"]);
+    timer rdtsc = start_timer(RUN_EM);
 
     int i = 0;
     double likelihood, likelihood_old = 0, converged = 1;

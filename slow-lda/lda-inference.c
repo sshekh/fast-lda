@@ -18,7 +18,7 @@
 // USA
 
 #include "lda-inference.h"
-#include "rdtsc-helper.h"
+#include "../fast-lda/rdtsc-helper.h"
 
 /*
  * variational inference
@@ -33,7 +33,7 @@ double lda_inference(document* doc, lda_model* model, double* var_gamma, double*
     int k, n, var_iter;
     double digamma_gam[model->num_topics];
 
-    timer rdtsc = start_timer(timer_ids["LDA_INFERENCE"]);
+    timer rdtsc = start_timer(LDA_INFERENCE);
     // compute posterior dirichlet
 
     for (k = 0; k < model->num_topics; k++)
@@ -98,7 +98,7 @@ compute_likelihood(document* doc, lda_model* model, double** phi, double* var_ga
     double likelihood = 0, digsum = 0, var_gamma_sum = 0, dig[model->num_topics];
     int k, n;
 
-    timer rdtsc = start_timer(timer_ids["LIKELIHOOD"]);
+    timer rdtsc = start_timer(LIKELIHOOD);
 
     for (k = 0; k < model->num_topics; k++)
     {
