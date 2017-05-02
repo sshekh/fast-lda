@@ -18,6 +18,7 @@
 // USA
 
 #include "lda-alpha.h"
+#include "rdtsc-helper.h"
 
 /*
  * objective function and its derivatives

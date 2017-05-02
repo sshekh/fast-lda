@@ -22,6 +22,7 @@
 
  */
 #include "lda-model.h"
+#include "rdtsc-helper.h"
 
 
 void lda_mle(lda_model* model, lda_suffstats* ss, int estimate_alpha)

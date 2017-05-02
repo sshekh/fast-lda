@@ -28,13 +28,14 @@ void init_timing_infrastructure(){
 	}
 }
 
-void print_timings(){
+void print_timings(FILE* f){
+	fprintf(f, "Timing results:\n");
+	fprintf(f, "timer, Total runtime sum [cycles], Average runtime [cycles]\n\n");
 	for (int i=0;i<N_ACCUMULATORS;i++){
-		printf("%s - Total Runtime sum[cycles]: %lld\n", timer_names[i], timing_infrastructure[i].sum);
 		if (timing_infrastructure[i].counter == 0){
-			printf("ERROR. Denominaotr zero\n");
+			fprintf(f, "%s, This code inside this timer has not been called, 0\n", timer_names[i]);
 		}else {
-			printf("%s - Runtime [cycles]: %lld\n", timer_names[i], timing_infrastructure[i].sum / timing_infrastructure[i].counter);
+			fprintf(f, "%s, %lld, %lld\n", timer_names[i], timing_infrastructure[i].sum, timing_infrastructure[i].sum / timing_infrastructure[i].counter);
 		}
 	}
 }

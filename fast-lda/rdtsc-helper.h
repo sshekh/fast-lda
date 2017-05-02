@@ -1,6 +1,14 @@
 #ifndef RDTSC_HELPER
 #define RDTSC_HELPER
 
+
+// Disable all printfs
+// #define IGNORE_PRINTF
+
+#ifdef IGNORE_PRINTF
+#define printf(fmt, ...)
+#endif
+
 #include "rdtsc.h"
 
 typedef struct timer{

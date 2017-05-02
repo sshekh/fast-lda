@@ -2,8 +2,6 @@
     saving the model, etc.
 2) Generate smaller reference outputs from the various parameter ranges decided upon
 3) Iteration count for converging variables - FRED
-3) Include parameter that suppresses all prints for measurement
-4) Format timing outputs to CSV format
 5) Do the flop counts
 	RUN_EM, DOC_E_STEP <- Saurav 
 	LDA_INFERENCE <- Ben
