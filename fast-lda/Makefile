@@ -19,7 +19,7 @@
 
 .SUFFIXES: .c .u
 CC= gcc
-CFLAGS= -O3 -Wall -g
+CFLAGS= -O3 -Wall -g -std=c99
 LDFLAGS= -lm
 
 LOBJECTS= rdtsc-helper.o lda-estimate-helper.o lda-run.o lda-estimate.o lda-model.o lda-inference.o utils.o cokus.o lda-alpha.o

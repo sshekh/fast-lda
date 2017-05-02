@@ -1,19 +1,20 @@
 #include "rdtsc-helper.h"
-#include "stdio.h"
+#include <stdio.h>
 
-char* timer_names[] = {"RUN_EM", "LDA_INFERENCE", "DIGAMMA", "LOG_SUM", "LOG_GAMMA", "DOC_E_STEP", "LIKELIHOOD"};
+accumulator timing_infrastructure[N_ACCUMULATORS];
+char* accumulator_names[] = {"RUN_EM", "LDA_INFERENCE", "DIGAMMA", "LOG_SUM", "LOG_GAMMA", "DOC_E_STEP", "LIKELIHOOD", "EM_CONVERGE", "INFERENCE_CONVERGE"};
 
 timer start_timer(int id){
-	timer t;
-	t.id = id;
-	// CPUID();
-	RDTSC(t.start);
-	return t;
+    timer t;
+    t.id = id;
+    // CPUID();
+    RDTSC(t.start);
+    return t;
 }
 
 void stop_timer(timer t){
-	// CPUID();
-	RDTSC(t.end);
+    // CPUID();
+    RDTSC(t.end);
     t.cycles = (long long) ((COUNTER_DIFF(t.end, t.start)));
     timing_infrastructure[t.id].sum += t.cycles;
     timing_infrastructure[t.id].counter += 1;
@@ -22,20 +23,22 @@ void stop_timer(timer t){
 }
 
 void init_timing_infrastructure(){
-	for (int i=0;i<N_ACCUMULATORS;i++){
-		timing_infrastructure[i].sum = 0;
-		timing_infrastructure[i].counter = 0;
-	}
+    for (int i=0;i<N_ACCUMULATORS;i++){
+        timing_infrastructure[i].sum = 0;
+        timing_infrastructure[i].counter = 0;
+    }
 }
 
 void print_timings(FILE* f){
-	fprintf(f, "Timing results:\n");
-	fprintf(f, "timer, Total runtime sum [cycles], Average runtime [cycles]\n\n");
-	for (int i=0;i<N_ACCUMULATORS;i++){
-		if (timing_infrastructure[i].counter == 0){
-			fprintf(f, "%s, This code inside this timer has not been called, 0\n", timer_names[i]);
-		}else {
-			fprintf(f, "%s, %lld, %lld\n", timer_names[i], timing_infrastructure[i].sum, timing_infrastructure[i].sum / timing_infrastructure[i].counter);
-		}
-	}
+    fprintf(f, "Accumulator, Total count, Average count\n");
+    for (int i=0;i<N_ACCUMULATORS;i++){
+        if (timing_infrastructure[i].counter == 0){
+            fprintf(f, "%s, The code inside this timer has not been called, 0\n", accumulator_names[i]);
+        }else {
+            fprintf(f, "%s, %lld, %f\n",
+                accumulator_names[i],
+                timing_infrastructure[i].sum,
+                (double) timing_infrastructure[i].sum / (double) timing_infrastructure[i].counter);
+        }
+    }
 }

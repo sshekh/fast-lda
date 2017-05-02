@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
     seedMT(t1);
     seedMT(4357U);
 
-    if (argc > 1)
+    if (argc > 8)
     {
         if (strcmp(argv[1], "est")==0)
         {
@@ -36,8 +36,14 @@ int main(int argc, char* argv[])
             init_timing_infrastructure();
             run_em(argv[7], argv[8], corpus);
 
-            FILE* f = fopen("results/timings.csv","w");
-            // Alternatively, pass stdout
+            FILE* f;
+            if (argc == 10 && strcmp(argv[9], "-out") == 0) {
+                f = stdout;
+            } else {
+                mkdir("results");
+                f = fopen("results/timings.csv","w");
+            }
+
             print_timings(f);
             fclose(f);
 
@@ -45,7 +51,7 @@ int main(int argc, char* argv[])
     }
     else
     {
-        printf("usage : lda est [ndocs] [initial alpha] [k] [settings] [data] [random/seeded/*] [directory]\n");
+        printf("usage : lda est [ndocs] [initial alpha] [k] [settings] [data] [random/seeded/*] [directory] [-out]\n");
     }
     return(0);
 }

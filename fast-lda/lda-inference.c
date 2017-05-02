@@ -84,7 +84,10 @@ double lda_inference(document* doc, lda_model* model, double* var_gamma, double*
 
     stop_timer(rdtsc);
 
-    return(likelihood);
+    timing_infrastructure[INFERENCE_CONVERGE].sum += var_iter;
+    timing_infrastructure[INFERENCE_CONVERGE].counter++;
+
+    return likelihood;
 }
 
 double compute_likelihood(document* doc, lda_model* model, double** phi, double* var_gamma)
@@ -102,16 +105,16 @@ double compute_likelihood(document* doc, lda_model* model, double** phi, double*
     digsum = digamma(var_gamma_sum);
 
     // <BG>: lgamma is a math library function
-    likelihood = lgamma(model->alpha * model -> num_topics) 
-                - model -> num_topics * lgamma(model->alpha) 
+    likelihood = lgamma(model->alpha * model -> num_topics)
+                - model -> num_topics * lgamma(model->alpha)
                 - (lgamma(var_gamma_sum));
 
-    // Compute the log likelihood dependent on the variational parameters 
-    // as per equation (15).              
+    // Compute the log likelihood dependent on the variational parameters
+    // as per equation (15).
     for (k = 0; k < model->num_topics; k++)
     {
-        likelihood += (model->alpha - 1)*(dig[k] - digsum) 
-                    + lgamma(var_gamma[k]) 
+        likelihood += (model->alpha - 1)*(dig[k] - digsum)
+                    + lgamma(var_gamma[k])
                     - (var_gamma[k] - 1)*(dig[k] - digsum);
 
         for (n = 0; n < doc->length; n++)
@@ -127,5 +130,5 @@ double compute_likelihood(document* doc, lda_model* model, double** phi, double*
 
     stop_timer(rdtsc);
 
-    return(likelihood);
+    return likelihood;
 }

@@ -18,7 +18,7 @@
 // USA
 
 /*
- * Implementation of the LDA parameter estimation functionality. 
+ * Implementation of the LDA parameter estimation functionality.
  */
 
 #include "lda-estimate.h"
@@ -35,7 +35,7 @@ double doc_e_step(document* doc, double* gamma, double** phi,
     double likelihood;
     int n, k;
 
-    // Posterior variational inference. 
+    // Posterior variational inference.
     likelihood = lda_inference(doc, model, gamma, phi);
 
     // Update sufficient statistics.
@@ -70,15 +70,15 @@ void run_em(char* start, char* directory, corpus* corpus)
 
     int d, n;
     lda_model *model = NULL;
-    // Variational parameters 
+    // Variational parameters
     double **var_gamma, **phi;
-    
+
     // Gamma variational parameter for each doc and for each topic.
     var_gamma = malloc(sizeof(double*)*(corpus->num_docs));
     for (d = 0; d < corpus->num_docs; d++)
 	var_gamma[d] = malloc(sizeof(double) * NTOPICS);
 
-    // Phi variational parameter for each term in the vocabulary and for each topic. 
+    // Phi variational parameter for each term in the vocabulary and for each topic.
     int max_length = max_corpus_length(corpus);
     phi = malloc(sizeof(double*)*max_length);
     for (n = 0; n < max_length; n++)
@@ -114,17 +114,19 @@ void run_em(char* start, char* directory, corpus* corpus)
     save_lda_model(model, filename);
 
 
-    timer rdtsc = start_timer(RUN_EM);
-
     // run expectation maximization
-    int i = 0;
+    int var_iter = 0;
     double likelihood, likelihood_old = 0, converged = 1;
     sprintf(filename, "%s/likelihood.dat", directory);
     FILE* likelihood_file = fopen(filename, "w");
 
-    while (((converged < 0) || (converged > EM_CONVERGED) || (i <= 2)) && (i <= EM_MAX_ITER))
+    timer rdtsc = start_timer(RUN_EM);
+
+    while (((converged < 0) || (converged > EM_CONVERGED) || (var_iter <= 2)) && (var_iter <= EM_MAX_ITER))
     {
-        i++; printf("**** em iteration %d ****\n", i);
+        var_iter++;
+        printf("**** em iteration %d ****\n", var_iter);
+
         likelihood = 0;
         zero_initialize_ss(ss, model);
 
@@ -139,7 +141,7 @@ void run_em(char* start, char* directory, corpus* corpus)
                                      ss);
         }
 
-        // M-Step 
+        // M-Step
         lda_mle(model, ss, ESTIMATE_ALPHA);
 
         // check for convergence
@@ -150,16 +152,19 @@ void run_em(char* start, char* directory, corpus* corpus)
         // output model and likelihood
         fprintf(likelihood_file, "%10.10f\t%5.5e\n", likelihood, converged);
         fflush(likelihood_file);
-        if ((i % LAG) == 0)
+        if ((var_iter % LAG) == 0)
         {
-            sprintf(filename,"%s/%03d",directory, i);
+            sprintf(filename,"%s/%03d",directory, var_iter);
             save_lda_model(model, filename);
-            sprintf(filename,"%s/%03d.gamma",directory, i);
+            sprintf(filename,"%s/%03d.gamma",directory, var_iter);
             save_gamma(filename, var_gamma, corpus->num_docs, model->num_topics);
         }
     }
 
     stop_timer(rdtsc);
+
+    timing_infrastructure[EM_CONVERGE].sum += var_iter;
+    timing_infrastructure[EM_CONVERGE].counter++;
 
     // output the final model
     sprintf(filename,"%s/final",directory);

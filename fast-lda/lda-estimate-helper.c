@@ -1,5 +1,5 @@
 /*
- * Implementation of helper functions for LDA estimation.    
+ * Implementation of helper functions for LDA estimation.
  */
 
 #include "lda-estimate-helper.h"
