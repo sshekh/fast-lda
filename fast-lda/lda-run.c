@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
             if (argc == 10 && strcmp(argv[9], "-out") == 0) {
                 f = stdout;
             } else {
-                mkdir("results");
+                mkdir("results",  0755);
                 f = fopen("results/timings.csv","w");
             }
 
