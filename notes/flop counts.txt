@@ -1,0 +1,14 @@
+Where;
+    K is the number of topics
+    N is the number of documents
+    V is the size of the vocabulary
+
+LIKELIHOOD
+
+        K * digamma
+      + K               (+)
+      + digamma
+      + 4               (2*, 2-)
+      + 3 * lgamma
+      + K * 9           (7+-, 2*)
+      + ???
