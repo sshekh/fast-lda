@@ -1,8 +1,19 @@
 0) Rip out useless code
-    saving the model, etc.
+    saving the model, etc. (we removed printing for instrumentation, 
+    						do you need to save the model for the validation still?)
 2) Generate smaller reference outputs from the various parameter ranges decided upon
 5) Do the flop counts
 	RUN_EM, DOC_E_STEP <- Saurav
 	LDA_INFERENCE <- Ben
 	DIGAMMA, LOG_SUM, LOG_GAMMA <- Cristina
 	LIKELIHOOD <- Fred
+6) Script to run the timings for different input size and plot performance.
+7) Look for better implementations of LDA :-/
+7) Update project descriptions:
+		point 3 - saving the model and printing removed.
+		point 4 - decribe validation
+		point 5 - update after we run the script in 6)
+		point 6 - update the flops count
+		point 7 - performance plot decription
+		point 8 - describe if there are optimized versions of LDA
+
