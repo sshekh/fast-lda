@@ -2,7 +2,13 @@
 
 ################################################################################
 
-#Script to run the algorithm for different input sizes to record timings.
+# Script to run the algorithm for different input sizes to record timings.
+# The results are saved to the folder 
+#	./profiling
+# and the results are named
+#   slow/fast_timings<NDOCS>.csv
+
+# Adjust the document collection size and step with START, END, STEP.
 
 ################################################################################
 
