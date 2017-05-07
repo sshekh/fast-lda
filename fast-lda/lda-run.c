@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
                 f = stdout;
             } else {
                 mkdir("results",  0755);
-                f = fopen("results/timings.csv","w");
+                f = fopen("results/fast_timings.csv","w");
             }
 
             print_timings(f);
