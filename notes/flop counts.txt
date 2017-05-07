@@ -9,31 +9,35 @@ LIKELIHOOD
         K * digamma
       + K               (+)
       + digamma
-      + 4               (2*, 2-)
+      + 4               (2*, 2+)
       + 3 * lgamma
-      + K * 9           (7+-, 2*)
-      + K * doc_length * 6 (4+-, 2*)
+      + K * 9           (7+, 2*)
+      + K * D * 6 (4+, 2*)
+
+      = 33K + 32 + 4 + 3*35 + 9K + K*D*6 = 6KD + 42K + 141
 
 DIGAMMA
       31 FLOPS + LOG(X) ~ 32 FLOPS
 
 LOG_SUM
-      4 FLOPS + LOG(X) + EXP(X)
+      4 FLOPS + LOG(X) + EXP(X) ~ 6 FLOPS
 
 LOG_GAMMA
-      28FLOPS + 7 * LOG(X)
+      28FLOPS + 7 * LOG(X) ~ 35 FLOPS
 
 LDA_INFERENCE
       K * 2         (+,/)    
     + K * digamma
     + K * D         (/)
 
-      VAR_MAX_ITER *
+    + VAR_MAX_ITER *
       {
           D * K * (5 + log_sum + exp + digamma)     (4+, *)
         + compute_likelihood
         + 2                                         (+)
       }
+
+  = 2K + 32K + KD + VAR_MAX_ITER * (44KD + 6KD + 42K + 141 + 2) = VAR_MAX_ITER * (50KD + 42K + 143) + KD + 34K
 
 DOC_E_STEP
       LDA_INFERENCE
@@ -42,6 +46,11 @@ DOC_E_STEP
     + DIGAMMA
     + K * N * 4     (2+, 2*)
     + 1             (1+)
+
+    = VAR_MAX_ITER * (50KD + 42K + 143) + KD + 34K
+      + 2K + 2 + 32 + 4KN + 1
+    = VAR_MAX_ITER * (50KD + 42K + 143) + 4KN + KD + 36K + 35
+
 
 RUN_EM
       random_initialize_ss  
@@ -52,4 +61,18 @@ RUN_EM
         lda_mle
         2             (1+, 1/)
         1             (1*)
-        N * lda_inference 
+        N * lda_inference
+
+    = 4KN + 3KV + var_iter * (N * doc_e_step + N + 3KV + 3 + N * lda_inference)
+
+LDA_MLE
+    K * V * (2*log + 1)       (+)
+      ~ 3KV
+
+RANDOM_INITIALIZE_SS
+    K * N * (3 + myrand)    (2+, 1/)
+      ~ 4KN
+
+
+
+TOTAL ASSYMPTOTIC FLOP COUNT: O(N * K * D * var_iter_inf * var_iter_em)

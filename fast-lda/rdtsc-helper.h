@@ -20,7 +20,7 @@ typedef struct timer{
 timer start_timer(int id);
 void stop_timer(timer t);
 
-// Always adapt both enum and string array!
+// Always adapt both enum and string array (in rdtsc_helper.c)!
 enum accumulator_ids{RUN_EM, LDA_INFERENCE, DIGAMMA, LOG_SUM, LOG_GAMMA, DOC_E_STEP, LIKELIHOOD, EM_CONVERGE, INFERENCE_CONVERGE, N_ACCUMULATORS};
 extern char* accumulator_names[N_ACCUMULATORS];
 
