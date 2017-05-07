@@ -348,7 +348,16 @@ int main(int argc, char* argv[])
         printf("        lda inf [settings] [model] [data] [name]\n");
     }
 
-    print_timings();
+    FILE* f;
+    if (argc == 10 && strcmp(argv[9], "-out") == 0) {
+        f = stdout;
+    } else {
+        mkdir("results",  0755);
+        f = fopen("results/slow_timings.csv","w");
+    }
+
+    print_timings(f);
+    fclose(f);
 
     return(0);
 }
