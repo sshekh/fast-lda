@@ -2,6 +2,7 @@ Where;
     K is the number of topics
     N is the number of documents
     V is the size of the vocabulary
+    D is the length of a document
 
 LIKELIHOOD
 
@@ -22,6 +23,18 @@ LOG_SUM
 LOG_GAMMA
       28FLOPS + 7 * LOG(X)
 
+LDA_INFERENCE
+      K * 2         (+,/)    
+    + K * digamma
+    + K * D         (/)
+
+      VAR_MAX_ITER *
+      {
+          D * K * (5 + log_sum + exp + digamma)     (4+, *)
+        + compute_likelihood
+        + 2                                         (+)
+      }
+
 DOC_E_STEP
       LDA_INFERENCE
     + K * 2         (2+)
@@ -40,4 +53,3 @@ RUN_EM
         2             (1+, 1/)
         1             (1*)
         N * lda_inference 
-
