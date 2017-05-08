@@ -6,7 +6,6 @@
 #include "lda-run.h"
 #include "rdtsc-helper.h"
 
-
 /*
  * Run LDA estimation.
  *
