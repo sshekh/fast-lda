@@ -1,5 +1,5 @@
 # Results folders
-*/results/*
+**/results/*
 
 # Profiling
 **/callgrind.out.*
@@ -28,3 +28,7 @@ obj/*
 
 #OS X indexing files
 *DS_Store
+
+# Python
+*.pyc
+__pycache__/*

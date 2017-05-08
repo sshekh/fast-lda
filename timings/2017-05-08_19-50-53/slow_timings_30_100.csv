@@ -1,0 +1,10 @@
+Accumulator, Total count, Average count
+RUN_EM, 15905137084, 15905137084.000000
+LDA_INFERENCE, 18924085692, 47310214.230000
+DIGAMMA, 3670305999, 182.795643
+LOG_SUM, 6627097427, 344.375878
+LOG_GAMMA, The code inside this timer has not been called, 0
+DOC_E_STEP, 15744310180, 52481033.933333
+LIKELIHOOD, 3297888084, 681522.646001
+EM_CONVERGE, The code inside this timer has not been called, 0
+INFERENCE_CONVERGE, The code inside this timer has not been called, 0

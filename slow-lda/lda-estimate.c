@@ -133,7 +133,7 @@ void run_em(char* start, char* directory, corpus* corpus)
 
     // initialize model
 
-    char filename[100];
+    char filename[1000];
 
     lda_suffstats* ss = NULL;
     if (strcmp(start, "seeded")==0)
@@ -352,8 +352,8 @@ int main(int argc, char* argv[])
     if (argc == 10 && strcmp(argv[9], "-out") == 0) {
         f = stdout;
     } else {
-        mkdir("results",  0755);
-        f = fopen("results/slow_timings.csv","w");
+        system("mkdir results");
+        f = fopen("results/timings.csv","w");
     }
 
     print_timings(f);
