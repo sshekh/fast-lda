@@ -30,7 +30,7 @@ def benchmark(n_list):
     for n in n_list:
 
         f1 = open("profiling/fast_timings" + str(n) + ".csv", "r")
-        f2 = open("profiling/fast_timings" + str(n) + ".csv", "r")
+        f2 = open("profiling/slow_timings" + str(n) + ".csv", "r")
         
         read_one_output(f1, n, data_1)
         read_one_output(f2, n, data_2)
@@ -51,6 +51,6 @@ def benchmark(n_list):
 
 
 if __name__ == '__main__':
-    benchmark(sys.argv[1], sys.argv[2])
+    benchmark(map(int, sys.argv[1:]))
     
 
