@@ -10,10 +10,9 @@ flops = { "RUN_EM" : 1., "LDA_INFERENCE" : 1., "DIGAMMA" : 1., "LOG_SUM" : 1.,
 
 def read_one_output(f, n, dict)
     header = f.readline().split(',')
-    assert(header[0] == 'Accumulator'
+    assert header[0] == 'Accumulator'
        and header[1] == ' Total count'
-       and header[2] == ' Average count')
-    global data
+       and header[2] == ' Average count', "Output file not in proper format"
     for i in range(9):
         s = f.readline().split(',')
         fn = s[0].strip()
