@@ -2,10 +2,10 @@ We selected a cost measure which takes into account the flop count for the most 
 The flop counts were done bottom up.
 
 Cost measure:
-C(N,D,V,K) = ( simple(N,D,V,K), compound(N,D,V,K) )
+C(N,D,V,K) = ( simple(N,D,V,K), heavy(N,D,V,K) )
 
 simple(N,D,V,K): adds, muls
-compound(N,D,V,K): divs, logs, exps, etc.
+heavy(N,D,V,K): divs, logs, exps, etc.
 
 Where;
     K is the number of topics
@@ -17,40 +17,40 @@ Where;
 
 DIGAMMA:
     simple: 23
-    compound: 9
+    heavy: 9
 
 LOG_SUM:
     simple: 4
-    compound: 2
+    heavy: 2
 
-LOG_GAMMA:
+LGAMMA: (if we use the function in utils.c)
     simple: 25
-    compound: 9
+    heavy: 9
 
 LDA_MLE
     simple: KV
-    compound: 2KV
+    heavy: 2KV
 
 RANDOM_INITIALIZE_SS
     simple: 2KN
-    compound: 2KN
+    heavy: 2KN
 
 LIKELIHOOD:
     simple: 6KD + 33K + 102
-    compound: 9K + 36
+    heavy: 9K + 36
 
 LDA_INFERENCE:
     simple: var_iter_inf * (38KD + 33K + 104) + 24K
-    compound: var_iter_inf * (14KD + 9K + 36) + KD + 10K
+    heavy: var_iter_inf * (14KD + 9K + 36) + KD + 10K
 
 DOC_E_STEP:
     simple: var_iter_inf * (38KD + 33K + 104) + 4KN + 26K + 26
-    compound: var_iter_inf * (14KD + 9K + 36) + KD + 10K + 9
+    heavy: var_iter_inf * (14KD + 9K + 36) + KD + 10K + 9
 
 RUN_EM:
     simple: 2KN + KV + var_iter_em * (N * doc_e_step.simple + N + KV
               + 2 + N * lda_inference.simple))
-    compound: 2KN + 2KV + var_iter_em * (N * doc_step.compound + 2KV
-              + 1 + N * lda_inference.compound)
+    heavy: 2KN + 2KV + var_iter_em * (N * doc_step.heavy + 2KV
+              + 1 + N * lda_inference.heavy)
 
 
