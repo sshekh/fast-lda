@@ -36,7 +36,7 @@ class Cost:
             return Cost(0, 0)
 
     def full(self):
-        return self.simple + 10 * self.heavy
+        return self.simple + self.heavy
 
 iters = {"EM_CONVERGE" : 1,
         "INFERENCE_CONVERGE" : 1. }   # EM_CONVERGE and INFERENCE_CONVERGE are # iteration counts for convergence
@@ -92,12 +92,13 @@ def run_em(N, K):
 flops = { "RUN_EM" : run_em, "LDA_INFERENCE" : lda_inference, "DIGAMMA" : digamma, "LOG_SUM" : log_sum,
         "LOG_GAMMA" : log_gamma, "DOC_E_STEP" : doc_e_step, "LIKELIHOOD" : likelihood }
 
-def plot(plt, data, color):
-    for fn, vals in data.items():
-        if len(vals['x']) is not 0:
-            x, y = (zip(*sorted(zip(vals['x'], vals['y']))))
-            plt.plot(x, y, '^-', color=color, linewidth=2)
-            plt.text(x[0], y[0] + 0.002 , fn)        # label 
+colors = { "RUN_EM" : "green", "LDA_INFERENCE" : "blue", "DIGAMMA" : "black", "LOG_SUM" : "purple",
+        "LOG_GAMMA" : "purple", "DOC_E_STEP" : "orange", "LIKELIHOOD" : "red" }       
+
+label_offsets = { "RUN_EM" : 0.008, "LDA_INFERENCE" : 0.008, "DIGAMMA" : 0.02, "LOG_SUM" : -0.015,
+        "LOG_GAMMA" : 0.008, "DOC_E_STEP" : -0.01, "LIKELIHOOD" : -0.015 }                 
+
+
 
 def read_one_output(f, N, K, dict):
     header = f.readline().split(',')
@@ -124,32 +125,53 @@ def read_one_output(f, N, K, dict):
         pass
     pass
 
+def plot_line(plt, data, color):
+    for fn, vals in data.items():
+        if len(vals['x']) is not 0:
+            x, y = (zip(*sorted(zip(vals['x'], vals['y']))))
+            plt.plot(x, y, '^-', color=colors[fn], linewidth=1)
+            plt.text(x[0], y[0] + label_offsets[fn] , fn, color=colors[fn], size=9)
+
+def set_up_perf_plot(axes):
+    #Per plot settings
+    axes.set_title('Performance on Haswell',  y=1.08, loc = "center")
+    axes.set_xlabel('$n$ documents')
+    axes.set_ylabel('Performance [flops/cycles]',rotation="0")
+    axes.set_ylim(-0.0, 0.3)
+
+    axes.set_axisbelow(True)
+    axes.yaxis.grid(color='white', linestyle='solid')
+    axes.set_axis_bgcolor((211.0/255,211.0/255,211.0/255))
+    axes.yaxis.set_label_coords(0.12,1.02)
+    axes.spines['left'].set_color('#dddddd')
+    axes.spines['right'].set_color('#dddddd')
+    axes.spines['top'].set_color('#dddddd')
+
+    # Peak performance
+    #plt.axhline(y=4, linestyle='--', color='black', label='Compute roof')
+
+
 def benchmark(dirpath):
     data_1 = {}       # "RUN_EM" : { x : [10, 15, 20], y : [3.2, 4.5, 6.7] }
     data_2 = {}       # "RUN_EM" : { x : [10, 15, 20], y : [3.2, 4.5, 6.7] }
 
     _, axes = plt.subplots()
 
+    
     regex = re.compile(r'\d+')
     for filename in listdir(dirpath):
         if filename.startswith("fast") or filename.startswith("slow"):
             f = open(join(dirpath, filename), "r")
-            N, K = map(int, re.findall(regex, filename))
+            K, N = map(int, re.findall(regex, filename))
             if filename[0] == 'f':
                 read_one_output(f, N, K, data_1)
             else:
                 read_one_output(f, N, K, data_2)
-
-    # plot roof
-    #plt.axhline(y=4, linestyle='--', color='black', label='Compute roof')
-    plt.ylabel('performance (flops/cycle)')
-    plt.xlabel('number of documents')
-
-    axes.yaxis.grid(color='white', linestyle='solid')
-    axes.set_facecolor((211.0/255,211.0/255,211.0/255))
     
-    plot(plt, data_1, color='blue')
-    plot(plt, data_2, color='red')
+    set_up_perf_plot(axes)
+
+    plot_line(plt, data_1, color='blue')
+    plot_line(plt, data_2, color='red')
     plt.show()
 
 if __name__ == '__main__':
