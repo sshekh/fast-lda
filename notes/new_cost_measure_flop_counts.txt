@@ -1,0 +1,105 @@
+Cost measure:
+C(N,D,V,K) = ( simple(N,D,V,K), compound(N,D,V,K) )
+
+simple(N,D,V,K): adds, muls
+compound(N,D,V,K): divs, logs, exps, etc.
+
+
+Where;
+    K is the number of topics
+    N is the number of documents
+    V is the size of the vocabulary
+    D is the length of a document
+
+
+
+LIKELIHOOD
+
+        K * digamma
+      + K               (+)
+      + digamma
+      + 4               (2*, 2+)
+      + 3 * lgamma
+      + K * 9           (7+, 2*)
+      + K * D * 6 (4+, 2*)
+
+      simple = K + 4 + 9K + 6KD + 23K + 23 + 75 = 6KD + 33K + 102
+      compound = 9K + 9 + 27 = 9K + 36
+
+DIGAMMA
+      simple = 23 ops
+      compound = 9 ops
+
+LOG_SUM
+      simple = 4 ops
+      compound = 2 ops
+
+LOG_GAMMA
+      simple = 25 ops
+      compound = 9 ops
+
+LDA_INFERENCE
+      K * 2         (+,/)    
+    + K * digamma
+    + K * D         (/)
+
+    + VAR_MAX_ITER *
+      {
+          D * K * (5 + log_sum + exp + digamma)     (4+, *)
+        + compute_likelihood
+        + 2                                         (2+)
+      }
+
+  simple = K + 23K + var_iter_inf * (32KD + 6KD + 33K + 102 + 2)
+          = 24K + var_iter_inf * (38KD + 33K + 104)
+  compound = K + 9K + KD + var_iter_inf * (14KD + 9K + 36)
+            = KD + 10K + var_iter_inf * (14KD + 9K + 36)
+
+DOC_E_STEP
+      LDA_INFERENCE
+    + K * 2         (2+)
+    + 2             (1+, 1*)
+    + DIGAMMA
+    + K * N * 4     (2+, 2*)
+    + 1             (1+)
+
+    simple = var_iter_inf * (38KD + 33K + 104) + 24K
+      + 2K + 2 + 23 + 4KN + 1
+    = var_iter_inf * (38KD + 33K + 104) + 4KN + 26K + 26
+
+    compound = var_iter_inf * (14KD + 9K + 36) + KD + 10K + 9
+
+
+RUN_EM
+      random_initialize_ss  
+    + lda_mle
+    + var_iter_em *  
+        N * doc_e_step
+        N             (1+)  
+        lda_mle
+        2             (1+, 1/)
+        1             (1*)
+        N * lda_inference
+
+
+    simple = 2KN + KV + var_iter_em * (N * doc_e_step.simple + N + KV
+              + 2 + N * lda_inference.simple))
+    compound = 2KN + 2KV + var_iter_em * (N * doc_step.compound + 2KV
+              + 1 + N * lda_inference.compound)
+    
+
+LDA_MLE
+    simple = KV
+    compound = 2KV
+
+RANDOM_INITIALIZE_SS
+    simple = 2KN
+    compound = 2KN
+
+
+
+TOTAL ASSYMPTOTIC OP COUNT simple:
+O(N * K * D * var_iter_inf * var_iter_em)
+
+TOTAL ASSYMPTOTIC OP COUNT compound:
+O(N * K * D * var_iter_inf * var_iter_em)
