@@ -2,7 +2,6 @@
 **/results/*
 
 # Profiling
-profiling/*
 **/callgrind.out.*
 **/lda.dSYM/*
 

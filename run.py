@@ -14,13 +14,13 @@
 
 import subprocess
 
-START = 2
-END = 20
-STEP = 10
+START = 100
+END = 2000
+STEP = 100
 
 # Fast
 for NDOCS in range(START, END, STEP):
-	subprocess.check_call(["./fast-lda/lda", "est", str(NDOCS), "1", "50", "./fast-lda/settings.txt", "./fast-lda/ap/ap.dat", "seeded", "logfiles"])
+	subprocess.check_call(["./fast-lda/lda", "est", str(NDOCS), "1", "100", "./fast-lda/settings.txt", "./fast-lda/ap/ap.dat", "seeded", "logfiles"])
 	source = "./results/fast_timings.csv"
 	destination = "./profiling/fast_timings" + str(NDOCS) + ".csv"
 	subprocess.call(["mv", source, destination])

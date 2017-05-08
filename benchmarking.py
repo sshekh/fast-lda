@@ -2,77 +2,70 @@
 import numpy as np
 import sys
 import matplotlib.pyplot as plt
+from os import listdir
+from os.path import join
+import re
 
-def add_to_plot(idx, x, y, label, color='blue'):
-    #plt = plot.figure(idx)
-    #plt.grid(true)
-
-    plt.plot(x, y, '^-', color=color, linewidth=2)
-    #plt.axvline(x=51.639, linestyle='--', color='black', label='L1')
-    #plt.text(51.8, 0.5, 'L1')
-
-    pass
+EPS = 1e-12     # Average count is float and integer count is a text in case of 0 calls
 
 flops = { "RUN_EM" : 1., "LDA_INFERENCE" : 1., "DIGAMMA" : 1., "LOG_SUM" : 1.,
         "LOG_GAMMA" : 1., "DOC_E_STEP" : 1., "LIKELIHOOD" : 1., "EM_CONVERGE" : 1,
         "INFERENCE_CONVERGE" : 1.
-        }
+        }   # EM_CONVERGENCE and INFERENCE_CONVERGE are # iteration counts for convergence
 
-def read_one_output(f, n, dict)
+def plot(plt, data, color):
+    for tp, vals in data.items():
+        if len(vals['x']) is not 0:
+            x, y = (zip(*sorted(zip(vals['x'], vals['y']))))
+            plt.plot(x, y, '^-', color=color, linewidth=2)
+            plt.text(x[0], y[0] + 0.002 , tp)        # label 
+
+def read_one_output(f, n, dict):
     header = f.readline().split(',')
-    assert(header[0] == 'Accumulator'
-       and header[1] == ' Total count'
-       and header[2] == ' Average count')
-    global data
-    for i in range(9):
+    header = [h.strip() for h in header]
+    assert header[0] == 'Accumulator' \
+        and header[1] == 'Total count' \
+       and header[2] == 'Average count', "Output file not in proper format"
+    for i in range(7):
         s = f.readline().split(',')
         fn = s[0].strip()
         if not fn in dict: dict[fn] = { 'x' : [], 'y' : []}
-        dict[fn]['x'].append(n)
-        dict[fn]['y'].append(flops[fn] / float(s[2]))
+        avg_cnt = float(s[2])
+        if abs(avg_cnt) > EPS:
+            dict[fn]['x'].append(n)
+            dict[fn]['y'].append(flops[fn] / avg_cnt)
         pass
     pass
 
-def benchmark(filename1, filename2):
+def benchmark(dirpath):
     data_1 = {}       # "RUN_EM" : { x : [10, 15, 20], y : [3.2, 4.5, 6.7] }
     data_2 = {}       # "RUN_EM" : { x : [10, 15, 20], y : [3.2, 4.5, 6.7] }
 
-    fp1 = open(filename1, "r")
-    fp2 = open(filename2, "r")
+    _, axes = plt.subplots()
 
-    while True:
-        n1 = fp1.readline()
-        n2 = fp2.readline()
+    regex = re.compile(r'\d+')
+    for filename in listdir(dirpath):
+        if filename.startswith("fast") or filename.startswith("slow"):
+            f = open(join(dirpath, filename), "r")
+            n = int(regex.search(filename).group(0))
+            if filename[0] == 'f':
+                read_one_output(f, n, data_1)
+            else:
+                read_one_output(f, n, data_2)
 
-        if n1 is not None and n2 is not None:
-            n1 = int(n1)
-            n2 = int(n2)
-            assert(n1 == n2)
-            read_one_output(fp1, n1, data_1)
-            read_one_output(fp2, n2, data_2)
-        elif n1 is not None or n2 is not None:
-            print("Unequal number of runs")
-            sys.exit(1)
-        else:
-            # EOF
-            break
-    
     # plot roof
-    plt.axhline(y=4, linestyle='--', color='black', label='Compute roof')
+    #plt.axhline(y=4, linestyle='--', color='black', label='Compute roof')
     plt.ylabel('performance (flops/cycle)')
     plt.xlabel('number of documents')
+
+    axes.yaxis.grid(color='white', linestyle='solid')
+    axes.set_facecolor((211.0/255,211.0/255,211.0/255))
     
-    for tp, vals in dict_1:
-        plt.plot(vals['x'], vals['y'], '^-', color='blue', linewidth=2)
-        #plt.text(, , tp)        # label 
-    for tp, vals in dict_2:
-        plt.plot(vals['x'], vals['y'], '^-', color='red', linewidth=2)
-        #plt.text(, , tp)        # label 
-
-    pass
-
+    plot(plt, data_1, color='blue')
+    plot(plt, data_2, color='red')
+    plt.show()
 
 if __name__ == '__main__':
-    benchmark(sys.argv[1], sys.argv[2])
+    benchmark(sys.argv[1])
     
 
