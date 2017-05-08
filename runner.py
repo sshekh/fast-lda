@@ -8,31 +8,119 @@ We would like to:
 '''
 
 import sys
+import os
 import getopt
+import subprocess
+import time
 
-REFERENCE_DATA = 'reference'
+from colorama import init, Fore, Style
+
+import beta_comp
+
+REFERENCE_FOLDER = 'reference'
+REFERENCE_DATA = REFERENCE_FOLDER + '/ref-%d-%d.beta'
+LDA_EXE_LOG = './%s-lda/logfiles'
+LDA_OUT_BETA = LDA_EXE_LOG + '/final.beta'
+LDA_OUT_TIMING = './results/timings.csv'
+
+ALWAYS_GENERATE_REF = False
+
+TIMING_FOLDER = 'timings/%s/'
+TIMING_FILENAME = '%s_timings_%d_%d.csv'
+
+RUN_NAME = None
+
+def run_lda(which, k, n):
+    params = ['./%s-lda/lda' % which,           # Executable location
+            'est',                              # Execution mode (always est)
+            str(n),                             # Number of documents
+            '1',                                # Initial estimate for alpha
+            str(k),                             # Number of topics
+            './%s-lda/settings.txt' % which,    # Settings location
+            './%s-lda/ap/ap.dat' % which,       # Documents location
+            'random',                           # Initialization method
+            LDA_EXE_LOG % which]                # Output directory
+
+    print(Fore.LIGHTGREEN_EX)
+    print(' ========== ')
+    subprocess.call(params)
+    print(' ========== ')
+    print(Style.RESET_ALL)
+
+
+def exists(path):
+    try:
+        os.stat(path)
+        return True
+    except FileNotFoundError:
+        return False
+
+def prompt_yna():
+    while True:
+        inp = input('(y)es, (n)o, yes to (a)ll\n')
+        if inp[0] in {'y', 'n', 'a'}:
+            ALWAYS_GENERATE_REF = inp[0] == 'a'
+            return inp[0] != 'n'
+
 
 def generate(k, n):
-    # Run the slow LDA
-    # Collect the file final.beta
-    # Move it into the reference folder, renaming it as k-n.beta or w/e
+    # Run the slow LDA, collect the final beta file and move it in the reference.
     print('Generating k=%d n=%d' % (k, n))
 
+    dst = REFERENCE_DATA % (k, n)
+
+    if exists(dst):
+        print('Already exists. Skipping...')
+        return
+
+    run_lda('slow', k, n)
+    os.renames(LDA_OUT_BETA, dst)
+
+
 def test(k, n):
-    # Run the fast LDA
-    # Collect the appropriate file final.beta
-    # Call the comparison script with the appropriate files
+    # Run the fast LDA and compare the resulting final beta against the reference.
     print('Testing fast against reference k=%d n=%d' % (k, n))
+    which = REFERENCE_DATA % (k, n)
+
+    if not exists(which):
+        print('Reference file %s not found... ' % which, end='')
+        if not ALWAYS_GENERATE_REF:
+            print('Do you want to generate it?')
+            if not prompt_yna():
+                sys.exit(0)
+
+        generate(k, n)
+
+    run_lda('fast', k, n)
+
+    reference = open(which, 'r')
+    created = open(LDA_OUT_BETA, 'r')
+
+    print('Comparing against the reference...')
+    good = beta_comp.compare(reference, created)
+
+    reference.close()
+    created.close()
+
+    if not good:
+        # The comparator script has printed the relevant info, just quit.
+        sys.exit(1)
+    else:
+        print('Test %d %d ran successfully' % (k, n))
 
 def bench(k, n, fast, slow):
-    if fast and slow:
-        which = 'fast and slow'
-    elif fast:
-        which = 'fast'
-    elif slow:
-        which = 'slow'
+    which = []
 
-    print('Benchmarking %s k=%d n=%d' % (which, k, n))
+    if fast:
+        which.append('fast')
+    if slow:
+        which.append('slow')
+
+    print('Benchmarking %s k=%d n=%d' % (str(which), k, n))
+    for lda in which:
+        run_lda(lda, k, n)
+        timing_out = (TIMING_FOLDER % RUN_NAME) + (TIMING_FILENAME % (lda, k, n))
+        os.rename(LDA_OUT_TIMING, timing_out)
 
 def usage_and_quit():
     print('Fast runner')
@@ -56,6 +144,11 @@ def usage_and_quit():
     print('If a double-dash appears, it signals the end of the options and\n' +
         'the beginning of a comment. This comment is optional and will appear\n' +
         'in the log files when in benchmark mode.')
+    print('')
+    print('Output from the LDA executable is colored in green.')
+    print('')
+    print('Generated reference data is available in the folder `%s`' % REFERENCE_FOLDER)
+    print('Benchmark timings are available in the folder `%s`' % TIMING_FOLDER)
 
     sys.exit()
 
@@ -111,6 +204,12 @@ if __name__ == '__main__':
         if not do_fast and not do_slow:
             raise ValueError('When benchmarking, specify at least one of -s (slow), -f (fast)')
         fn = lambda x, y: bench(x, y, do_fast, do_slow)
+
+        RUN_NAME = time.strftime('%Y-%m-%d_%H-%M-%S')
+        os.makedirs(TIMING_FOLDER % RUN_NAME)
+
+    if not exists(REFERENCE_FOLDER):
+        os.mkdir(REFERENCE_FOLDER)
 
     for k in ks:
         for n in ns:

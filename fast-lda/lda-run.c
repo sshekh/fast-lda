@@ -5,7 +5,6 @@
 
 #include "lda-run.h"
 #include "rdtsc-helper.h"
-#include "sys/stat.h"
 
 
 /*
@@ -40,8 +39,8 @@ int main(int argc, char* argv[])
             if (argc == 10 && strcmp(argv[9], "-out") == 0) {
                 f = stdout;
             } else {
-                mkdir("results",  0755);
-                f = fopen("results/fast_timings.csv","w");
+                system("mkdir results");
+                f = fopen("results/timings.csv","w");
             }
 
             print_timings(f);
