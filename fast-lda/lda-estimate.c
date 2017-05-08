@@ -85,7 +85,7 @@ void run_em(char* start, char* directory, corpus* corpus)
 	phi[n] = malloc(sizeof(double) * NTOPICS);
 
     // initialize model
-    char filename[100];
+    char filename[1000];
 
     lda_suffstats* ss = NULL;
     if (strcmp(start, "seeded")==0)
