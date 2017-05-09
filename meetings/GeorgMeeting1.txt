@@ -1,0 +1,40 @@
+
+Pi-chart for the performance 
+ Infrastructure for automatically creating the performance visualisations.
+
+Make clear the sizes and architecture we use.
+
+Vtune for later in the project. 
+Make clear what is the cost measure: have a cost for each of them. 
+
+Having the cost function with separate measurements will allow us to remote parts of we optimize them out. Make lookups for the log function if it becomes a problem. 
+
+Make sure we get improvements without affecting correctness. Validation is good no need to do more.
+
+Lookup other optimizations and benchmark them to compare the results and  present that in a performance plot. Compare apples to apples. 
+Can get directions of which direction to take.
+
+Avoid randomness, reporting would be harder.
+
+Vectorization might have to be thrown away because of the matrix blocking
+
+Report even if you skew-up if you can explain it.
+
+Roofline plot. 
+
+Add Georg to gitlab.
+
+Next meeting: 
+* higher level pi-chart,
+* focus on reasoning of why we go to specific optimization.    
+* better overview on how we walk over the data ( how the matrixes are accessed) 
+* infrastructure to switch between double and flops (nice comparison for final presentation) 
+* decomposing the algorithm into more 
+* caching of results from the functions that are re-run billions of times; exploit the context of the functions in the algorithm
+* a lot of reordering at the start; be sure of the independence
+* high level algorithm same as in the paper
+* exploring tradeoffs (memory vs time, precision)
+
+GRILLED if we do not have a high level reasoning of why we tried a specific optimization.
+
+ 
