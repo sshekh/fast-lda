@@ -87,6 +87,7 @@ def test(k, n):
         if not ALWAYS_GENERATE_REF:
             print('Do you want to generate it?')
             if not prompt_yna():
+                print('Aborting')
                 sys.exit(0)
 
         generate(k, n)
@@ -125,7 +126,7 @@ def bench(k, n, fast, slow):
 def usage_and_quit():
     print('Fast runner')
     print('')
-    print('usage: %s [ gen | test | bench ] options... -- comment' % sys.argv[0])
+    print('usage: %s [ gen | test | bench ] options... [-- comment]' % sys.argv[0])
     print('')
     print('Options: ')
     print('The following two options recieve as argument either one number,\n' +
@@ -142,13 +143,17 @@ def usage_and_quit():
     print('\tbench: Check speed of the fast (-f) and/or slow (-s) implementations')
     print('')
     print('If a double-dash appears, it signals the end of the options and\n' +
-        'the beginning of a comment. This comment is optional and will appear\n' +
-        'in the log files when in benchmark mode.')
+        'the beginning of a comment. This comment is mandatory in benchnamrk ' +
+         'mode and appears in the log files.')
     print('')
     print('Output from the LDA executable is colored in green.')
     print('')
     print('Generated reference data is available in the folder `%s`' % REFERENCE_FOLDER)
     print('Benchmark timings are available in the folder `%s`' % TIMING_FOLDER)
+    print('Other options:')
+    print('')
+    print('\t-n: Do not run make before running a task')
+    print('\t-v: When benchmarking, also validate before')
 
     sys.exit()
 
@@ -170,11 +175,13 @@ if __name__ == '__main__':
     mode = sys.argv[1]
     try:
         ddash = sys.argv.index('--')
-        options = sys.argv[1:, ddash]
+        options = sys.argv[1:ddash]
         comment = ' '.join(sys.argv[ddash + 1:])
-    except:
+    except ValueError:
         options = sys.argv[1:]
         comment = ''
+        if mode == 'bench':
+            raise ValueError('When benchmarking, please include a comment.')
 
     opts, args = getopt.gnu_getopt(options, "fs",
         ["num-topics=",
@@ -182,6 +189,8 @@ if __name__ == '__main__':
 
     do_fast = False
     do_slow = False
+    do_make = True
+    validate_when_benching = False
 
     ks = [50]
     ns = [2246] # Maximal amount of documents
@@ -195,18 +204,38 @@ if __name__ == '__main__':
             do_fast = True
         elif o == '-s':
             do_slow = True
+        elif o == '-n':
+            do_make = False
+        elif o == '-v':
+            validate_when_benching = True
+
+
+    if do_make:
+        print('Making the code...')
+        print(Fore.LIGHTGREEN_EX)
+        os.system('cd fast-lda && make')
+        os.system('cd slow-lda && make')
+        print(Style.RESET_ALL)
 
     if mode == 'gen':
         fn = generate
     elif mode == 'test':
         fn = test
     elif mode == 'bench':
+        fn = lambda x, y: bench(x, y, do_fast, do_slow)
+
+        if validate_when_benching:
+            print('First validating on a small input...')
+            test(10, 100)
+
         if not do_fast and not do_slow:
             raise ValueError('When benchmarking, specify at least one of -s (slow), -f (fast)')
-        fn = lambda x, y: bench(x, y, do_fast, do_slow)
 
         RUN_NAME = time.strftime('%Y-%m-%d_%H-%M-%S')
         os.makedirs(TIMING_FOLDER % RUN_NAME)
+        minilog = open((TIMING_FOLDER % RUN_NAME) + '/info.txt', 'w')
+        minilog.write(comment + '\n')
+        minilog.close()
 
     if not exists(REFERENCE_FOLDER):
         os.mkdir(REFERENCE_FOLDER)
