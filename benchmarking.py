@@ -16,7 +16,7 @@ def memoize(f):
     cache = {}
     return lambda *args: cache[args] if args in cache else cache.update({args: f(*args)}) or cache[args]
 
-class Cost:
+class Cost2:
     def __init__(self, simple, heavy):
         self.simple = simple
         self.heavy = heavy
@@ -38,59 +38,107 @@ class Cost:
     def full(self):
         return self.simple + self.heavy
 
-iters = {"EM_CONVERGE" : 1, "INFERENCE_CONVERGE" : 1., "ALPHA_CONVERGE"}   # EM_CONVERGE and INFERENCE_CONVERGE are # iteration counts for convergence
+class Cost:
+    def __init__(self, adds=0, muls=0, divs=0, logs=0, exps=0):
+        if isinstance(adds, tuple):
+            self.adds = adds[0]
+            self.muls = adds[1]
+            self.divs = adds[2]
+            self.logs = adds[3]
+            self.exps = adds[4]
+        else:
+            self.adds = adds
+            self.muls = muls
+            self.divs = divs
+            self.logs = logs
+            self.exps = exps
+
+    def toTup(self):
+        return (self.adds, self.muls, self.divs, self.logs, self.exps)
+
+    def __str__(self):
+        return str(self.toTup())
+
+    def __add__(self, other):
+        if isinstance(other, tuple):
+            other = Cost(other)
+        return Cost(self.adds + other.adds, \
+                    self.muls + other.muls, \
+                    self.divs + other.divs, \
+                    self.logs + other.logs, \
+                    self.exps + other.exps)
+
+    def __mul__(self, other):
+        if type(other) == type(42.) or type(other) == type(42):
+            return Cost(self.adds * other, \
+                        self.muls * other, \
+                        self.divs * other, \
+                        self.logs * other, \
+                        self.exps * other)
+        else:                    
+            return None     # multiplication not defined
+
+    def full(self):
+        return 
+
+iters = {"EM_CONVERGE" : 1, "INFERENCE_CONVERGE" : 1., "ALPHA_CONVERGE"}  # conv counts for var iterations 
 
 @memoize
 def digamma(N, K):
-    return Cost(23, 9)
+    return Cost(18, 5, 8, 1, 0) 
 
 @memoize
 def log_sum(N, K):
-    return Cost(4, 2)
+    return Cost(4, 0, 0, 1, 1)
 
 @memoize
 def log_gamma(N, K):
-    return Cost(25, 9)
+    return Cost(20, 5, 2, 7, 0)  
 
 @memoize
 def random_initialize_ss(N, K):
-    return Cost(2*K*N, 2*K*N)
+    return K * N * Cost(adds=3, divs=1)
 
 @memoize
-def opt_alpha(N, K):        #TODO
+def opt_alpha(N, K):        #FIXME Fred, I am a little bird
     return Cost(0, 0)
 
 @memoize
 def mle(N, K):
-    return Cost(K*V, 2*K*V) + opt_alpha(N, K)   #TODO
+    return Cost(K*V, 2*K*V) + opt_alpha(N, K)   #FIXME Fred, I am a little bird
 
 @memoize
 def likelihood(N, K):
-    return Cost((K + 1) * digamma(N, K).simple + 3 * log_gamma(N, K).simple + 6*K*D + 10*K + 4, \
-            (K + 1) * digamma(N, K).heavy + 3 * log_gamma(N, K).heavy)
+    return K * digamma(N, K) + Cost(adds=K) + digamma + Cost(adds=2, muls=2) + 3 * log_gamma(N, K) + \
+            K * Cost(adds=7, muls=2) + K * D * 6 * Cost(adds=4, muls=2, logs=1)
+    #return Cost((K + 1) * digamma(N, K).simple + 3 * log_gamma(N, K).simple + 6*K*D + 10*K + 4, \
+    #        (K + 1) * digamma(N, K).heavy + 3 * log_gamma(N, K).heavy)
 
 @memoize
 def lda_inference(N, K):
-    return Cost(K * digamma(N, K).simple + K + iters["INFERENCE_CONVERGE"] * (D * K * (digamma(N, K).simple + log_sum(N, K).simple + 5)) \
-                    + likelihood(N, K).simple + 2,  \
-            K + K * digamma(N, K).heavy + K*D + iters["INFERENCE_CONVERGE"] * (D * K * (digamma(N, K).heavy + log_sum(N, K).heavy + 1)))
-    #return Cost (24*K + iters["INFERENCE_CONVERGE"]*(38*K*D + 33*K + 104), \
-    #        K*D + 10*K + iters["INFERENCE_CONVERGE"]*(14*K*D + 9*K + 36))
+    return K * Cost(adds=1, divs=1) + K * digamma(N, K) + K * D * (divs=1) + \
+        iters["INFERENCE_CONVERGE"] * (D * K * (digamma(N, K) + Cost(adds=4, muls=1, exps=1) + log_sum(N, K)) + \
+            likelihood(N, K) + Cost(adds=2))
+    #return Cost(K * digamma(N, K).simple + K + iters["INFERENCE_CONVERGE"] * (D * K * (digamma(N, K).simple + log_sum(N, K).simple + 5)) \
+    #                + likelihood(N, K).simple + 2,  \
+    #        K + K * digamma(N, K).heavy + K*D + iters["INFERENCE_CONVERGE"] * (D * K * (digamma(N, K).heavy + log_sum(N, K).heavy + 1)))
 
 @memoize
 def doc_e_step(N, K):
-    return Cost(lda_inference(N, K).simple + digamma(N, K).simple + 4*K*N + 2*K + 3, \
-            lda_inference(N, K).heavy + digamma(N, K).heavy)
-    #return Cost(4*K*N + 26*K + 26 + lda_inf)
+    return lda_inference(N, K) + K * Cost(adds=2) + Cost(adds=1, muls=1) + digamma(N, K) + K * N * Cost(adds=2, muls=2)
+    #return Cost(lda_inference(N, K).simple + digamma(N, K).simple + 4*K*N + 2*K + 3, \
+    #        lda_inference(N, K).heavy + digamma(N, K).heavy)
 
 @memoize
 def run_em(N, K):
-    return Cost(random_initialize_ss(N, K).simple + mle(N, K).simple +  \
-        + iters["EM_CONVERGE"] * (N * doc_e_step(N, K).simple + N + mle(N, K).simple + 2 + \
-                                     N * lda_inference(N, K).simple), \
-                random_initialize_ss(N, K).heavy + mle(N, K).heavy +  \
-        + iters["EM_CONVERGE"] * (N * doc_e_step(N, K).heavy + mle(N, K).heavy + 1 + \
-                                     N * lda_inference(N, K).heavy))
+    return random_initialize_ss(N, K) + mle(N, K) + iters["EM_CONVERGE"] * (N * doc_e_step(N, K) + Cost(adds=N) + \
+            mle(N, K) + Cost(adds=1, muls=1, divs=1) + N * lda_inference(N, K))
+    #return Cost(random_initialize_ss(N, K).simple + mle(N, K).simple +  \
+    #    + iters["EM_CONVERGE"] * (N * doc_e_step(N, K).simple + N + mle(N, K).simple + 2 + \
+    #                                 N * lda_inference(N, K).simple), \
+    #            random_initialize_ss(N, K).heavy + mle(N, K).heavy +  \
+    #    + iters["EM_CONVERGE"] * (N * doc_e_step(N, K).heavy + mle(N, K).heavy + 1 + \
+    #                                 N * lda_inference(N, K).heavy))
 
 flops = { "RUN_EM" : run_em, "LDA_INFERENCE" : lda_inference, "DIGAMMA" : digamma, "LOG_SUM" : log_sum,
         "LOG_GAMMA" : log_gamma, "DOC_E_STEP" : doc_e_step, "LIKELIHOOD" : likelihood, "MLE" : mle, "OPT_ALPHA" : opt_alpha}
