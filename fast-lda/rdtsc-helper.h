@@ -6,7 +6,7 @@
 // #define IGNORE_PRINTF
 
 #ifdef IGNORE_PRINTF
-    #define printf(fmt, ...)  (void)
+    #define printf(fmt, ...)
 #endif
 
 // #define DOUBLE
@@ -34,6 +34,7 @@ enum accumulator_ids{
     DIGAMMA,
     LOG_SUM,
     LOG_GAMMA,
+    TRIGAMMA,
     DOC_E_STEP,
     LIKELIHOOD,
     MLE,

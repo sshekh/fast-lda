@@ -38,6 +38,8 @@ fp_t trigamma(fp_t x)
     fp_t p;
     int i;
 
+    timer t = start_timer(TRIGAMMA);
+
     x=x+6;
     p=1/(x*x);
     p=(((((0.075757575757576*p-0.033333333333333)*p+0.0238095238095238)
@@ -47,6 +49,9 @@ fp_t trigamma(fp_t x)
         x=x-1;
         p=1/(x*x)+p;
     }
+
+    stop_timer(t);
+
     return(p);
 }
 
