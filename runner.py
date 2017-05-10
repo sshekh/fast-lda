@@ -30,6 +30,10 @@ TIMING_FILENAME = '%s_timings_%d_%d.csv'
 
 RUN_NAME = None
 
+def quit_on_fail(i):
+    if i != 0:
+        sys.exit()
+
 def run_lda(which, k, n):
     params = ['./%s-lda/lda' % which,           # Executable location
             'est',                              # Execution mode (always est)
@@ -38,12 +42,12 @@ def run_lda(which, k, n):
             str(k),                             # Number of topics
             './%s-lda/settings.txt' % which,    # Settings location
             './%s-lda/ap/ap.dat' % which,       # Documents location
-            'random',                           # Initialization method
+            'random',                           # Initialization method (only random)
             LDA_EXE_LOG % which]                # Output directory
 
     print(Fore.LIGHTGREEN_EX)
     print(' ========== ')
-    subprocess.call(params)
+    quit_on_fail(subprocess.call(params))
     print(' ========== ')
     print(Style.RESET_ALL)
 
@@ -213,8 +217,8 @@ if __name__ == '__main__':
     if do_make:
         print('Making the code...')
         print(Fore.LIGHTGREEN_EX)
-        os.system('cd fast-lda && make')
-        os.system('cd slow-lda && make')
+        quit_on_fail(os.system('cd fast-lda && make'))
+        quit_on_fail(os.system('cd slow-lda && make'))
         print(Style.RESET_ALL)
 
     if mode == 'gen':

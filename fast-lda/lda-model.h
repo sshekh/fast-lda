@@ -51,11 +51,6 @@ void save_lda_model(lda_model*, char*);
 lda_suffstats* new_lda_suffstats(lda_model* model);
 
 /*
- * Initialize sufficient statistics from smoothed corpus information.
- *
- */
-void corpus_initialize_ss(lda_suffstats* ss, lda_model* model, corpus* c);
-/*
  * Initialize sufficient statistics randomly.
  *
  */

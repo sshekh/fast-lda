@@ -53,7 +53,7 @@ fp_t doc_e_step(document* doc, fp_t* gamma, fp_t** phi,
         for (k = 0; k < model->num_topics; k++)
         {
             // <BG> non-sequential matrix access
-            ss->class_word[k][doc->words[n]] += doc->counts[n]*phi[n][k];
+            ss->class_word[doc->words[n] * model->num_topics + k] += doc->counts[n]*phi[n][k];
             ss->class_total[k] += doc->counts[n]*phi[n][k];
         }
     }
@@ -77,27 +77,19 @@ void run_em(char* start, char* directory, corpus* corpus)
     // Gamma variational parameter for each doc and for each topic.
     var_gamma = malloc(sizeof(fp_t*)*(corpus->num_docs));
     for (d = 0; d < corpus->num_docs; d++)
-	var_gamma[d] = malloc(sizeof(fp_t) * NTOPICS);
+        var_gamma[d] = malloc(sizeof(fp_t) * NTOPICS);
 
     // Phi variational parameter for each term in the vocabulary and for each topic.
     int max_length = max_corpus_length(corpus);
     phi = malloc(sizeof(fp_t*)*max_length);
     for (n = 0; n < max_length; n++)
-	phi[n] = malloc(sizeof(fp_t) * NTOPICS);
+        phi[n] = malloc(sizeof(fp_t) * NTOPICS);
 
     // initialize model
     char filename[1000];
 
     lda_suffstats* ss = NULL;
-    if (strcmp(start, "seeded")==0)
-    {
-        model = new_lda_model(corpus->num_terms, NTOPICS);
-        ss = new_lda_suffstats(model);
-        corpus_initialize_ss(ss, model, corpus);
-        lda_mle(model, ss, 0);
-        model->alpha = INITIAL_ALPHA;
-    }
-    else if (strcmp(start, "random")==0)
+    if (strcmp(start, "random")==0)
     {
         printf("Init model\n");
         model = new_lda_model(corpus->num_terms, NTOPICS);
