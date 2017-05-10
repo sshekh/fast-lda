@@ -1,0 +1,29 @@
+Optimizations
+
+1. We have two large matrices: model->log_prob_w[K][V] and ss->class_word[K][V].
+	V = 10000
+	K = 50
+	There are two problems:
+		- they will not fit in the cache
+		- the access pattern is jumping on V which is large thus incurring many cache misses.
+	The good thing is that for every iteration we do not access all word in the vocabulary V.
+	Thus if we transpose the matrices to be [V][K] then for one work we load in the cacheline
+	values for 8 topics which gains 7 hits.
+
+	Given that this happens for each document we can compare the secnarios given 
+	that the document length is D:
+		model->log_prob_w accesses: K * D (compute_likelihood)
+									K * D (lda_inference)
+									until convergence
+									= CONVERGE_INFER * 2 * K * D
+
+		ss->class_word[K][V] accesses: K * D (doc-e-step)
+
+		until CONVERGE_EM
+
+		=> total accesses = CONVERGE_EM * (K * D * ( 2 * CONVERGE_INFER + 1))
+
+	1) [K][V] miss ratio = 100%
+
+	2) [V][K] miss ratio ~ 1/8 = 12.5%	 
+

@@ -8,7 +8,7 @@
 #include "lda.h"
 #include "utils.h"
 
-#define NEWTON_THRESH 1e-5
+#define NEWTON_THRESH 1e-3
 #define MAX_ALPHA_ITER 1000
 
 fp_t alhood(fp_t a, fp_t ss, int D, int K);
