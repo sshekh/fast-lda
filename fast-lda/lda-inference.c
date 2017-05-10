@@ -20,7 +20,7 @@
 #include "lda-inference.h"
 #include "rdtsc-helper.h"
 
-fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t** phi)
+fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
 {
 
     fp_t converged = 1;
@@ -39,7 +39,7 @@ fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t** phi)
         digamma_gam[k] = digamma(var_gamma[k]);
         for (n = 0; n < doc->length; n++)
             // <BG> Non-sequential access
-            phi[n][k] = 1.0/model->num_topics;
+            phi[n * model->num_topics + k] = 1.0/model->num_topics;
     }
     var_iter = 0;
 
@@ -53,24 +53,24 @@ fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t** phi)
             phisum = 0;
             for (k = 0; k < model->num_topics; k++)
             {
-                oldphi[k] = phi[n][k];
+                oldphi[k] = phi[n * model->num_topics + k];
                 // Eq (16)
 
                 // <BG> Non-sequential access
-                phi[n][k] = digamma_gam[k] + model->log_prob_w[doc->words[n] * model->num_topics + k];
+                phi[n * model->num_topics + k] = digamma_gam[k] + model->log_prob_w[doc->words[n] * model->num_topics + k];
 
                 if (k > 0)
-                    phisum = log_sum(phisum, phi[n][k]);
+                    phisum = log_sum(phisum, phi[n * model->num_topics + k]);
                 else
-                    phisum = phi[n][k]; // note, phi is in log space
+                    phisum = phi[n * model->num_topics + k]; // note, phi is in log space
             }
 
             //Update equation (17) for variational gamma for each topic
             for (k = 0; k < model->num_topics; k++)
             {
                 // Write the final value of the update for phi.
-                phi[n][k] = exp(phi[n][k] - phisum);
-                var_gamma[k] = var_gamma[k] + doc->counts[n]*(phi[n][k] - oldphi[k]);
+                phi[n * model->num_topics + k] = exp(phi[n * model->num_topics + k] - phisum);
+                var_gamma[k] = var_gamma[k] + doc->counts[n]*(phi[n * model->num_topics + k] - oldphi[k]);
                 // !!! a lot of extra digamma's here because of how we're computing it
                 // !!! but its more automatically updated too.
                 digamma_gam[k] = digamma(var_gamma[k]);
@@ -93,7 +93,7 @@ fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t** phi)
     return likelihood;
 }
 
-fp_t compute_likelihood(document* doc, lda_model* model, fp_t** phi, fp_t* var_gamma)
+fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_gamma)
 {
     fp_t likelihood = 0, digsum = 0, var_gamma_sum = 0, dig[model->num_topics];
     int k, n;
@@ -123,10 +123,10 @@ fp_t compute_likelihood(document* doc, lda_model* model, fp_t** phi, fp_t* var_g
         for (n = 0; n < doc->length; n++)
         {
             // <BG> Non-sequential access
-            if (phi[n][k] > 0)
+            if (phi[n * model->num_topics + k] > 0)
             {
                 likelihood += doc->counts[n]*
-                (phi[n][k]*((dig[k] - digsum) - log(phi[n][k])
+                (phi[n * model->num_topics + k]*((dig[k] - digsum) - log(phi[n * model->num_topics + k])
                     + model->log_prob_w[doc->words[n] * model->num_topics + k]));
             }
         }

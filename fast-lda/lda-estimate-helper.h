@@ -18,7 +18,7 @@ void save_gamma(char* filename, fp_t** gamma, int num_docs, int num_topics);
  * Writes the word assignments line for a document to a file
  *
  */
-void write_word_assignment(FILE* f, document* doc, fp_t** phi, lda_model* model);
+void write_word_assignment(FILE* f, document* doc, fp_t* phi, lda_model* model);
 
 /*
  * Computes teh maximum length of a document in the corpus.

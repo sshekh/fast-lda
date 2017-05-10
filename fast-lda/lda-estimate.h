@@ -32,7 +32,7 @@ int NTOPICS;
  */
 fp_t doc_e_step(document* doc,
                   fp_t* gamma,
-                  fp_t** phi,
+                  fp_t* phi,
                   lda_model* model,
                   lda_suffstats* ss);
 
