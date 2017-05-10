@@ -4,6 +4,28 @@ Where;
     V is the size of the vocabulary
     D is the length of a document
 
+
+LDA_MLE
+
+    N * K * (
+        2       (1-, 1+)
+      + 2       (log)
+    )
+
+OPT_ALPHA
+
+    Note: ignoring the isnan condition since that hasn't been shown to appear.
+
+    ALPHA_CONVERGE * (
+        exp
+      + 7 + 2 * lgamma   (alhood: 4*, 3+)
+      + 6 + 2 * digamma  (d_alhood: 4*, 2+)
+      + 6 + 2 * trigamma (d2_alhood: 5*, 1+)
+      + 4                (1*, 1/, 2+)
+      + fabs
+    )
+    + exp
+
 LIKELIHOOD
 
         K * digamma
@@ -26,7 +48,7 @@ LOG_GAMMA
       28FLOPS + 7 * LOG(X) ~ 35 FLOPS
 
 LDA_INFERENCE
-      K * 2         (+,/)    
+      K * 2         (+,/)
     + K * digamma
     + K * D         (/)
 
@@ -53,11 +75,11 @@ DOC_E_STEP
 
 
 RUN_EM
-      random_initialize_ss  
+      random_initialize_ss
     + lda_mle
-    + var_iter *  
+    + var_iter *
         N * doc_e_step
-        N             (1+)  
+        N             (1+)
         lda_mle
         2             (1+, 1/)
         1             (1*)

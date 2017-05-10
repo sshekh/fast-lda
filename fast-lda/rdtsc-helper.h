@@ -34,6 +34,7 @@ enum accumulator_ids{
     DIGAMMA,
     LOG_SUM,
     LOG_GAMMA,
+    TRIGAMMA,
     DOC_E_STEP,
     LIKELIHOOD,
     MLE,

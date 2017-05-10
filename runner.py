@@ -113,13 +113,7 @@ def test(k, n):
     else:
         print('Test %d %d ran successfully' % (k, n))
 
-def bench(k, n, fast, slow):
-    which = []
-
-    if fast:
-        which.append('fast')
-    if slow:
-        which.append('slow')
+def bench(k, n, which):
 
     print('Benchmarking %s k=%d n=%d' % (str(which), k, n))
     for lda in which:
@@ -156,8 +150,8 @@ def usage_and_quit():
     print('Benchmark timings are available in the folder `%s`' % TIMING_FOLDER)
     print('Other options:')
     print('')
-    print('\t-m: Do not run make before running a task')
-    print('\t-v: When benchmarking, also validate before')
+    print('\t-m: Do not run make before running a task. Ignored in bench mode.')
+    print('\t-v: When benchmarking, also validate before.')
 
     sys.exit()
 
@@ -216,7 +210,7 @@ if __name__ == '__main__':
             validate_when_benching = True
 
 
-    if do_make:
+    if do_make and mode != 'bench':
         print('Making the code...')
         print(Fore.LIGHTGREEN_EX)
         quit_on_fail(os.system('cd fast-lda && make'))
@@ -228,7 +222,20 @@ if __name__ == '__main__':
     elif mode == 'test':
         fn = test
     elif mode == 'bench':
-        fn = lambda x, y: bench(x, y, do_fast, do_slow)
+
+        which = []
+
+        if do_fast:
+            print('Preparing the fast...')
+            quit_on_fail(os.system('cd fast-lda && make clean && make XCFLAGS=-DIGNORE_PRINTF'))
+            which.append('fast')
+        if do_slow:
+            print('Preparing the slow...')
+            quit_on_fail(os.system('cd slow-lda && make clean && make XCFLAGS=-DIGNORE_PRINTF'))
+            which.append('slow')
+
+
+        fn = lambda x, y: bench(x, y, which)
 
         if validate_when_benching:
             print('First validating on a small input...')
