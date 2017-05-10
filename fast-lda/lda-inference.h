@@ -15,14 +15,14 @@ int VAR_MAX_ITER;
  * The optimizing values of the gamma and phi variational parameters
  * are found by minimizing KL divergence between the variational
  * distribution and the true posterior p(theta, z | w, alpha, beta).
- * 
+ *
  */
-double lda_inference(document*, lda_model*, double*, double**);
+fp_t lda_inference(document*, lda_model*, fp_t*, fp_t**);
 
 /*
  * Compute the log likelihood bound with respect to the variational
  * parameters gamma and phi.
  */
-double compute_likelihood(document*, lda_model*, double**, double*);
+fp_t compute_likelihood(document*, lda_model*, fp_t**, fp_t*);
 
 #endif

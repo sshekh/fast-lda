@@ -15,13 +15,13 @@
 #include "cokus.h"
 
 /*
- * The LDA parameter estimation functionality. 
+ * The LDA parameter estimation functionality.
  */
 
 float EM_CONVERGED;
 int EM_MAX_ITER;
 int ESTIMATE_ALPHA;
-double INITIAL_ALPHA;
+fp_t INITIAL_ALPHA;
 int NTOPICS;
 
 /*
@@ -30,9 +30,9 @@ int NTOPICS;
  * to the variational parameters gamma and phi. Performing the updates
  * in equations (16) and (17).
  */
-double doc_e_step(document* doc,
-                  double* gamma,
-                  double** phi,
+fp_t doc_e_step(document* doc,
+                  fp_t* gamma,
+                  fp_t** phi,
                   lda_model* model,
                   lda_suffstats* ss);
 

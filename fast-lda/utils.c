@@ -6,11 +6,11 @@
  *
  */
 
-double log_sum(double log_a, double log_b)
+fp_t log_sum(fp_t log_a, fp_t log_b)
 {
   timer rdtsc = start_timer(LOG_SUM);
 
-  double v;
+  fp_t v;
   if (log_a < log_b)
   {
       v = log_b+log(1 + exp(log_a-log_b));
@@ -33,9 +33,9 @@ double log_sum(double log_a, double log_b)
    *
    **/
 
-double trigamma(double x)
+fp_t trigamma(fp_t x)
 {
-    double p;
+    fp_t p;
     int i;
 
     x=x+6;
@@ -56,11 +56,11 @@ double trigamma(double x)
  *
  */
 
-double digamma(double x)
+fp_t digamma(fp_t x)
 {
     timer rdtsc = start_timer(DIGAMMA);
 
-    double p;
+    fp_t p;
     x=x+6;
     p=1/(x*x);
     p=(((0.004166666666667*p-0.003968253986254)*p+
@@ -72,11 +72,11 @@ double digamma(double x)
 }
 
 
-double log_gamma(double x)
+fp_t log_gamma(fp_t x)
 {
     timer rdtsc = start_timer(LOG_GAMMA);
-    
-     double z=1/(x*x);
+
+     fp_t z=1/(x*x);
 
     x=x+6;
     z=(((-0.000595238095238*z+0.000793650793651)
@@ -106,10 +106,10 @@ void make_directory(char* name)
  *
  */
 
-int argmax(double* x, int n)
+int argmax(fp_t* x, int n)
 {
     int i;
-    double max = x[0];
+    fp_t max = x[0];
     int argmax = 0;
     for (i = 1; i < n; i++)
     {

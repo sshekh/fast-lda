@@ -18,7 +18,7 @@
 // USA
 
 /*
- * Implemetation of functionality for LDA model construction and MLE. 
+ * Implemetation of functionality for LDA model construction and MLE.
 
  */
 #include "lda-model.h"
@@ -62,10 +62,10 @@ lda_model* new_lda_model(int num_terms, int num_topics)
     model->num_topics = num_topics;
     model->num_terms = num_terms;
     model->alpha = 1.0;
-    model->log_prob_w = malloc(sizeof(double*)*num_topics);
+    model->log_prob_w = malloc(sizeof(fp_t*)*num_topics);
     for (i = 0; i < num_topics; i++)
     {
-       model->log_prob_w[i] = malloc(sizeof(double)*num_terms);
+       model->log_prob_w[i] = malloc(sizeof(fp_t)*num_terms);
        for (j = 0; j < num_terms; j++)
            model->log_prob_w[i][j] = 0;
    }
@@ -152,12 +152,12 @@ lda_suffstats* new_lda_suffstats(lda_model* model)
     int i,j;
 
     lda_suffstats* ss = malloc(sizeof(lda_suffstats));
-    ss->class_total = malloc(sizeof(double)*num_topics);
-    ss->class_word = malloc(sizeof(double*)*num_topics);
+    ss->class_total = malloc(sizeof(fp_t)*num_topics);
+    ss->class_word = malloc(sizeof(fp_t*)*num_topics);
     for (i = 0; i < num_topics; i++)
     {
        ss->class_total[i] = 0;
-       ss->class_word[i] = malloc(sizeof(double)*num_terms);
+       ss->class_word[i] = malloc(sizeof(fp_t)*num_terms);
        for (j = 0; j < num_terms; j++)
        {
            ss->class_word[i][j] = 0;

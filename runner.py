@@ -74,7 +74,7 @@ def generate(k, n):
         return
 
     run_lda('slow', k, n)
-    os.renames(LDA_OUT_BETA, dst)
+    os.renames(LDA_OUT_BETA % 'slow', dst)
 
 
 def test(k, n):
@@ -95,7 +95,7 @@ def test(k, n):
     run_lda('fast', k, n)
 
     reference = open(which, 'r')
-    created = open(LDA_OUT_BETA, 'r')
+    created = open(LDA_OUT_BETA % 'fast', 'r')
 
     print('Comparing against the reference...')
     good = beta_comp.compare(reference, created)
