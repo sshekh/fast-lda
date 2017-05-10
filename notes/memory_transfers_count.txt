@@ -1,0 +1,76 @@
+Where;
+    K is the number of topics
+    N is the number of documents
+    V is the size of the vocabulary
+    D is the length of a document
+
+LIKELIHOOD
+      W dig           K / 8
+      R var_gamma     K / 8  
+      R phi           D * K / 8
+      R doc->counts   D / 8
+      R log_prob_w    D * K / 8
+  =  (2 * D * K + 2 * K + D) / 8    
+
+LDA_INFERENCE
+    W var_gamma         K / 8
+    W digamma_gam       K / 8
+    W phi               D * K / 8
+
+    CONVERGE_INFER 
+      W oldphi          K / 8
+      R phi             D * K / 8
+      R digamma_gam     K / 8
+      R log_prob_w      D * K / 8
+      R doc->words      D / 8
+      W phi             D * K / 8
+      W var_gamma       K / 8
+      R doc->counts     D / 8
+      W digamma_gam     K / 8
+
+      LIKELIHOOD
+
+  =  CONVERGE_INFER * LIKELIHOOD + CONVERGE_INFER * (3 * D * K + 4 * K + 2 * D) / 8 + (D * K + 2 * K) / 8 
+
+   
+DOC_E_STEP
+      LDA_INFERENCE
+      R gamma               K / 8  
+      R doc->words          D / 8 
+      R doc->counts         D / 8
+      R phi                 D * K/ 8
+      W ss->class_word      D * K / 8
+      W ss->class_total     K / 8
+
+  = LDA_INFERENCE + (2 * D * K  + 2 * D + 2 * K) / 8  
+
+
+RUN_EM
+    new_lda_model
+    random_initialize_ss  
+    lda_mle
+      
+    CONVERGE_EM *
+      zero_initialize_ss      
+      N * doc_e_step         
+      lda_mle
+
+  = NEW_LDA_MODEL + RANDOM_INITIALIZE_SS + (CONVERGE_EM + 1) * LDA_MLE + CONVERGE_EM * N * DOC_E_STEP + CONVERGE_EM * ZERO_INITIALISE_SS   
+
+LDA_MLE
+    R ss->class_word        V * K / 8 
+    W model->log_prob_w     V * K / 8
+    R ss->class_word        V * K / 8
+    R ss->class_total       K / 8 
+
+RANDOM_INITIALIZE_SS
+    ss->class_word        V * K / 8 
+    ss->class_total       K / 8
+
+NEW_LDA_MODEL
+    log_prob_w            V * K / 8 
+
+ZERO_INITIALISE_SS     
+        W ss->class_total     K / 8 
+        W ss->class_word      V * K / 8   
+
