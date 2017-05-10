@@ -62,7 +62,7 @@ lda_model* new_lda_model(int num_terms, int num_topics)
     model->num_topics = num_topics;
     model->num_terms = num_terms;
     model->alpha = 1.0;
-    model->log_prob_w = malloc(sizeof(fp_t*)*num_topics);
+    model->log_prob_w = malloc(sizeof(fp_t*)* num_terms * num_topics);
     for (i = 0; i < num_topics; i++)
     {
        for (j = 0; j < num_topics; j++)
@@ -74,13 +74,7 @@ lda_model* new_lda_model(int num_terms, int num_topics)
 
 void free_lda_model(lda_model* model)
 {
-    int i;
-
-    for (i = 0; i < model->num_topics; i++)
-    {
-       free(model->log_prob_w[i]);
-   }
-   free(model->log_prob_w);
+    free(model->log_prob_w);
 }
 
 
