@@ -1,6 +1,6 @@
 Optimizations
 
-1. We have two large matrices: model->log_prob_w[K][V] and ss->class_word[K][V].
+1. Done - We have two large matrices: model->log_prob_w[K][V] and ss->class_word[K][V].
 	V = 10000
 	K = 50
 	There are two problems:
@@ -26,4 +26,10 @@ Optimizations
 	1) [K][V] miss ratio = 100%
 
 	2) [V][K] miss ratio ~ 1/8 = 12.5%	 
+
+	Actual improvements: TO DO
+
+2. TO DO: Save the matrices model->log_prob_w[K][V] and ss->class_word[K][V] for one document
+	for the reiteration because we jump through 10000 words and we might replace things
+	in the L1 cache which we could avoid.
 
