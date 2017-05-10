@@ -17,12 +17,12 @@ int VAR_MAX_ITER;
  * distribution and the true posterior p(theta, z | w, alpha, beta).
  *
  */
-fp_t lda_inference(document*, lda_model*, fp_t*, fp_t**);
+fp_t lda_inference(document*, lda_model*, fp_t*, fp_t*);
 
 /*
  * Compute the log likelihood bound with respect to the variational
  * parameters gamma and phi.
  */
-fp_t compute_likelihood(document*, lda_model*, fp_t**, fp_t*);
+fp_t compute_likelihood(document*, lda_model*, fp_t*, fp_t*);
 
 #endif

@@ -22,7 +22,7 @@ void save_gamma(char* filename, fp_t** gamma, int num_docs, int num_topics)
     fclose(fileptr);
 }
 
-void write_word_assignment(FILE* f, document* doc, fp_t** phi, lda_model* model)
+void write_word_assignment(FILE* f, document* doc, fp_t* phi, lda_model* model)
 {
     int n;
 
@@ -30,7 +30,7 @@ void write_word_assignment(FILE* f, document* doc, fp_t** phi, lda_model* model)
     for (n = 0; n < doc->length; n++)
     {
         fprintf(f, " %04d:%02d",
-                doc->words[n], argmax(phi[n], model->num_topics));
+                doc->words[n], argmax(phi + (n * model->num_topics), model->num_topics));
     }
     fprintf(f, "\n");
     fflush(f);
