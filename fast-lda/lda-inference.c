@@ -38,6 +38,7 @@ double lda_inference(document* doc, lda_model* model, double* var_gamma, double*
         var_gamma[k] = model->alpha + (doc->total/((double) model->num_topics));
         digamma_gam[k] = digamma(var_gamma[k]);
         for (n = 0; n < doc->length; n++)
+            // <BG> Non-sequential access
             phi[n][k] = 1.0/model->num_topics;
     }
     var_iter = 0;
@@ -54,6 +55,8 @@ double lda_inference(document* doc, lda_model* model, double* var_gamma, double*
             {
                 oldphi[k] = phi[n][k];
                 // Eq (16)
+                
+                // <BG> Non-sequential access
                 phi[n][k] = digamma_gam[k] + model->log_prob_w[k][doc->words[n]];
 
                 if (k > 0)
@@ -119,6 +122,7 @@ double compute_likelihood(document* doc, lda_model* model, double** phi, double*
 
         for (n = 0; n < doc->length; n++)
         {
+            // <BG> Non-sequential access
             if (phi[n][k] > 0)
             {
                 likelihood += doc->counts[n]*
