@@ -18,6 +18,7 @@
 // USA
 
 #include "lda-model.h"
+#include "../fast-lda/rdtsc-helper.h"
 
 /*
  * compute MLE lda model from sufficient statistics
@@ -27,6 +28,8 @@
 void lda_mle(lda_model* model, lda_suffstats* ss, int estimate_alpha)
 {
     int k; int w;
+
+    timer t = start_timer(MLE);
 
     for (k = 0; k < model->num_topics; k++)
     {
@@ -50,6 +53,8 @@ void lda_mle(lda_model* model, lda_suffstats* ss, int estimate_alpha)
 
         printf("new alpha = %5.5f\n", model->alpha);
     }
+
+    stop_timer(t);
 }
 
 /*

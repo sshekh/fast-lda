@@ -29,6 +29,8 @@ void lda_mle(lda_model* model, lda_suffstats* ss, int estimate_alpha)
 {
     int k; int w;
 
+    timer t = start_timer(MLE);
+
     for (w = 0; w < model->num_terms; w++)
     {
         for (k = 0; k < model->num_topics; k++)
@@ -43,6 +45,8 @@ void lda_mle(lda_model* model, lda_suffstats* ss, int estimate_alpha)
                 model->log_prob_w[w * model->num_topics + k] = -100;
         }
     }
+
+
     if (estimate_alpha == 1)
     {
         model->alpha = opt_alpha(ss->alpha_suffstats,
@@ -51,6 +55,8 @@ void lda_mle(lda_model* model, lda_suffstats* ss, int estimate_alpha)
 
         printf("new alpha = %5.5f\n", model->alpha);
     }
+
+    stop_timer(t);
 }
 
 lda_model* new_lda_model(int num_terms, int num_topics)

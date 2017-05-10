@@ -142,17 +142,6 @@ void run_em(char* start, char* directory, corpus* corpus)
         converged = (likelihood_old - likelihood) / (likelihood_old);
         if (converged < 0) VAR_MAX_ITER = VAR_MAX_ITER * 2;
         likelihood_old = likelihood;
-
-        // output model and likelihood
-        fprintf(likelihood_file, "%10.10f\t%5.5e\n", likelihood, converged);
-        fflush(likelihood_file);
-        if ((var_iter % LAG) == 0)
-        {
-            sprintf(filename,"%s/%03d",directory, var_iter);
-            save_lda_model(model, filename);
-            sprintf(filename,"%s/%03d.gamma",directory, var_iter);
-            save_gamma(filename, var_gamma, corpus->num_docs, model->num_topics);
-        }
     }
 
     stop_timer(rdtsc);

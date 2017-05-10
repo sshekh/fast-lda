@@ -46,6 +46,8 @@ fp_t opt_alpha(fp_t ss, int D, int K)
     fp_t f, df, d2f;
     int iter = 0;
 
+    timer t = start_timer(OPT_ALPHA);
+
     log_a = log(init_a);
     do
     {
@@ -65,5 +67,12 @@ fp_t opt_alpha(fp_t ss, int D, int K)
         printf("alpha maximization : %5.5f   %5.5f\n", f, df);
     }
     while ((fabs(df) > NEWTON_THRESH) && (iter < MAX_ALPHA_ITER));
-    return(exp(log_a));
+
+    a = exp(log_a);
+
+    stop_timer(t);
+    timing_infrastructure[ALPHA_CONVERGE].counter++;
+    timing_infrastructure[ALPHA_CONVERGE].sum += iter;
+
+    return(a);
 }
