@@ -68,7 +68,7 @@ fp_t doc_e_step(document* doc, fp_t* gamma, fp_t** phi,
 
 void run_em(char* start, char* directory, corpus* corpus)
 {
-
+    printf("start em\n");
     int d, n;
     lda_model *model = NULL;
     // Variational parameters
@@ -91,6 +91,7 @@ void run_em(char* start, char* directory, corpus* corpus)
     lda_suffstats* ss = NULL;
     if (strcmp(start, "random")==0)
     {
+        printf("Init model\n");
         model = new_lda_model(corpus->num_terms, NTOPICS);
         ss = new_lda_suffstats(model);
         random_initialize_ss(ss, model);

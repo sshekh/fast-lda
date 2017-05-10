@@ -57,7 +57,7 @@ fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t** phi)
                 // Eq (16)
 
                 // <BG> Non-sequential access
-                phi[n][k] = digamma_gam[k] + model->log_prob_w[k][doc->words[n]];
+                phi[n][k] = digamma_gam[k] + model->log_prob_w[doc->words[n] * model->num_topics + k];
 
                 if (k > 0)
                     phisum = log_sum(phisum, phi[n][k]);
@@ -119,15 +119,19 @@ fp_t compute_likelihood(document* doc, lda_model* model, fp_t** phi, fp_t* var_g
         likelihood += (model->alpha - 1)*(dig[k] - digsum)
                     + lgamma(var_gamma[k])
                     - (var_gamma[k] - 1)*(dig[k] - digsum);
+    }
 
-        for (n = 0; n < doc->length; n++)
+    // <CC> Swapped loop to have the strided access to the transposed
+    for (n = 0; n < doc->length; n++)
+    {
+        for (k = 0; k < model->num_topics; k++)
         {
             // <BG> Non-sequential access
             if (phi[n][k] > 0)
             {
                 likelihood += doc->counts[n]*
                 (phi[n][k]*((dig[k] - digsum) - log(phi[n][k])
-                    + model->log_prob_w[k][doc->words[n]]));
+                    + model->log_prob_w[doc->words[n] * model->num_topics + k]));
             }
         }
     }
