@@ -117,8 +117,12 @@ def bench(k, n, fast, slow):
     which = []
 
     if fast:
+        print('Preparing the fast...')
+        quit_on_fail(os.system('cd fast-lda && make clean && make XCFLAGS=-DIGNORE_PRINTF'))
         which.append('fast')
     if slow:
+        print('Preparing the slow...')
+        quit_on_fail(os.system('cd slow-lda && make clean && make XCFLAGS=-DIGNORE_PRINTF'))
         which.append('slow')
 
     print('Benchmarking %s k=%d n=%d' % (str(which), k, n))
@@ -156,8 +160,8 @@ def usage_and_quit():
     print('Benchmark timings are available in the folder `%s`' % TIMING_FOLDER)
     print('Other options:')
     print('')
-    print('\t-m: Do not run make before running a task')
-    print('\t-v: When benchmarking, also validate before')
+    print('\t-m: Do not run make before running a task. Ignored in bench mode.')
+    print('\t-v: When benchmarking, also validate before.')
 
     sys.exit()
 
@@ -216,7 +220,7 @@ if __name__ == '__main__':
             validate_when_benching = True
 
 
-    if do_make:
+    if do_make && mode != 'bench':
         print('Making the code...')
         print(Fore.LIGHTGREEN_EX)
         quit_on_fail(os.system('cd fast-lda && make'))
