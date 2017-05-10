@@ -5,4 +5,4 @@
 		point 4 - decribe validation
 		point 7 - performance plot decription
 
-8) Script for Automatic flop, memeory transfers counters which uses the caller/callee DAG.  
+8) Script for Automatic flop, memeory transfers counters which uses the caller/callee DAG. 
