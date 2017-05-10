@@ -113,17 +113,7 @@ def test(k, n):
     else:
         print('Test %d %d ran successfully' % (k, n))
 
-def bench(k, n, fast, slow):
-    which = []
-
-    if fast:
-        print('Preparing the fast...')
-        quit_on_fail(os.system('cd fast-lda && make clean && make XCFLAGS=-DIGNORE_PRINTF'))
-        which.append('fast')
-    if slow:
-        print('Preparing the slow...')
-        quit_on_fail(os.system('cd slow-lda && make clean && make XCFLAGS=-DIGNORE_PRINTF'))
-        which.append('slow')
+def bench(k, n, which):
 
     print('Benchmarking %s k=%d n=%d' % (str(which), k, n))
     for lda in which:
@@ -232,7 +222,20 @@ if __name__ == '__main__':
     elif mode == 'test':
         fn = test
     elif mode == 'bench':
-        fn = lambda x, y: bench(x, y, do_fast, do_slow)
+
+        which = []
+
+        if do_fast:
+            print('Preparing the fast...')
+            quit_on_fail(os.system('cd fast-lda && make clean && make XCFLAGS=-DIGNORE_PRINTF'))
+            which.append('fast')
+        if do_slow:
+            print('Preparing the slow...')
+            quit_on_fail(os.system('cd slow-lda && make clean && make XCFLAGS=-DIGNORE_PRINTF'))
+            which.append('slow')
+
+
+        fn = lambda x, y: bench(x, y, which)
 
         if validate_when_benching:
             print('First validating on a small input...')
