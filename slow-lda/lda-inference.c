@@ -83,6 +83,9 @@ double lda_inference(document* doc, lda_model* model, double* var_gamma, double*
 
     stop_timer(rdtsc);
 
+    timing_infrastructure[INFERENCE_CONVERGE].sum += var_iter;
+    timing_infrastructure[INFERENCE_CONVERGE].counter++;
+
     return(likelihood);
 }
 

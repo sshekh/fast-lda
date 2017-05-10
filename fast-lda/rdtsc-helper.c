@@ -2,7 +2,19 @@
 #include <stdio.h>
 
 accumulator timing_infrastructure[N_ACCUMULATORS];
-char* accumulator_names[] = {"RUN_EM", "LDA_INFERENCE", "DIGAMMA", "LOG_SUM", "LOG_GAMMA", "DOC_E_STEP", "LIKELIHOOD", "EM_CONVERGE", "INFERENCE_CONVERGE"};
+char* accumulator_names[] = {
+    "RUN_EM",
+    "LDA_INFERENCE",
+    "DIGAMMA",
+    "LOG_SUM",
+    "LOG_GAMMA",
+    "DOC_E_STEP",
+    "LIKELIHOOD",
+    "MLE",
+    "OPT_ALPHA",
+    "EM_CONVERGE",
+    "INFERENCE_CONVERGE",
+    "ALPHA_CONVERGE"};
 
 timer start_timer(int id){
     timer t;
