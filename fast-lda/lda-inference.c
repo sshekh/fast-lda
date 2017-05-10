@@ -119,8 +119,12 @@ fp_t compute_likelihood(document* doc, lda_model* model, fp_t** phi, fp_t* var_g
         likelihood += (model->alpha - 1)*(dig[k] - digsum)
                     + lgamma(var_gamma[k])
                     - (var_gamma[k] - 1)*(dig[k] - digsum);
+    }
 
-        for (n = 0; n < doc->length; n++)
+    // <CC> Swapped loop to have the strided access to the transposed
+    for (n = 0; n < doc->length; n++)
+    {
+        for (k = 0; k < model->num_topics; k++)
         {
             // <BG> Non-sequential access
             if (phi[n][k] > 0)
