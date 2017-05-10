@@ -137,8 +137,8 @@ def usage_and_quit():
         'or three separated by a comma (e.g. `--num-docs=50,100,10`. These\n' +
         'three numbers specify the start, end and step values. If a single\n' +
         'number is specified, only that value will be used.' )
-    print('\t--num-topics (default: 50)')
-    print('\t--num-docs (default: all documents)')
+    print('\t--num-topics / --k (default: 50)')
+    print('\t--num-docs / --n (default: all documents)')
     print('')
     print('Modes:')
     print('\tgen: Generate test data from the slow implementation')
@@ -156,7 +156,7 @@ def usage_and_quit():
     print('Benchmark timings are available in the folder `%s`' % TIMING_FOLDER)
     print('Other options:')
     print('')
-    print('\t-n: Do not run make before running a task')
+    print('\t-m: Do not run make before running a task')
     print('\t-v: When benchmarking, also validate before')
 
     sys.exit()
@@ -187,7 +187,7 @@ if __name__ == '__main__':
         if mode == 'bench':
             raise ValueError('When benchmarking, please include a comment.')
 
-    opts, args = getopt.gnu_getopt(options, "fs",
+    opts, args = getopt.gnu_getopt(options, "fsvmnk",
         ["num-topics=",
         "num-docs="])
 
@@ -200,15 +200,15 @@ if __name__ == '__main__':
     ns = [2246] # Maximal amount of documents
 
     for o, a in opts:
-        if o == '--num-topics':
+        if o == {'--num-topics', '--k'}:
             ks = list_from_range(a)
-        elif o == '--num-docs':
+        elif o in {'--num-docs', '--n'}:
             ns = list_from_range(a)
         elif o == '-f':
             do_fast = True
         elif o == '-s':
             do_slow = True
-        elif o == '-n':
+        elif o == '-m':
             do_make = False
         elif o == '-v':
             validate_when_benching = True
