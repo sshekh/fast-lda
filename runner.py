@@ -189,7 +189,9 @@ if __name__ == '__main__':
 
     opts, args = getopt.gnu_getopt(options, "fsvmnk",
         ["num-topics=",
-        "num-docs="])
+        "num-docs=",
+        "n=",
+        "k="])
 
     do_fast = False
     do_slow = False
