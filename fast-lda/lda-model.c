@@ -35,12 +35,13 @@ void lda_mle(lda_model* model, lda_suffstats* ss, int estimate_alpha)
         {
             if (ss->class_word[k][w] > 0)
             {
-                model->log_prob_w[k][w] =
+
+                model->log_prob_w[w * model->num_topics + k] =
                 log(ss->class_word[k][w]) -
                 log(ss->class_total[k]);
             }
             else
-                model->log_prob_w[k][w] = -100;
+                model->log_prob_w[w * model->num_topics + k] = -100;
         }
     }
     if (estimate_alpha == 1)
@@ -65,9 +66,8 @@ lda_model* new_lda_model(int num_terms, int num_topics)
     model->log_prob_w = malloc(sizeof(fp_t*)*num_topics);
     for (i = 0; i < num_topics; i++)
     {
-       model->log_prob_w[i] = malloc(sizeof(fp_t)*num_terms);
-       for (j = 0; j < num_terms; j++)
-           model->log_prob_w[i][j] = 0;
+       for (j = 0; j < num_topics; j++)
+           model->log_prob_w[i * num_topics + j] = 0;
    }
    return(model);
 }
@@ -97,7 +97,7 @@ void save_lda_model(lda_model* model, char* model_root)
     {
        for (j = 0; j < model->num_terms; j++)
        {
-           fprintf(fileptr, " %5.10f", model->log_prob_w[i][j]);
+           fprintf(fileptr, " %5.10f", model->log_prob_w[j * model->num_topics + i]);
        }
        fprintf(fileptr, "\n");
    }
@@ -138,7 +138,7 @@ lda_model* load_lda_model(char* model_root)
         for (j = 0; j < num_terms; j++)
         {
             fscanf(fileptr, "%f", &x);
-            model->log_prob_w[i][j] = x;
+            model->log_prob_w[j * num_topics + i] = x;
         }
     }
     fclose(fileptr);
