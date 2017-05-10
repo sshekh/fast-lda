@@ -220,7 +220,7 @@ if __name__ == '__main__':
             validate_when_benching = True
 
 
-    if do_make && mode != 'bench':
+    if do_make and mode != 'bench':
         print('Making the code...')
         print(Fore.LIGHTGREEN_EX)
         quit_on_fail(os.system('cd fast-lda && make'))
