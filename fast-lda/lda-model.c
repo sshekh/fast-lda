@@ -69,7 +69,7 @@ lda_model* new_lda_model(int num_terms, int num_topics)
     model->num_terms = num_terms;
     model->alpha = 1.0;
     model->log_prob_w = malloc(sizeof(fp_t*)* num_terms * num_topics);
-    for (i = 0; i < num_topics; i++)
+    for (i = 0; i < num_terms; i++)
     {
        for (j = 0; j < num_topics; j++)
            model->log_prob_w[i * num_topics + j] = 0;
