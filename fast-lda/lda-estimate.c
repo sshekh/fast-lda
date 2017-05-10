@@ -27,19 +27,19 @@
 
 #define LAG 5
 
-double doc_e_step(document* doc, double* gamma, double** phi,
+fp_t doc_e_step(document* doc, fp_t* gamma, fp_t** phi,
                   lda_model* model, lda_suffstats* ss)
 {
     timer rdtsc = start_timer(DOC_E_STEP);
 
-    double likelihood;
+    fp_t likelihood;
     int n, k;
 
     // Posterior variational inference.
     likelihood = lda_inference(doc, model, gamma, phi);
 
     // Update sufficient statistics.
-    double gamma_sum = 0;
+    fp_t gamma_sum = 0;
     for (k = 0; k < model->num_topics; k++)
     {
         gamma_sum += gamma[k];
@@ -51,7 +51,7 @@ double doc_e_step(document* doc, double* gamma, double** phi,
     for (n = 0; n < doc->length; n++)
     {
         for (k = 0; k < model->num_topics; k++)
-        {  
+        {
             // <BG> non-sequential matrix access
             ss->class_word[k][doc->words[n]] += doc->counts[n]*phi[n][k];
             ss->class_total[k] += doc->counts[n]*phi[n][k];
@@ -72,19 +72,18 @@ void run_em(char* start, char* directory, corpus* corpus)
     int d, n;
     lda_model *model = NULL;
     // Variational parameters
-    double **var_gamma, **phi;
+    fp_t **var_gamma, **phi;
 
     // Gamma variational parameter for each doc and for each topic.
-    var_gamma = malloc(sizeof(double*)*(corpus->num_docs));
+    var_gamma = malloc(sizeof(fp_t*)*(corpus->num_docs));
     for (d = 0; d < corpus->num_docs; d++)
-	var_gamma[d] = malloc(sizeof(double) * NTOPICS);
+	var_gamma[d] = malloc(sizeof(fp_t) * NTOPICS);
 
     // Phi variational parameter for each term in the vocabulary and for each topic.
     int max_length = max_corpus_length(corpus);
-    printf("Max doc length\t: %d\n",max_length);
-    phi = malloc(sizeof(double*)*max_length);
+    phi = malloc(sizeof(fp_t*)*max_length);
     for (n = 0; n < max_length; n++)
-	phi[n] = malloc(sizeof(double) * NTOPICS);
+	phi[n] = malloc(sizeof(fp_t) * NTOPICS);
 
     // initialize model
     char filename[1000];
@@ -118,7 +117,7 @@ void run_em(char* start, char* directory, corpus* corpus)
 
     // run expectation maximization
     int var_iter = 0;
-    double likelihood, likelihood_old = 0, converged = 1;
+    fp_t likelihood, likelihood_old = 0, converged = 1;
     sprintf(filename, "%s/likelihood.dat", directory);
     FILE* likelihood_file = fopen(filename, "w");
 

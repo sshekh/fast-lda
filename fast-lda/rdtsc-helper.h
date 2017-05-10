@@ -9,6 +9,13 @@
     #define printf(fmt, ...)  (void)
 #endif
 
+// #define DOUBLE
+#ifdef DOUBLE
+    #define fp_t double
+#else
+    #define fp_t float
+#endif
+
 #include "rdtsc.h"
 
 typedef struct timer{

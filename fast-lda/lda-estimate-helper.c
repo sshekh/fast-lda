@@ -4,7 +4,7 @@
 
 #include "lda-estimate-helper.h"
 
-void save_gamma(char* filename, double** gamma, int num_docs, int num_topics)
+void save_gamma(char* filename, fp_t** gamma, int num_docs, int num_topics)
 {
     FILE* fileptr;
     int d, k;
@@ -22,7 +22,7 @@ void save_gamma(char* filename, double** gamma, int num_docs, int num_topics)
     fclose(fileptr);
 }
 
-void write_word_assignment(FILE* f, document* doc, double** phi, lda_model* model)
+void write_word_assignment(FILE* f, document* doc, fp_t** phi, lda_model* model)
 {
     int n;
 
