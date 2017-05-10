@@ -8,6 +8,7 @@ char* accumulator_names[] = {
     "DIGAMMA",
     "LOG_SUM",
     "LOG_GAMMA",
+    "TRIGAMMA",
     "DOC_E_STEP",
     "LIKELIHOOD",
     "MLE",
