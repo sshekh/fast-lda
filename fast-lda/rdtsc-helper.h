@@ -6,7 +6,7 @@
 // #define IGNORE_PRINTF
 
 #ifdef IGNORE_PRINTF
-    #define printf(fmt, ...)  (void)
+    #define printf(fmt, ...)
 #endif
 
 // #define DOUBLE
