@@ -50,7 +50,7 @@ typedef struct
 
 typedef struct
 {
-    fp_t** class_word;
+    fp_t* class_word;
     fp_t* class_total;
     fp_t alpha_suffstats;
     int num_docs;

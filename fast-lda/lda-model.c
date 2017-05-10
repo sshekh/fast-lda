@@ -29,14 +29,14 @@ void lda_mle(lda_model* model, lda_suffstats* ss, int estimate_alpha)
 {
     int k; int w;
 
-    for (k = 0; k < model->num_topics; k++)
+    for (w = 0; w < model->num_terms; w++)
     {
-        for (w = 0; w < model->num_terms; w++)
+        for (k = 0; k < model->num_topics; k++)
         {
-            if (ss->class_word[k][w] > 0)
+            if (ss->class_word[w * model->num_topics + k] > 0)
             {
                 model->log_prob_w[k][w] =
-                log(ss->class_word[k][w]) -
+                log(ss->class_word[w * model->num_topics + k]) -
                 log(ss->class_total[k]);
             }
             else
@@ -69,7 +69,7 @@ lda_model* new_lda_model(int num_terms, int num_topics)
        for (j = 0; j < num_terms; j++)
            model->log_prob_w[i][j] = 0;
    }
-   return(model);
+   return model;
 }
 
 
@@ -149,32 +149,25 @@ lda_suffstats* new_lda_suffstats(lda_model* model)
 {
     int num_topics = model->num_topics;
     int num_terms = model->num_terms;
-    int i,j;
 
     lda_suffstats* ss = malloc(sizeof(lda_suffstats));
-    ss->class_total = malloc(sizeof(fp_t)*num_topics);
-    ss->class_word = malloc(sizeof(fp_t*)*num_topics);
-    for (i = 0; i < num_topics; i++)
-    {
-       ss->class_total[i] = 0;
-       ss->class_word[i] = malloc(sizeof(fp_t)*num_terms);
-       for (j = 0; j < num_terms; j++)
-       {
-           ss->class_word[i][j] = 0;
-       }
-   }
-   return(ss);
+    ss->class_total = calloc(num_topics, sizeof(fp_t));
+    ss->class_word = calloc(num_terms * num_topics, sizeof(fp_t));
+
+    printf("%d\n", num_terms * num_topics);
+
+    return ss;
 }
 
 void zero_initialize_ss(lda_suffstats* ss, lda_model* model)
 {
     int k, w;
-    for (k = 0; k < model->num_topics; k++)
+    for (w = 0; w < model->num_terms; w++)
     {
+        for (k = 0; k < model->num_topics; k++)
         ss->class_total[k] = 0;
-        for (w = 0; w < model->num_terms; w++)
         {
-            ss->class_word[k][w] = 0;
+            ss->class_word[w * model->num_topics + k] = 0;
         }
     }
     ss->num_docs = 0;
@@ -187,40 +180,12 @@ void random_initialize_ss(lda_suffstats* ss, lda_model* model)
     int num_topics = model->num_topics;
     int num_terms = model->num_terms;
     int k, n;
-    for (k = 0; k < num_topics; k++)
+    for (n = 0; n < num_terms; n++)
     {
-        for (n = 0; n < num_terms; n++)
+        for (k = 0; k < num_topics; k++)
         {
-            ss->class_word[k][n] += 1.0/num_terms + myrand();
-            ss->class_total[k] += ss->class_word[k][n];
+            ss->class_word[n * num_topics + k] += 1.0/num_terms + myrand();
+            ss->class_total[k] += ss->class_word[n * num_topics + k];
         }
     }
 }
-
-void corpus_initialize_ss(lda_suffstats* ss, lda_model* model, corpus* c)
-{
-    int num_topics = model->num_topics;
-    int i, k, d, n;
-    document* doc;
-
-    for (k = 0; k < num_topics; k++)
-    {
-        for (i = 0; i < NUM_INIT; i++)
-        {
-            d = floor(myrand() * c->num_docs);
-            printf("initialized with document %d\n", d);
-            doc = &(c->docs[d]);
-            for (n = 0; n < doc->length; n++)
-            {
-                ss->class_word[k][doc->words[n]] += doc->counts[n];
-            }
-        }
-        for (n = 0; n < model->num_terms; n++)
-        {
-            ss->class_word[k][n] += 1.0;
-            ss->class_total[k] = ss->class_total[k] + ss->class_word[k][n];
-        }
-    }
-}
-
-
