@@ -27,7 +27,7 @@
 
 #define LAG 5
 
-fp_t doc_e_step(document* doc, fp_t* gamma, fp_t** phi,
+fp_t doc_e_step(document* doc, fp_t* gamma, fp_t* phi,
                   lda_model* model, lda_suffstats* ss)
 {
     timer rdtsc = start_timer(DOC_E_STEP);
@@ -53,8 +53,8 @@ fp_t doc_e_step(document* doc, fp_t* gamma, fp_t** phi,
         for (k = 0; k < model->num_topics; k++)
         {
             // <BG> non-sequential matrix access
-            ss->class_word[doc->words[n] * model->num_topics + k] += doc->counts[n]*phi[n][k];
-            ss->class_total[k] += doc->counts[n]*phi[n][k];
+            ss->class_word[doc->words[n] * model->num_topics + k] += doc->counts[n]*phi[n * model->num_topics + k];
+            ss->class_total[k] += doc->counts[n]*phi[n * model->num_topics + k];
         }
     }
 
@@ -69,10 +69,10 @@ fp_t doc_e_step(document* doc, fp_t* gamma, fp_t** phi,
 void run_em(char* start, char* directory, corpus* corpus)
 {
     printf("start em\n");
-    int d, n;
+    int d;
     lda_model *model = NULL;
     // Variational parameters
-    fp_t **var_gamma, **phi;
+    fp_t **var_gamma, *phi;
 
     // Gamma variational parameter for each doc and for each topic.
     var_gamma = malloc(sizeof(fp_t*)*(corpus->num_docs));
@@ -81,9 +81,7 @@ void run_em(char* start, char* directory, corpus* corpus)
 
     // Phi variational parameter for each term in the vocabulary and for each topic.
     int max_length = max_corpus_length(corpus);
-    phi = malloc(sizeof(fp_t*)*max_length);
-    for (n = 0; n < max_length; n++)
-        phi[n] = malloc(sizeof(fp_t) * NTOPICS);
+    phi = malloc(sizeof(fp_t*) * max_length * NTOPICS);
 
     // initialize model
     char filename[1000];
@@ -162,6 +160,7 @@ void run_em(char* start, char* directory, corpus* corpus)
     {
         if ((d % 100) == 0) printf("final e step document %d\n",d);
         likelihood += lda_inference(&(corpus->docs[d]), model, var_gamma[d], phi);
+        // printf("likelihood calculated\n");
         write_word_assignment(w_asgn_file, &(corpus->docs[d]), phi, model);
     }
     fclose(w_asgn_file);
