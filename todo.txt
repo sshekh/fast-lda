@@ -3,7 +3,6 @@
 6) Script to run the timings for different input size and plot performance.
 7) Update project descriptions:
 		point 4 - decribe validation
-		point 6 - update the flops count
 		point 7 - performance plot decription
 
 8) Script for Automatic flop, memeory transfers counters which uses the caller/callee DAG.  
