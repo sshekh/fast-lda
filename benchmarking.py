@@ -38,8 +38,7 @@ class Cost:
     def full(self):
         return self.simple + self.heavy
 
-iters = {"EM_CONVERGE" : 1,
-        "INFERENCE_CONVERGE" : 1. }   # EM_CONVERGE and INFERENCE_CONVERGE are # iteration counts for convergence
+iters = {"EM_CONVERGE" : 1, "INFERENCE_CONVERGE" : 1., "ALPHA_CONVERGE"}   # EM_CONVERGE and INFERENCE_CONVERGE are # iteration counts for convergence
 
 @memoize
 def digamma(N, K):
@@ -58,8 +57,12 @@ def random_initialize_ss(N, K):
     return Cost(2*K*N, 2*K*N)
 
 @memoize
-def lda_mle(N, K):
-    return Cost(K*V, 2*K*V) 
+def opt_alpha(N, K):        #TODO
+    return Cost(0, 0)
+
+@memoize
+def mle(N, K):
+    return Cost(K*V, 2*K*V) + opt_alpha(N, K)   #TODO
 
 @memoize
 def likelihood(N, K):
@@ -82,21 +85,21 @@ def doc_e_step(N, K):
 
 @memoize
 def run_em(N, K):
-    return Cost(random_initialize_ss(N, K).simple + lda_mle(N, K).simple +  \
-        + iters["EM_CONVERGE"] * (N * doc_e_step(N, K).simple + N + lda_mle(N, K).simple + 2 + \
+    return Cost(random_initialize_ss(N, K).simple + mle(N, K).simple +  \
+        + iters["EM_CONVERGE"] * (N * doc_e_step(N, K).simple + N + mle(N, K).simple + 2 + \
                                      N * lda_inference(N, K).simple), \
-                random_initialize_ss(N, K).heavy + lda_mle(N, K).heavy +  \
-        + iters["EM_CONVERGE"] * (N * doc_e_step(N, K).heavy + lda_mle(N, K).heavy + 1 + \
+                random_initialize_ss(N, K).heavy + mle(N, K).heavy +  \
+        + iters["EM_CONVERGE"] * (N * doc_e_step(N, K).heavy + mle(N, K).heavy + 1 + \
                                      N * lda_inference(N, K).heavy))
 
 flops = { "RUN_EM" : run_em, "LDA_INFERENCE" : lda_inference, "DIGAMMA" : digamma, "LOG_SUM" : log_sum,
-        "LOG_GAMMA" : log_gamma, "DOC_E_STEP" : doc_e_step, "LIKELIHOOD" : likelihood }
+        "LOG_GAMMA" : log_gamma, "DOC_E_STEP" : doc_e_step, "LIKELIHOOD" : likelihood, "MLE" : mle, "OPT_ALPHA" : opt_alpha}
 
 colors = { "RUN_EM" : "green", "LDA_INFERENCE" : "blue", "DIGAMMA" : "black", "LOG_SUM" : "purple",
-        "LOG_GAMMA" : "purple", "DOC_E_STEP" : "orange", "LIKELIHOOD" : "red" }       
+        "LOG_GAMMA" : "purple", "DOC_E_STEP" : "orange", "LIKELIHOOD" : "red", "MLE" : "cyan", "OPT_ALPHA" : "cyan"}       
 
 label_offsets = { "RUN_EM" : 0.008, "LDA_INFERENCE" : 0.008, "DIGAMMA" : 0.02, "LOG_SUM" : -0.015,
-        "LOG_GAMMA" : 0.008, "DOC_E_STEP" : -0.01, "LIKELIHOOD" : -0.015 }                 
+        "LOG_GAMMA" : 0.008, "DOC_E_STEP" : -0.01, "LIKELIHOOD" : -0.015, "MLE" : 0.01, "OPT_ALPHA" : 0.01 }                 
 
 
 
@@ -107,14 +110,14 @@ def read_one_output(f, N, K, dict):
         and header[1] == 'Total count' \
        and header[2] == 'Average count', "Output file not in proper format"
     lines = f.readlines()
-    assert len(lines) == 9, "Timings file has incompatible # lines"
+    assert len(lines) == 12, "Timings file has incompatible # lines"
 
-    for i in range(7, 9):
+    for i in range(9, 12):
         s = lines[i].split(',')
         fn = s[0].strip()
         iters[fn] = float(s[2])
 
-    for i in range(7):
+    for i in range(9):
         s = lines[i].split(',')
         fn = s[0].strip()
         if not fn in dict: dict[fn] = { 'x' : [], 'y' : []}
