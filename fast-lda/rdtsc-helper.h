@@ -9,7 +9,6 @@
     #define printf(fmt, ...)
 #endif
 
-// #define DOUBLE
 #ifdef DOUBLE
     #define fp_t double
 #else
