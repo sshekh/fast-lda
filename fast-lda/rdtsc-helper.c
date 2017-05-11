@@ -1,5 +1,5 @@
 #include "rdtsc-helper.h"
-#include <stdio.h>
+
 
 accumulator timing_infrastructure[N_ACCUMULATORS];
 char* accumulator_names[] = {
