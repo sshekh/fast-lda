@@ -1,12 +1,3 @@
-'''
-We would like to:
-    - Generate test data from the slow
-    - Test the fast against the slow
-    - Benchmark the fast (or the slow)
-
-
-'''
-
 import sys
 import os
 import getopt
@@ -14,6 +5,7 @@ import subprocess
 import time
 
 from colorama import init, Fore, Style
+from git import Repo
 
 import beta_comp
 
@@ -32,6 +24,7 @@ RUN_NAME = None
 
 def quit_on_fail(i):
     if i != 0:
+        print(Style.RESET_ALL)
         sys.exit()
 
 def run_lda(which, k, n):
@@ -121,6 +114,49 @@ def bench(k, n, which):
         timing_out = (TIMING_FOLDER % RUN_NAME) + (TIMING_FILENAME % (lda, k, n))
         os.rename(LDA_OUT_TIMING, timing_out)
 
+def record_vitals(comment):
+    os.makedirs(TIMING_FOLDER % RUN_NAME)
+
+    with open((TIMING_FOLDER % RUN_NAME) + '/info.txt', 'w') as minilog:
+
+        # Header
+        minilog.write('Bench run %s\n' % RUN_NAME)
+        minilog.write('"' + comment + '"\n')
+        minilog.write('===============================\n\n')
+
+
+        # git information
+        repo = Repo('.')
+        branch = repo.active_branch.name
+        commit = repo.commit().hexsha[:8] # commit by itself returns the last commit
+
+        minilog.write('Latest commit at time of writing:\n')
+        minilog.write('%s (on branch %s)\n\n' % (commit, branch))
+
+        if len(repo.untracked_files) != 0:
+            minilog.write('Additionally, the repo contained the following untracked files:\n')
+            for f in repo.untracked_files:
+                minilog.write('\t' + f + '\n')
+            minilog.write('\n')
+
+        minilog.write('The diff, if any, follows:\n\n')
+        minilog.write(repo.git.diff())
+        minilog.write('\n\n===============================\n\n')
+
+        # Settings
+        minilog.write('Settings file (fast):\n')
+        with open('./fast-lda/settings.txt') as fsetts:
+            settings = fsetts.readlines()
+            minilog.writelines(settings)
+
+        minilog.write('\n')
+
+        minilog.write('Settings file (slow):\n')
+        with open('./slow-lda/settings.txt') as fsetts:
+            settings = fsetts.readlines()
+            minilog.writelines(settings)
+
+
 def usage_and_quit():
     print('Fast runner')
     print('')
@@ -128,26 +164,27 @@ def usage_and_quit():
     print('')
     print('Options: ')
     print('The following two options recieve as argument either one number,\n' +
-        'or three separated by a comma (e.g. `--num-docs=50,100,10`. These\n' +
+        'or three separated by a comma (e.g. `--num-docs=50,100,10`). These\n' +
         'three numbers specify the start, end and step values. If a single\n' +
         'number is specified, only that value will be used.' )
     print('\t--num-topics / --k (default: 50)')
     print('\t--num-docs / --n (default: all documents)')
     print('')
     print('Modes:')
-    print('\tgen: Generate test data from the slow implementation')
-    print('\ttest: Obtain results from the fast implementation, and compare ')
-    print('\t  against reference output from the slow implementation.')
-    print('\tbench: Check speed of the fast (-f) and/or slow (-s) implementations')
+    print('\tgen:   Generate test data from the slow implementation')
+    print('\ttest:  Obtain results from the fast implementation, and compare ')
+    print('\t       against reference output from the slow implementation.')
+    print('\tbench: Check speed of fast (-f) and/or slow (-s) implementations')
     print('')
     print('If a double-dash appears, it signals the end of the options and\n' +
-        'the beginning of a comment. This comment is mandatory in benchnamrk ' +
+        'the beginning of a comment. This comment is mandatory in benchnamrk\n' +
          'mode and appears in the log files.')
     print('')
-    print('Output from the LDA executable is colored in green.')
+    print('Output from the LDA executable and make is colored in green.')
     print('')
     print('Generated reference data is available in the folder `%s`' % REFERENCE_FOLDER)
     print('Benchmark timings are available in the folder `%s`' % TIMING_FOLDER)
+    print('')
     print('Other options:')
     print('')
     print('\t-m: Do not run make before running a task. Ignored in bench mode.')
@@ -196,7 +233,7 @@ if __name__ == '__main__':
     ns = [2246] # Maximal amount of documents
 
     for o, a in opts:
-        if o == {'--num-topics', '--k'}:
+        if o in {'--num-topics', '--k'}:
             ks = list_from_range(a)
         elif o in {'--num-docs', '--n'}:
             ns = list_from_range(a)
@@ -227,11 +264,15 @@ if __name__ == '__main__':
 
         if do_fast:
             print('Preparing the fast...')
+            print(Fore.LIGHTGREEN_EX)
             quit_on_fail(os.system('cd fast-lda && make clean && make XCFLAGS=-DIGNORE_PRINTF'))
+            print(Style.RESET_ALL)
             which.append('fast')
         if do_slow:
             print('Preparing the slow...')
+            print(Fore.LIGHTGREEN_EX)
             quit_on_fail(os.system('cd slow-lda && make clean && make XCFLAGS=-DIGNORE_PRINTF'))
+            print(Style.RESET_ALL)
             which.append('slow')
 
 
@@ -245,10 +286,8 @@ if __name__ == '__main__':
             raise ValueError('When benchmarking, specify at least one of -s (slow), -f (fast)')
 
         RUN_NAME = time.strftime('%Y-%m-%d_%H-%M-%S')
-        os.makedirs(TIMING_FOLDER % RUN_NAME)
-        minilog = open((TIMING_FOLDER % RUN_NAME) + '/info.txt', 'w')
-        minilog.write(comment + '\n')
-        minilog.close()
+
+        record_vitals(comment)
 
     if not exists(REFERENCE_FOLDER):
         os.mkdir(REFERENCE_FOLDER)

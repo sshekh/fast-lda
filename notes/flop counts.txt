@@ -10,7 +10,8 @@ LDA_MLE
     N * K * (
         2       (1-, 1+)
       + 2       (log)
-    )
+    ) 
+    + OPT_ALPHA
 
 OPT_ALPHA
 
@@ -18,10 +19,10 @@ OPT_ALPHA
 
     ALPHA_CONVERGE * (
         exp
+      + 4                (1*, 1/, 2+)
       + 7 + 2 * lgamma   (alhood: 4*, 3+)
       + 6 + 2 * digamma  (d_alhood: 4*, 2+)
       + 6 + 2 * trigamma (d2_alhood: 5*, 1+)
-      + 4                (1*, 1/, 2+)
       + fabs
     )
     + exp
@@ -34,18 +35,23 @@ LIKELIHOOD
       + 4               (2*, 2+)
       + 3 * lgamma
       + K * 9           (7+, 2*)
-      + K * D * 6 (4+, 2*)
+      + K * D * 6 (4+, 2*, 1 log)
 
       = 33K + 32 + 4 + 3*35 + 9K + K*D*6 = 6KD + 42K + 141
 
 DIGAMMA
-      31 FLOPS + LOG(X) ~ 32 FLOPS
+      (18+, 5*, 8/, 1 log)
 
 LOG_SUM
-      4 FLOPS + LOG(X) + EXP(X) ~ 6 FLOPS
+      # taking < as add 
+      (4+, log, exp)
+
+TRIGAMMA
+      (7+, 7*, 2/)  
+    + 6*(2+, 1*, 1/)
 
 LOG_GAMMA
-      28FLOPS + 7 * LOG(X) ~ 35 FLOPS
+      (20+, 5*, 2/, 7 logs)
 
 LDA_INFERENCE
       K * 2         (+,/)
@@ -67,7 +73,6 @@ DOC_E_STEP
     + 2             (1+, 1*)
     + DIGAMMA
     + K * N * 4     (2+, 2*)
-    + 1             (1+)
 
     = VAR_MAX_ITER * (50KD + 42K + 143) + KD + 34K
       + 2K + 2 + 32 + 4KN + 1
@@ -86,10 +91,6 @@ RUN_EM
         N * lda_inference
 
     = 4KN + 3KV + var_iter * (N * doc_e_step + N + 3KV + 3 + N * lda_inference)
-
-LDA_MLE
-    K * V * (2*log + 1)       (+)
-      ~ 3KV
 
 RANDOM_INITIALIZE_SS
     K * N * (3 + myrand)    (2+, 1/)

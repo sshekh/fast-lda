@@ -164,11 +164,15 @@ void zero_initialize_ss(lda_suffstats* ss, lda_model* model)
     for (w = 0; w < model->num_terms; w++)
     {
         for (k = 0; k < model->num_topics; k++)
-        ss->class_total[k] = 0;
         {
             ss->class_word[w * model->num_topics + k] = 0;
         }
     }
+
+    for (k = 0; k < model->num_topics; k++) {
+        ss->class_total[k] = 0;
+    }
+
     ss->num_docs = 0;
     ss->alpha_suffstats = 0;
 }

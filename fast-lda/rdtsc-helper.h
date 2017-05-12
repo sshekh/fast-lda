@@ -1,15 +1,14 @@
 #ifndef RDTSC_HELPER
 #define RDTSC_HELPER
 
-
-// Disable all printfs
-// #define IGNORE_PRINTF
+// Note: always ensure that stdio is included before we do this define printf
+// macro. Otherwise we end up replacing it in stdio, leading to compiler errors.
+#include <stdio.h>
 
 #ifdef IGNORE_PRINTF
-    #define printf(fmt, ...)  (void)
+    #define printf(fmt, ...)
 #endif
 
-// #define DOUBLE
 #ifdef DOUBLE
     #define fp_t double
 #else
