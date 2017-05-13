@@ -37,10 +37,16 @@ fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
     {
         var_gamma[k] = model->alpha + (doc->total/((fp_t) model->num_topics));
         digamma_gam[k] = digamma(var_gamma[k]);
-        for (n = 0; n < doc->length; n++)
-            // <BG> Non-sequential access
-            phi[n * model->num_topics + k] = 1.0/model->num_topics;
     }
+    for (n = 0; n < doc->length; n++)
+    {
+        for (k = 0; k < model->num_topics; k++)
+        {
+            phi[n * model->num_topics + k] = 1.0/model->num_topics;
+        }
+    }
+
+
     var_iter = 0;
 
     while ((converged > VAR_CONVERGED) &&
@@ -56,7 +62,6 @@ fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
                 oldphi[k] = phi[n * model->num_topics + k];
                 // Eq (16)
 
-                // <BG> Non-sequential access
                 phi[n * model->num_topics + k] = digamma_gam[k] + model->log_prob_w[doc->words[n] * model->num_topics + k];
 
                 if (k > 0)
