@@ -16,6 +16,7 @@ LDA_OUT_BETA = LDA_EXE_LOG + '/final.beta'
 LDA_OUT_TIMING = './results/timings.csv'
 
 ALWAYS_GENERATE_REF = False
+ALWAYS_USE_REF = False
 
 TIMING_FOLDER = 'timings/%s/'
 TIMING_FILENAME = '%s_timings_%d_%d.csv'
@@ -60,13 +61,13 @@ def prompt_yna():
             return inp[0] != 'n'
 
 
-def generate(k, n, dbl):
+def generate(k, n, dbl, overwrite=False):
     # Run the slow LDA, collect the final beta file and move it in the reference.
     print('Generating k=%d n=%d' % (k, n))
 
     dst = REFERENCE_DATA % (k, n, dbl)
 
-    if exists(dst):
+    if exists(dst) and overwrite == False:
         print('Already exists. Skipping...')
         return
 
@@ -75,19 +76,34 @@ def generate(k, n, dbl):
 
 
 def test(k, n, dbl):
+    global ALWAYS_GENERATE_REF
+    global ALWAYS_USE_REF
     # Run the fast LDA and compare the resulting final beta against the reference.
     print('Testing fast against reference k=%d n=%d' % (k, n))
     which = REFERENCE_DATA % (k, n, dbl)
 
     if not exists(which):
-        print('Reference file %s not found... ' % which, end='')
+        print('Reference file %s not found... ' % which, end='\n')
         if not ALWAYS_GENERATE_REF:
             print('Do you want to generate it?')
             if not prompt_yna():
                 print('Aborting')
                 sys.exit(0)
 
-        generate(k, n)
+        generate(k, n, dbl)
+    else:
+        print('Reference file %s is available... ' % which, end='\n')
+        if not ALWAYS_USE_REF:
+            print('Do you want to use the available reference file?')
+            while True:
+                inp = input('(y)es, (n)o, yes to (a)ll\n')
+                if inp[0] in {'y', 'n', 'a'}:
+                    ALWAYS_USE_REF = inp[0] == 'a'
+                    if inp[0] is 'n':
+                        generate(k, n, dbl, overwrite=True)
+                        break
+                    break
+
 
     run_lda('fast', k, n)
 

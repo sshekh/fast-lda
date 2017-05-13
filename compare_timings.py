@@ -38,7 +38,7 @@ def compare_timings(path1, path2, timer_name):
     plt.show()
 
 def usage_and_quit():
-    print("\nCompare runtime of one function for two batches of timings")
+    print("\nCompare performance of one function for two batches of timings")
     print("\nUsage: python compare_timings.py old_path new_path2 timer_name")
     print()
     sys.exit()
