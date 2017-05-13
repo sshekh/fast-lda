@@ -146,7 +146,7 @@ label_offsets = { "RUN_EM" : 0.008, "LDA_INFERENCE" : 0.008, "DIGAMMA" : 0.02, "
 
 
 
-def read_one_output(f, N, K, dict):
+def read_one_output(f, N, K, dic):
     header = f.readline().split(',')
     header = [h.strip() for h in header]
     assert header[0] == 'Accumulator' \
@@ -166,25 +166,33 @@ def read_one_output(f, N, K, dict):
         s = lines[i].split(',')
         fn = s[0].strip()
         if 'CONVERGE' not in fn:
-            if not fn in dict: dict[fn] = { 'x' : [], 'y' : []}
+            if not fn in dic: dic[fn] = { 'x' : [], 'y' : []}
             avg_cnt = float(s[2])
             if abs(avg_cnt) > EPS:
-                dict[fn]['x'].append(N)
-                dict[fn]['y'].append(flops[fn](N, K).full() / avg_cnt)
+                dic[fn]['x'].append(N)
+                dic[fn]['y'].append(flops[fn](N, K).full() / avg_cnt)
             pass
         pass
     pass
 
-def plot_line(plt, data, color):
+def plot_line(plt, data, color=None, label_offset=None):
     for fn, vals in data.items():
         if len(vals['x']) is not 0:
             x, y = (zip(*sorted(zip(vals['x'], vals['y']))))
-            plt.plot(x, y, '^-', color=colors[fn], linewidth=1)
-            plt.text(x[0], y[0] + label_offsets[fn] , fn, color=colors[fn], size=9)
+            if color is None:
+                use_color = colors[fn]
+            else:
+                use_color = color
+            if label_offset is None:
+                use_label_offset = label_offsets[fn]
+            else:
+                use_label_offset = label_offset
+            plt.plot(x, y, '^-', color=use_color, linewidth=1)
+            plt.text(x[0], y[0] + use_label_offset , fn, color=use_color, size=9)
 
 def set_up_perf_plot(axes):
     #Per plot settings
-    axes.set_title('Performance on Haswell',  y=1.08, loc = "center")
+    axes.set_title('Performance on Skylake',  y=1.08, loc = "center")
     axes.set_xlabel('$n$ documents')
     axes.set_ylabel('Performance [flops/cycles]',rotation="0")
     axes.set_ylim(-0.0, 0.4)
@@ -217,11 +225,11 @@ def benchmark(dirpath):
                 read_one_output(f, N, K, data_1)
             else:
                 read_one_output(f, N, K, data_2)
-    
+        
     set_up_perf_plot(axes)
 
-    plot_line(plt, data_1, color='blue')
-    plot_line(plt, data_2, color='red')
+    plot_line(plt, data_1)
+    plot_line(plt, data_2)
     plt.show()
 
 if __name__ == '__main__':
