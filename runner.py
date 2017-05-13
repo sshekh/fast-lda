@@ -10,7 +10,7 @@ from git import Repo
 import beta_comp
 
 REFERENCE_FOLDER = 'reference'
-REFERENCE_DATA = REFERENCE_FOLDER + '/ref-%d-%d.beta'
+REFERENCE_DATA = REFERENCE_FOLDER + '/ref-%d-%d-%s.beta'
 LDA_EXE_LOG = './%s-lda/logfiles'
 LDA_OUT_BETA = LDA_EXE_LOG + '/final.beta'
 LDA_OUT_TIMING = './results/timings.csv'
@@ -60,11 +60,11 @@ def prompt_yna():
             return inp[0] != 'n'
 
 
-def generate(k, n):
+def generate(k, n, dbl):
     # Run the slow LDA, collect the final beta file and move it in the reference.
     print('Generating k=%d n=%d' % (k, n))
 
-    dst = REFERENCE_DATA % (k, n)
+    dst = REFERENCE_DATA % (k, n, dbl)
 
     if exists(dst):
         print('Already exists. Skipping...')
@@ -74,10 +74,10 @@ def generate(k, n):
     os.renames(LDA_OUT_BETA % 'slow', dst)
 
 
-def test(k, n):
+def test(k, n, dbl):
     # Run the fast LDA and compare the resulting final beta against the reference.
     print('Testing fast against reference k=%d n=%d' % (k, n))
-    which = REFERENCE_DATA % (k, n)
+    which = REFERENCE_DATA % (k, n, dbl)
 
     if not exists(which):
         print('Reference file %s not found... ' % which, end='')
@@ -189,6 +189,8 @@ def usage_and_quit():
     print('')
     print('\t-m: Do not run make before running a task. Ignored in bench mode.')
     print('\t-v: When benchmarking, also validate before.')
+    print('\t-d: Use doubles instead of floats.')
+    print('\t-s: Silence output (always enabled in bench mode).')
 
     sys.exit()
 
@@ -202,6 +204,10 @@ def list_from_range(r):
         return list(range(int(parts[0]), int(parts[1]) + 1, int(parts[2])))
     else:
         return [int(r)]
+
+def xflags_from_list(defines):
+    with_d = ['-D' + x for x in defines]
+    return ' '.join(with_d)
 
 if __name__ == '__main__':
     if len(sys.argv) < 2 or sys.argv[1] not in {'gen', 'test', 'bench'}:
@@ -218,7 +224,7 @@ if __name__ == '__main__':
         if mode == 'bench':
             raise ValueError('When benchmarking, please include a comment.')
 
-    opts, args = getopt.gnu_getopt(options, "fsvmnk",
+    opts, args = getopt.gnu_getopt(options, "fsmvds",
         ["num-topics=",
         "num-docs=",
         "n=",
@@ -228,6 +234,8 @@ if __name__ == '__main__':
     do_slow = False
     do_make = True
     validate_when_benching = False
+    use_doubles = False
+    silence_output = mode == 'bench'
 
     ks = [50]
     ns = [2246] # Maximal amount of documents
@@ -241,40 +249,61 @@ if __name__ == '__main__':
             do_fast = True
         elif o == '-s':
             do_slow = True
-        elif o == '-m':
+        elif o == '-m' and mode != 'bench': # ALWAYS make in bench mode
             do_make = False
         elif o == '-v':
             validate_when_benching = True
+        elif o == '-d':
+            use_doubles = True
+        elif o == '-s':
+            silence_output = True
 
 
-    if do_make and mode != 'bench':
-        print('Making the code...')
+    if do_make:
+
+        # Check which defines we need to add
+        defines = []
+        if use_doubles:
+            defines.append('DOUBLE')
+        if silence_output:
+            defines.append('IGNORE_PRINTF')
+
+        # Construct the make command
+        xflags = xflags_from_list(defines)
+        final_command = 'make'
+        if xflags != '':
+            final_command += (' XCFLAGS="%s"' % xflags)
+
+        # Actually make the programs
+        print('Perparing the fast...')
         print(Fore.LIGHTGREEN_EX)
-        quit_on_fail(os.system('cd fast-lda && make'))
-        quit_on_fail(os.system('cd slow-lda && make'))
+        quit_on_fail(os.system('cd fast-lda && make clean && ' + final_command))
         print(Style.RESET_ALL)
 
+        print('Perparing the slow...')
+        print(Fore.LIGHTGREEN_EX)
+        quit_on_fail(os.system('cd slow-lda && make clean && ' + final_command))
+        print(Style.RESET_ALL)
+
+    # Use different names for the reference files depending on whether we're
+    # using floats or doubles.
+    if use_doubles:
+        ref_type_name = 'dbl'
+    else:
+        ref_type_name = 'flt'
+
     if mode == 'gen':
-        fn = generate
+        fn = lambda x, y: generate(x, y, ref_type_name)
     elif mode == 'test':
-        fn = test
+        fn = lambda x, y: test(x, y, ref_type_name)
     elif mode == 'bench':
 
         which = []
 
         if do_fast:
-            print('Preparing the fast...')
-            print(Fore.LIGHTGREEN_EX)
-            quit_on_fail(os.system('cd fast-lda && make clean && make XCFLAGS=-DIGNORE_PRINTF'))
-            print(Style.RESET_ALL)
             which.append('fast')
         if do_slow:
-            print('Preparing the slow...')
-            print(Fore.LIGHTGREEN_EX)
-            quit_on_fail(os.system('cd slow-lda && make clean && make XCFLAGS=-DIGNORE_PRINTF'))
-            print(Style.RESET_ALL)
             which.append('slow')
-
 
         fn = lambda x, y: bench(x, y, which)
 
