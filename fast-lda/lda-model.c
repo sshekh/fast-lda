@@ -24,6 +24,7 @@
 #include "lda-model.h"
 #include "rdtsc-helper.h"
 
+#include <float.h>
 
 void lda_mle(lda_model* model, lda_suffstats* ss, int estimate_alpha)
 {
@@ -35,14 +36,22 @@ void lda_mle(lda_model* model, lda_suffstats* ss, int estimate_alpha)
     {
         for (k = 0; k < model->num_topics; k++)
         {
-            if (ss->class_word[w * model->num_topics + k] > 0)
+            /*if (ss->class_word[w * model->num_topics + k] > 0)
             {
                 model->log_prob_w[w * model->num_topics + k] =
                 log(ss->class_word[w * model->num_topics + k]) -
                 log(ss->class_total[k]);
             }
-            else
+            else {
                 model->log_prob_w[w * model->num_topics + k] = -100;
+            }*/
+
+            double a = log(ss->class_word[w * model->num_topics + k] + FP_MIN);
+            double b = log(ss->class_total[k] + FP_MIN);
+
+            model->log_prob_w[w * model->num_topics + k] = a - b;
+            //printf("%f %f\n", a, b);
+
         }
     }
 
