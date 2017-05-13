@@ -43,6 +43,7 @@ typedef struct
 {
     fp_t alpha;
     fp_t* log_prob_w;
+    fp_t* log_prob_w_doc;
     int num_topics;
     int num_terms;
 } lda_model;

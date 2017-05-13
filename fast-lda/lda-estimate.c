@@ -35,8 +35,18 @@ fp_t doc_e_step(document* doc, fp_t* gamma, fp_t* phi,
     fp_t likelihood;
     int n, k;
 
+    // <CC> Gather the rows from large matrices for this doc
+    // for optimization 2.
+    gatherDocWords(model->log_prob_w, model->log_prob_w_doc, doc,
+                   model->num_topics);
+
     // Posterior variational inference.
     likelihood = lda_inference(doc, model, gamma, phi);
+
+    // <CC> Scatter the rows used for this doc in the original matrix
+    // for optimization 2.
+    scatterDocWords(model->log_prob_w, model->log_prob_w_doc, doc,
+                    model->num_topics);
 
     // Update sufficient statistics.
     fp_t gamma_sum = 0;
@@ -90,7 +100,7 @@ void run_em(char* start, char* directory, corpus* corpus)
     if (strcmp(start, "random")==0)
     {
         printf("Init model\n");
-        model = new_lda_model(corpus->num_terms, NTOPICS);
+        model = new_lda_model(corpus->num_terms, NTOPICS, max_length);
         ss = new_lda_suffstats(model);
         random_initialize_ss(ss, model);
         lda_mle(model, ss, 0);
@@ -103,7 +113,7 @@ void run_em(char* start, char* directory, corpus* corpus)
     }
 
     sprintf(filename,"%s/000",directory);
-    save_lda_model(model, filename);
+    save_lda_model(model, filename, max_length);
 
 
     // run expectation maximization
@@ -149,7 +159,7 @@ void run_em(char* start, char* directory, corpus* corpus)
 
     // output the final model
     sprintf(filename,"%s/final",directory);
-    save_lda_model(model, filename);
+    save_lda_model(model, filename, max_length);
     sprintf(filename,"%s/final.gamma",directory);
     save_gamma(filename, var_gamma, corpus->num_docs, model->num_topics);
 

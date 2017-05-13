@@ -26,7 +26,7 @@ void lda_mle(lda_model* model, lda_suffstats* ss, int estimate_alpha);
  * Allocate new lda model.
  *
  */
-lda_model* new_lda_model(int, int);
+lda_model* new_lda_model(int, int, int);
 /*
  * Deallocate new lda model.
  *
@@ -41,7 +41,7 @@ lda_model* load_lda_model(char* model_root);
  * Save current state of lda model.
  *
  */
-void save_lda_model(lda_model*, char*);
+void save_lda_model(lda_model*, char*, int);
 
 
 /*
