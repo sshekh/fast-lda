@@ -56,18 +56,16 @@ fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
        // Update equation (16) for variational phi for each topic and word.
        for (n = 0; n < doc->length; n++)
        {
-            phisum = 0;
-            for (k = 0; k < model->num_topics; k++)
+            // <BG> Moved if else initialization of phisum outside of the loop
+            phisum = phi[n * model->num_topics + 0];
+            for (k = 1; k < model->num_topics; k++)
             {
                 oldphi[k] = phi[n * model->num_topics + k];
                 // Eq (16)
 
                 phi[n * model->num_topics + k] = digamma_gam[k] + model->log_prob_w[doc->words[n] * model->num_topics + k];
 
-                if (k > 0)
-                    phisum = log_sum(phisum, phi[n * model->num_topics + k]);
-                else
-                    phisum = phi[n * model->num_topics + k]; // note, phi is in log space
+                phisum = log_sum(phisum, phi[n * model->num_topics + k]);
             }
 
             //Update equation (17) for variational gamma for each topic
@@ -131,7 +129,6 @@ fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_ga
     {
         for (k = 0; k < model->num_topics; k++)
         {
-            // <BG> Non-sequential access
             if (phi[n * model->num_topics + k] > 0)
             {
                 likelihood += doc->counts[n]*
