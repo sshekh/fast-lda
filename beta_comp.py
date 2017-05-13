@@ -16,7 +16,7 @@ def IsApproximatelyEqual(x, y, epsilon = 1e-6):
 
     # Since these are log values, difference doesn't matter if both values
     # are < 100
-    if x < 100 and y < 100:
+    if x < -100 and y < -100:
         return True
 
     return False
