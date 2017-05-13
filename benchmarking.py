@@ -153,21 +153,25 @@ def read_one_output(f, N, K, dict):
         and header[1] == 'Total count' \
        and header[2] == 'Average count', "Output file not in proper format"
     lines = f.readlines()
-    assert len(lines) == 12, "Timings file has incompatible # lines"
 
-    for i in range(10, 13):
+
+    # Naming convention: All convergence counters should include the tag 'CONVERGE'
+    for i in range(len(lines)):
         s = lines[i].split(',')
         fn = s[0].strip()
-        iters[fn] = float(s[2])
+        if 'CONVERGE' in fn:
+            iters[fn] = float(s[2])
 
-    for i in range(10):
+    for i in range(len(lines)):
         s = lines[i].split(',')
         fn = s[0].strip()
-        if not fn in dict: dict[fn] = { 'x' : [], 'y' : []}
-        avg_cnt = float(s[2])
-        if abs(avg_cnt) > EPS:
-            dict[fn]['x'].append(N)
-            dict[fn]['y'].append(flops[fn](N, K).full() / avg_cnt)
+        if 'CONVERGE' not in fn:
+            if not fn in dict: dict[fn] = { 'x' : [], 'y' : []}
+            avg_cnt = float(s[2])
+            if abs(avg_cnt) > EPS:
+                dict[fn]['x'].append(N)
+                dict[fn]['y'].append(flops[fn](N, K).full() / avg_cnt)
+            pass
         pass
     pass
 
