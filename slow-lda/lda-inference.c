@@ -25,20 +25,20 @@
  *
  */
 
-double lda_inference(document* doc, lda_model* model, double* var_gamma, double** phi)
+fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t** phi)
 {
-    double converged = 1;
-    double phisum = 0, likelihood = 0;
-    double likelihood_old = 0, oldphi[model->num_topics];
+    fp_t converged = 1;
+    fp_t phisum = 0, likelihood = 0;
+    fp_t likelihood_old = 0, oldphi[model->num_topics];
     int k, n, var_iter;
-    double digamma_gam[model->num_topics];
+    fp_t digamma_gam[model->num_topics];
 
     timer rdtsc = start_timer(LDA_INFERENCE);
     // compute posterior dirichlet
 
     for (k = 0; k < model->num_topics; k++)
     {
-        var_gamma[k] = model->alpha + (doc->total/((double) model->num_topics));
+        var_gamma[k] = model->alpha + (doc->total/((fp_t) model->num_topics));
         digamma_gam[k] = digamma(var_gamma[k]);
         for (n = 0; n < doc->length; n++)
             phi[n][k] = 1.0/model->num_topics;
@@ -95,10 +95,10 @@ double lda_inference(document* doc, lda_model* model, double* var_gamma, double*
  *
  */
 
-double
-compute_likelihood(document* doc, lda_model* model, double** phi, double* var_gamma)
+fp_t
+compute_likelihood(document* doc, lda_model* model, fp_t** phi, fp_t* var_gamma)
 {
-    double likelihood = 0, digsum = 0, var_gamma_sum = 0, dig[model->num_topics];
+    fp_t likelihood = 0, digsum = 0, var_gamma_sum = 0, dig[model->num_topics];
     int k, n;
 
     timer rdtsc = start_timer(LIKELIHOOD);
