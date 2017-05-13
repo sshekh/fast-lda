@@ -25,10 +25,10 @@
  *
  */
 
-double doc_e_step(document* doc, double* gamma, double** phi,
+fp_t doc_e_step(document* doc, fp_t* gamma, fp_t** phi,
                   lda_model* model, lda_suffstats* ss)
 {
-    double likelihood;
+    fp_t likelihood;
     int n, k;
 
     // posterior inference
@@ -38,7 +38,7 @@ double doc_e_step(document* doc, double* gamma, double** phi,
 
     // update sufficient statistics
 
-    double gamma_sum = 0;
+    fp_t gamma_sum = 0;
     for (k = 0; k < model->num_topics; k++)
     {
         gamma_sum += gamma[k];
@@ -68,7 +68,7 @@ double doc_e_step(document* doc, double* gamma, double** phi,
  *
  */
 
-void write_word_assignment(FILE* f, document* doc, double** phi, lda_model* model)
+void write_word_assignment(FILE* f, document* doc, fp_t** phi, lda_model* model)
 {
     int n;
 
@@ -88,7 +88,7 @@ void write_word_assignment(FILE* f, document* doc, double** phi, lda_model* mode
  *
  */
 
-void save_gamma(char* filename, double** gamma, int num_docs, int num_topics)
+void save_gamma(char* filename, fp_t** gamma, int num_docs, int num_topics)
 {
     FILE* fileptr;
     int d, k;
@@ -117,19 +117,19 @@ void run_em(char* start, char* directory, corpus* corpus)
 
     int d, n;
     lda_model *model = NULL;
-    double **var_gamma, **phi;
+    fp_t **var_gamma, **phi;
 
     // allocate variational parameters
     // Gamma variational parameter for each doc and for each topic which generated the theta
-    var_gamma = malloc(sizeof(double*)*(corpus->num_docs));
+    var_gamma = malloc(sizeof(fp_t*)*(corpus->num_docs));
     for (d = 0; d < corpus->num_docs; d++)
-	var_gamma[d] = malloc(sizeof(double) * NTOPICS);
+	var_gamma[d] = malloc(sizeof(fp_t) * NTOPICS);
 
     // Phi variational parameter which generated the z latent variable
     int max_length = max_corpus_length(corpus);
-    phi = malloc(sizeof(double*)*max_length);
+    phi = malloc(sizeof(fp_t*)*max_length);
     for (n = 0; n < max_length; n++)
-	phi[n] = malloc(sizeof(double) * NTOPICS);
+	phi[n] = malloc(sizeof(fp_t) * NTOPICS);
 
     // initialize model
 
@@ -166,7 +166,7 @@ void run_em(char* start, char* directory, corpus* corpus)
     timer rdtsc = start_timer(RUN_EM);
 
     int i = 0;
-    double likelihood, likelihood_old = 0, converged = 1;
+    fp_t likelihood, likelihood_old = 0, converged = 1;
     sprintf(filename, "%s/likelihood.dat", directory);
     FILE* likelihood_file = fopen(filename, "w");
 
@@ -264,13 +264,13 @@ void infer(char* model_root, char* save, corpus* corpus)
     char filename[100];
     int i, d, n;
     lda_model *model;
-    double **var_gamma, likelihood, **phi;
+    fp_t **var_gamma, likelihood, **phi;
     document* doc;
 
     model = load_lda_model(model_root);
-    var_gamma = malloc(sizeof(double*)*(corpus->num_docs));
+    var_gamma = malloc(sizeof(fp_t*)*(corpus->num_docs));
     for (i = 0; i < corpus->num_docs; i++)
-	var_gamma[i] = malloc(sizeof(double)*model->num_topics);
+	var_gamma[i] = malloc(sizeof(fp_t)*model->num_topics);
     sprintf(filename, "%s-lda-lhood.dat", save);
     fileptr = fopen(filename, "w");
     for (d = 0; d < corpus->num_docs; d++)
@@ -278,9 +278,9 @@ void infer(char* model_root, char* save, corpus* corpus)
 	if (((d % 100) == 0) && (d>0)) printf("document %d\n",d);
 
 	doc = &(corpus->docs[d]);
-	phi = (double**) malloc(sizeof(double*) * doc->length);
+	phi = (fp_t**) malloc(sizeof(fp_t*) * doc->length);
 	for (n = 0; n < doc->length; n++)
-	    phi[n] = (double*) malloc(sizeof(double) * model->num_topics);
+	    phi[n] = (fp_t*) malloc(sizeof(fp_t) * model->num_topics);
 	likelihood = lda_inference(doc, model, var_gamma[d], phi);
 
 	fprintf(fileptr, "%5.5f\n", likelihood);

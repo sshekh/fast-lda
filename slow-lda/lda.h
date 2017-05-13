@@ -20,6 +20,8 @@
 #ifndef LDA_H
 #define LDA_H
 
+#include "../fast-lda/rdtsc-helper.h"
+
 typedef struct
 {
     int* words;
@@ -39,8 +41,8 @@ typedef struct
 
 typedef struct
 {
-    double alpha;
-    double** log_prob_w;
+    fp_t alpha;
+    fp_t** log_prob_w;
     int num_topics;
     int num_terms;
 } lda_model;
@@ -48,9 +50,9 @@ typedef struct
 
 typedef struct
 {
-    double** class_word;
-    double* class_total;
-    double alpha_suffstats;
+    fp_t** class_word;
+    fp_t* class_total;
+    fp_t alpha_suffstats;
     int num_docs;
 } lda_suffstats;
 

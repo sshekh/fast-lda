@@ -21,17 +21,17 @@ int LAG = 5;
 float EM_CONVERGED;
 int EM_MAX_ITER;
 int ESTIMATE_ALPHA;
-double INITIAL_ALPHA;
+fp_t INITIAL_ALPHA;
 int NTOPICS;
 
-double doc_e_step(document* doc,
-                  double* gamma,
-                  double** phi,
+fp_t doc_e_step(document* doc,
+                  fp_t* gamma,
+                  fp_t** phi,
                   lda_model* model,
                   lda_suffstats* ss);
 
 void save_gamma(char* filename,
-                double** gamma,
+                fp_t** gamma,
                 int num_docs,
                 int num_topics);
 

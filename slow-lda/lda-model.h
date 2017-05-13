@@ -8,7 +8,7 @@
 #include "lda-alpha.h"
 #include "cokus.h"
 
-#define myrand() (double) (((unsigned long) randomMT()) / 4294967296.)
+#define myrand() (fp_t) (((unsigned long) randomMT()) / 4294967296.)
 #define NUM_INIT 1
 
 void free_lda_model(lda_model*);

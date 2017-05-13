@@ -10,7 +10,7 @@
 float VAR_CONVERGED;
 int VAR_MAX_ITER;
 
-double lda_inference(document*, lda_model*, double*, double**);
-double compute_likelihood(document*, lda_model*, double**, double*);
+fp_t lda_inference(document*, lda_model*, fp_t*, fp_t**);
+fp_t compute_likelihood(document*, lda_model*, fp_t**, fp_t*);
 
 #endif

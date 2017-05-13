@@ -25,13 +25,13 @@
  *
  */
 
-double alhood(double a, double ss, int D, int K)
+fp_t alhood(fp_t a, fp_t ss, int D, int K)
 { return(D * (lgamma(K * a) - K * lgamma(a)) + (a - 1) * ss); }
 
-double d_alhood(double a, double ss, int D, int K)
+fp_t d_alhood(fp_t a, fp_t ss, int D, int K)
 { return(D * (K * digamma(K * a) - K * digamma(a)) + ss); }
 
-double d2_alhood(double a, int D, int K)
+fp_t d2_alhood(fp_t a, int D, int K)
 { return(D * (K * K * trigamma(K * a) - K * trigamma(a))); }
 
 
@@ -40,10 +40,10 @@ double d2_alhood(double a, int D, int K)
  *
  */
 
-double opt_alpha(double ss, int D, int K)
+fp_t opt_alpha(fp_t ss, int D, int K)
 {
-    double a, log_a, init_a = 100;
-    double f, df, d2f;
+    fp_t a, log_a, init_a = 100;
+    fp_t f, df, d2f;
     int iter = 0;
 
     timer t = start_timer(OPT_ALPHA);

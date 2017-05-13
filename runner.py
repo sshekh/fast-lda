@@ -34,7 +34,7 @@ def run_lda(which, k, n):
             str(n),                             # Number of documents
             '1',                                # Initial estimate for alpha
             str(k),                             # Number of topics
-            './%s-lda/settings.txt' % which,    # Settings location
+            'master-settings.txt',              # Settings location
             './%s-lda/ap/ap.dat' % which,       # Documents location
             'random',                           # Initialization method (only random)
             LDA_EXE_LOG % which]                # Output directory
