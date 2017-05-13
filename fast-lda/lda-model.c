@@ -192,9 +192,9 @@ void random_initialize_ss(lda_suffstats* ss, lda_model* model)
     int num_topics = model->num_topics;
     int num_terms = model->num_terms;
     int k, n;
-    for (n = 0; n < num_terms; n++)
+    for (k = 0; k < num_topics; k++)
     {
-        for (k = 0; k < num_topics; k++)
+        for (n = 0; n < num_terms; n++)
         {
             ss->class_word[n * num_topics + k] += 1.0/num_terms + myrand();
             ss->class_total[k] += ss->class_word[n * num_topics + k];
