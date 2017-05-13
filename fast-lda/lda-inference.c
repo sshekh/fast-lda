@@ -22,7 +22,6 @@
 
 fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
 {
-
     fp_t converged = 1;
     fp_t phisum = 0, likelihood = 0;
     fp_t likelihood_old = 0, oldphi[model->num_topics];
@@ -65,7 +64,7 @@ fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
                 oldphi[k] = phi[n * model->num_topics + k];
                 // Eq (16)
 
-                phi[n * model->num_topics + k] = digamma_gam[k] + model->log_prob_w[doc->words[n] * model->num_topics + k];
+                phi[n * model->num_topics + k] = digamma_gam[k] + model->log_prob_w_doc[n * model->num_topics + k];
 
                 phisum = log_sum(phisum, phi[n * model->num_topics + k]);
             }
@@ -135,7 +134,7 @@ fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_ga
             {
                 likelihood += doc->counts[n]*
                 (phi[n * model->num_topics + k]*((dig[k] - digsum) - log(phi[n * model->num_topics + k])
-                    + model->log_prob_w[doc->words[n] * model->num_topics + k]));
+                    + model->log_prob_w_doc[n * model->num_topics + k]));
             }
         }
     }

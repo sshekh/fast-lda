@@ -45,3 +45,18 @@ int max_corpus_length(corpus* c)
     return(max);
 }
 
+void gatherDocWords(fp_t* entire_matrix, fp_t* reduced_matrix, document* doc, size_t row_size) {
+    for (int n = 0; n < doc->length; n++)
+    {
+        memcpy(reduced_matrix + n * row_size,
+               entire_matrix + doc->words[n] * row_size,
+               row_size * sizeof(fp_t));
+    }
+}
+
+void scatterDocWords(fp_t* entire_matrix, fp_t* reduced_matrix, document* doc, size_t row_size) {
+    for (int n = 0; n < doc->length; n++)
+    {
+        entire_matrix[doc->words[n]] = reduced_matrix[n];
+    }
+}

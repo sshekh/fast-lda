@@ -59,7 +59,7 @@ void lda_mle(lda_model* model, lda_suffstats* ss, int estimate_alpha)
     stop_timer(t);
 }
 
-lda_model* new_lda_model(int num_terms, int num_topics)
+lda_model* new_lda_model(int num_terms, int num_topics, int max_doc_length)
 {
     int i,j;
     lda_model* model;
@@ -71,10 +71,18 @@ lda_model* new_lda_model(int num_terms, int num_topics)
     model->log_prob_w = malloc(sizeof(fp_t) * num_terms * num_topics);
     for (i = 0; i < num_terms; i++)
     {
-       for (j = 0; j < num_topics; j++)
+        for (j = 0; j < num_topics; j++)
            model->log_prob_w[i * num_topics + j] = 0;
-   }
-   return model;
+    }
+
+    // <CC> Create matrix for log_prob_w for one doc for optimization no 2.
+    model->log_prob_w_doc = malloc(sizeof(fp_t*)* max_doc_length * num_topics);
+    for (i = 0; i < max_doc_length; i++)
+    {
+        for (j = 0; j < num_topics; j++)
+           model->log_prob_w_doc[i * num_topics + j] = 0;
+    }
+    return model;
 }
 
 
@@ -84,7 +92,7 @@ void free_lda_model(lda_model* model)
 }
 
 
-void save_lda_model(lda_model* model, char* model_root)
+void save_lda_model(lda_model* model, char* model_root, int max_doc_length)
 {
     char filename[100];
     FILE* fileptr;
@@ -106,6 +114,7 @@ void save_lda_model(lda_model* model, char* model_root)
    fileptr = fopen(filename, "w");
    fprintf(fileptr, "num_topics %d\n", model->num_topics);
    fprintf(fileptr, "num_terms %d\n", model->num_terms);
+   fprintf(fileptr, "max_doc_length %d\n", max_doc_length);
    fprintf(fileptr, "alpha %5.10f\n", model->alpha);
    fclose(fileptr);
 }
@@ -115,7 +124,7 @@ lda_model* load_lda_model(char* model_root)
 {
     char filename[100];
     FILE* fileptr;
-    int i, j, num_terms, num_topics;
+    int i, j, num_terms, num_topics, max_doc_length;
     float x, alpha;
 
     sprintf(filename, "%s.other", model_root);
@@ -123,10 +132,11 @@ lda_model* load_lda_model(char* model_root)
     fileptr = fopen(filename, "r");
     fscanf(fileptr, "num_topics %d\n", &num_topics);
     fscanf(fileptr, "num_terms %d\n", &num_terms);
+    fscanf(fileptr, "max_doc_length %d\n", &max_doc_length);
     fscanf(fileptr, "alpha %f\n", &alpha);
     fclose(fileptr);
 
-    lda_model* model = new_lda_model(num_terms, num_topics);
+    lda_model* model = new_lda_model(num_terms, num_topics, max_doc_length);
     model->alpha = alpha;
 
     sprintf(filename, "%s.beta", model_root);
