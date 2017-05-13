@@ -170,9 +170,9 @@ lda_suffstats* new_lda_suffstats(lda_model* model)
 void zero_initialize_ss(lda_suffstats* ss, lda_model* model)
 {
     int k, w;
-    for (w = 0; w < model->num_terms; w++)
+    for (k = 0; k < model->num_topics; k++)
     {
-        for (k = 0; k < model->num_topics; k++)
+        for (w = 0; w < model->num_terms; w++)
         {
             ss->class_word[w * model->num_topics + k] = 0;
         }
