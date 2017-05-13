@@ -53,11 +53,11 @@ def exists(path):
     except FileNotFoundError:
         return False
 
-def prompt_yna():
+def prompt_yna(always_flag):
     while True:
         inp = input('(y)es, (n)o, yes to (a)ll\n')
         if inp[0] in {'y', 'n', 'a'}:
-            ALWAYS_GENERATE_REF = inp[0] == 'a'
+            always_flag = inp[0] == 'a'
             return inp[0] != 'n'
 
 
@@ -86,7 +86,7 @@ def test(k, n, dbl):
         print('Reference file %s not found... ' % which, end='\n')
         if not ALWAYS_GENERATE_REF:
             print('Do you want to generate it?')
-            if not prompt_yna():
+            if not prompt_yna(ALWAYS_GENERATE_REF):
                 print('Aborting')
                 sys.exit(0)
 
@@ -95,14 +95,8 @@ def test(k, n, dbl):
         print('Reference file %s is available... ' % which, end='\n')
         if not ALWAYS_USE_REF:
             print('Do you want to use the available reference file?')
-            while True:
-                inp = input('(y)es, (n)o, yes to (a)ll\n')
-                if inp[0] in {'y', 'n', 'a'}:
-                    ALWAYS_USE_REF = inp[0] == 'a'
-                    if inp[0] is 'n':
-                        generate(k, n, dbl, overwrite=True)
-                        break
-                    break
+            if not prompt_yna(ALWAYS_USE_REF):
+                generate(k, n, dbl, overwrite=True)
 
 
     run_lda('fast', k, n)

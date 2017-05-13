@@ -64,7 +64,7 @@ fp_t opt_alpha(fp_t ss, int D, int K)
         df = d_alhood(a, ss, D, K);
         d2f = d2_alhood(a, D, K);
         log_a = log_a - df/(d2f * a + df);
-        printf("alpha maximization : %5.5f   %5.5f\n", f, df);
+        // printf("alpha maximization : %5.5f   %5.5f\n", f, df);
     }
     while ((fabs(df) > NEWTON_THRESH) && (iter < MAX_ALPHA_ITER));
 
