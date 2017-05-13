@@ -11,10 +11,8 @@
 
 #ifdef DOUBLE
     #define fp_t double
-    #define FP_MIN      DBL_MIN
 #else
     #define fp_t float
-    #define FP_MIN      FLT_MIN
 #endif
 
 #include "rdtsc.h"
