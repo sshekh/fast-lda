@@ -25,14 +25,14 @@
  *
  */
 
-fp_t alhood(fp_t a, fp_t ss, int D, int K)
-{ return(D * (lgamma(K * a) - K * lgamma(a)) + (a - 1) * ss); }
+fp_t alhood(fp_t a, fp_t ss, int N, int K)
+{ return(N * (lgamma(K * a) - K * lgamma(a)) + (a - 1) * ss); }
 
-fp_t d_alhood(fp_t a, fp_t ss, int D, int K)
-{ return(D * (K * digamma(K * a) - K * digamma(a)) + ss); }
+fp_t d_alhood(fp_t a, fp_t ss, int N, int K)
+{ return(N * (K * digamma(K * a) - K * digamma(a)) + ss); }
 
-fp_t d2_alhood(fp_t a, int D, int K)
-{ return(D * (K * K * trigamma(K * a) - K * trigamma(a))); }
+fp_t d2_alhood(fp_t a, int N, int K)
+{ return(N * (K * K * trigamma(K * a) - K * trigamma(a))); }
 
 
 /*
@@ -40,7 +40,7 @@ fp_t d2_alhood(fp_t a, int D, int K)
  *
  */
 
-fp_t opt_alpha(fp_t ss, int D, int K)
+fp_t opt_alpha(fp_t ss, int N, int K)
 {
     fp_t a, log_a, init_a = 100;
     fp_t f, df, d2f;
@@ -60,9 +60,9 @@ fp_t opt_alpha(fp_t ss, int D, int K)
             a = init_a;
             log_a = log(a);
         }
-        f = alhood(a, ss, D, K);
-        df = d_alhood(a, ss, D, K);
-        d2f = d2_alhood(a, D, K);
+        f = alhood(a, ss, N, K);
+        df = d_alhood(a, ss, N, K);
+        d2f = d2_alhood(a, N, K);
         log_a = log_a - df/(d2f * a + df);
         printf("alpha maximization : %5.5f   %5.5f\n", f, df);
     }
