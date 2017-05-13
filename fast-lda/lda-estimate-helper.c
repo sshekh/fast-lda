@@ -57,6 +57,7 @@ void gatherDocWords(fp_t* entire_matrix, fp_t* reduced_matrix, document* doc, si
 void scatterDocWords(fp_t* entire_matrix, fp_t* reduced_matrix, document* doc, size_t row_size) {
     for (int n = 0; n < doc->length; n++)
     {
-        entire_matrix[doc->words[n]] = reduced_matrix[n];
+        for (int k = 0; k < row_size; k++)
+            entire_matrix[doc->words[n] * row_size + k] = reduced_matrix[n * row_size + k];
     }
 }
