@@ -323,8 +323,8 @@ int main(int argc, char* argv[])
             NTOPICS = atoi(argv[4]);
             read_settings(argv[5]);
             corpus = read_data(argv[6], doc_limit);
-            run_em(argv[7], argv[8], corpus);
             make_directory(argv[8]);
+            run_em(argv[7], argv[8], corpus);
         }
         if (strcmp(argv[1], "inf")==0)
         {
