@@ -29,9 +29,15 @@ Optimizations
 
 	Actual improvements: TO DO
 
-2. TO DO: Save the matrices model->log_prob_w[K][V] and ss->class_word[K][V] for
-    one document for the reiteration because we jump through 10000 words and we
-    might replace things in the L1 cache which we could avoid.
+
+2. DONE: Save the matrices model->log_prob_w[K][V] and ss->class_word[K][V] for one document
+	for the reiteration because we jump through 10000 words and we might replace things
+	in the L1 cache which we could avoid.
+	Instead gather the rowns needed for one doc_e_step and scatter them after the computation.
+
+	Calculations show we save ~ 1/16 STLB/TLB? misses(write down the calculations)
+
+	TO DO: Benchmarking results
 
 3. MAYBE DO: In the inference, do the convergence loop not for the entire matrix
     log_prob_w (or the smaller matrix for one document), but do stuff until
