@@ -96,17 +96,6 @@ fp_t log_gamma(fp_t x)
 
 
 /*
- * make directory
- *
- */
-
-void make_directory(char* name)
-{
-    mkdir(name, S_IRUSR|S_IWUSR|S_IXUSR);
-}
-
-
-/*
  * argmax
  *
  */

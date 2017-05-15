@@ -20,6 +20,8 @@ int main(int argc, char* argv[])
     // seedMT(t1);
     seedMT(4357U);
 
+    char cmd_mkdir[500];
+
     if (argc > 8)
     {
         if (strcmp(argv[1], "est")==0)
@@ -29,7 +31,8 @@ int main(int argc, char* argv[])
             NTOPICS = atoi(argv[4]);
             read_settings(argv[5]);
             corpus = read_data(argv[6], doc_limit);
-            make_directory(argv[8]);
+            sprintf(cmd_mkdir, "mkdir %s", argv[8]);
+            system(cmd_mkdir);
 
             init_timing_infrastructure();
             run_em(argv[7], argv[8], corpus);
