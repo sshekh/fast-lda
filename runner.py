@@ -23,7 +23,12 @@ TIMING_FILENAME = '%s_timings_%d_%d.csv'
 
 RUN_NAME = None
 
-def quit_on_fail(i):
+def print_cmd(cmd):
+    print(Fore.LIGHTBLUE_EX)
+    print(cmd)
+    print(Style.RESET_ALL)
+
+def quit_on_fail(i, cmd=None):
     if i != 0:
         print(Style.RESET_ALL)
         sys.exit()
@@ -39,9 +44,7 @@ def run_lda(which, k, n):
             'random',                           # Initialization method (only random)
             LDA_EXE_LOG % which]                # Output directory
 
-    print(Fore.LIGHTBLUE_EX)
-    print(params)
-    print(Style.RESET_ALL)
+    print_cmd(params)
     print(Fore.LIGHTGREEN_EX)
     print(' ========== ')
     quit_on_fail(subprocess.call(params))
@@ -282,11 +285,13 @@ if __name__ == '__main__':
             final_command += (' XCFLAGS="%s"' % xflags)
 
         # Actually make the programs
+        print_cmd('cd fast-lda && make clean && ' + final_command)
         print('Perparing the fast...')
         print(Fore.LIGHTGREEN_EX)
         quit_on_fail(os.system('cd fast-lda && make clean && ' + final_command))
         print(Style.RESET_ALL)
 
+        print_cmd('cd slow-lda && make clean && ' + final_command)
         print('Perparing the slow...')
         print(Fore.LIGHTGREEN_EX)
         quit_on_fail(os.system('cd slow-lda && make clean && ' + final_command))
