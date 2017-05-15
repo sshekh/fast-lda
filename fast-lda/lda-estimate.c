@@ -81,7 +81,7 @@ void run_em(char* start, char* directory, corpus* corpus)
 
     // Phi variational parameter for each term in the vocabulary and for each topic.
     int max_length = max_corpus_length(corpus);
-    phi = malloc(sizeof(fp_t*) * max_length * NTOPICS);
+    phi = malloc(sizeof(fp_t) * max_length * NTOPICS);
 
     // initialize model
     char filename[1000];
