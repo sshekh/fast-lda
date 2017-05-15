@@ -56,7 +56,9 @@ fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
        // Update equation (16) for variational phi for each topic and word.
        for (n = 0; n < doc->length; n++)
        {
-            // <BG> Moved if else initialization of phisum outside of the loop
+            // <BG, SS> Moved if else initialization of phisum outside of the loop
+            oldphi[0] = phi[n * model->num_topics + 0];
+            phi[n * model->num_topics + 0] = digamma_gam[0] + model->log_prob_w[doc->words[n] * model->num_topics + 0];
             phisum = phi[n * model->num_topics + 0];
             for (k = 1; k < model->num_topics; k++)
             {

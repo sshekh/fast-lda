@@ -39,6 +39,9 @@ def run_lda(which, k, n):
             'random',                           # Initialization method (only random)
             LDA_EXE_LOG % which]                # Output directory
 
+    print(Fore.LIGHTBLUE_EX)
+    print(params)
+    print(Style.RESET_ALL)
     print(Fore.LIGHTGREEN_EX)
     print(' ========== ')
     quit_on_fail(subprocess.call(params))
