@@ -157,18 +157,12 @@ def record_vitals(comment):
         minilog.write('\n\n===============================\n\n')
 
         # Settings
-        minilog.write('Settings file (fast):\n')
-        with open('./fast-lda/settings.txt') as fsetts:
-            settings = fsetts.readlines()
+        minilog.write('Settings file:\n')
+        with open('../master-settings.txt') as setts:
+            settings = setts.readlines()
             minilog.writelines(settings)
 
         minilog.write('\n')
-
-        minilog.write('Settings file (slow):\n')
-        with open('./slow-lda/settings.txt') as fsetts:
-            settings = fsetts.readlines()
-            minilog.writelines(settings)
-
 
 def usage_and_quit():
     print('Fast runner')
