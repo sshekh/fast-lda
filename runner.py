@@ -73,9 +73,12 @@ def generate(k, n, dbl, overwrite=False):
 
     dst = REFERENCE_DATA % (k, n, dbl)
 
-    if exists(dst) and overwrite == False:
-        print('Already exists. Skipping...')
-        return
+    if exists(dst):
+        if overwrite:
+            os.remove(dst)
+        else:
+            print('Already exists. Skipping...')
+            return
 
     run_lda('slow', k, n)
     os.renames(LDA_OUT_BETA % 'slow', dst)
@@ -89,7 +92,7 @@ def test(k, n, dbl):
     which = REFERENCE_DATA % (k, n, dbl)
 
     if not exists(which):
-        print('Reference file %s not found... ' % which, end='\n')
+        print('Reference file %s not found... ' % which)
         if not ALWAYS_GENERATE_REF:
             print('Do you want to generate it?')
             if not prompt_yna(ALWAYS_GENERATE_REF):
@@ -98,7 +101,7 @@ def test(k, n, dbl):
 
         generate(k, n, dbl)
     else:
-        print('Reference file %s is available... ' % which, end='\n')
+        print('Reference file %s is available... ' % which)
         if not ALWAYS_USE_REF:
             print('Do you want to use the available reference file?')
             if not prompt_yna(ALWAYS_USE_REF):
