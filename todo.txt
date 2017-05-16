@@ -6,3 +6,6 @@
 		point 7 - performance plot decription
 
 8) Script for Automatic flop, memeory transfers counters which uses the caller/callee DAG. 
+
+9) ! The printing of the model is suppressed by the actualy call to inference 
+	is not so computation is performed outside RUN_EM. What to do?
