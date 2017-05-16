@@ -1,3 +1,9 @@
+
+
+perf stat -e instructions,cycles,cache-references,cache-misses,LLC-loads,LLC-load-misses,LLC-stores,LLC-store-misses,dTLB-loads,dTLB-load-misses,dTLB-stores,dTLB-store-misses <cmd>
+
+####################################################
+
 perf stat -e task-clock,cycles,instructions,cache-references,cache-misses,branches,branch-misses,bus-cycles,page-faults ./fast-lda/lda est 200 1 50 master-settings.txt ./fast-lda/ap/ap.dat random ./fast-lda/logfiles
 
  Performance counter stats for './fast-lda/lda est 200 1 50 master-settings.txt ./fast-lda/ap/ap.dat random ./fast-lda/logfiles':
