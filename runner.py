@@ -84,7 +84,7 @@ def generate(k, n, dbl, overwrite=False):
     os.renames(LDA_OUT_BETA % 'slow', dst)
 
 
-def test(k, n, dbl):
+def test(k, n, dbl="", epsilon=0):
     global ALWAYS_GENERATE_REF
     global ALWAYS_USE_REF
     # Run the fast LDA and compare the resulting final beta against the reference.
@@ -114,7 +114,7 @@ def test(k, n, dbl):
     created = open(LDA_OUT_BETA % 'fast', 'r')
 
     print('Comparing against the reference...')
-    good = beta_comp.compare(reference, created)
+    good = beta_comp.compare(reference, created, epsilon=epsilon)
 
     reference.close()
     created.close()
@@ -123,7 +123,7 @@ def test(k, n, dbl):
         # The comparator script has printed the relevant info, just quit.
         sys.exit(1)
     else:
-        print('Test %d %d ran successfully' % (k, n))
+        print('Test %d %d ran successfully\n' % (k, n))
 
 def bench(k, n, which):
 
@@ -164,7 +164,7 @@ def record_vitals(comment):
 
         # Settings
         minilog.write('Settings file:\n')
-        with open('../master-settings.txt') as setts:
+        with open('./master-settings.txt') as setts:
             settings = setts.readlines()
             minilog.writelines(settings)
 
@@ -302,15 +302,19 @@ if __name__ == '__main__':
 
     # Use different names for the reference files depending on whether we're
     # using floats or doubles.
+    # Use different validation thresholds.
+    # REPORT TO THE GROUP if thresholds are changed
     if use_doubles:
         ref_type_name = 'dbl'
+        validation_threshold = 1e-6
     else:
         ref_type_name = 'flt'
+        validation_threshold = 1e-1
 
     if mode == 'gen':
         fn = lambda x, y: generate(x, y, ref_type_name)
     elif mode == 'test':
-        fn = lambda x, y: test(x, y, ref_type_name)
+        fn = lambda x, y: test(x, y, ref_type_name, validation_threshold)
     elif mode == 'bench':
 
         which = []
@@ -324,7 +328,7 @@ if __name__ == '__main__':
 
         if validate_when_benching:
             print('First validating on a small input...')
-            test(10, 100)
+            test(10, 100, dbl=ref_type_name, epsilon=validation_threshold)
 
         if not do_fast and not do_slow:
             raise ValueError('When benchmarking, specify at least one of -s (slow), -f (fast)')

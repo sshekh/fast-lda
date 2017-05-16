@@ -5,8 +5,9 @@
 # <beta file> is output from the lda-c code
 
 import sys
+import numpy as np
 
-def IsApproximatelyEqual(x, y, epsilon = 1e-6):
+def IsApproximatelyEqual(x, y, epsilon):
     """Returns True iff y is within relative or absolute 'epsilon' of x.
     By default, 'epsilon' is 1e-6.
     """
@@ -21,23 +22,27 @@ def IsApproximatelyEqual(x, y, epsilon = 1e-6):
 
     return False
 
-def compare(f1, f2):
-    topics1 = f1.readlines()
-    topics2 = f2.readlines()
-    if len(topics1) != len(topics2):
-        print("Number of topics not equal!!, file 1 has %d, file 2 %d\n" % (len(topics1), len(topics2)))
+def compare(f_ref, f_opt, top_x = 20, epsilon = 1e-1):
+    topics_ref = f_ref.readlines()
+    topics_opt = f_opt.readlines()
+    if len(topics_ref) != len(topics_opt):
+        print("Number of topics not equal!!, file 1 has %d, file 2 %d\n" % (len(topics_ref), len(topics_opt)))
         return False
-    for i in range(len(topics1)):
-        topic1 = [float(x) for x in topics1[i].split()]
-        topic2 = [float(x) for x in topics2[i].split()]
-        if len(topic1) != len(topic2):
-            print("Number of words in topic %d not equal!!, file 1 has %d, file 2 %d\n" % (i, len(topic1), len(topic2)))
+    for i in range(len(topics_ref)):
+        one_topic_ref = [float(x) for x in topics_ref[i].split()]
+        one_topic_opt = [float(x) for x in topics_opt[i].split()]
+        if len(one_topic_ref) != len(one_topic_opt):
+            print("Number of words in topic %d not equal!!, file 1 has %d, file 2 %d\n" % (i, len(one_topic_ref), len(one_topic_opt)))
             return False
         else:
-            for j in range(len(topic1)):
-                if not IsApproximatelyEqual(topic1[j], topic2[j]):
-                    print("Word %d %f %f" % (j, topic1[j], topic2[j]))
-                    print("Aborting topic\n")
+            # First reverse to descending order, then pick TOP X topics from the reference file, only compare on those.
+            ind_ref = np.argsort(one_topic_ref)[::-1][:top_x]
+            for j in ind_ref:
+                if not IsApproximatelyEqual(one_topic_ref[j], one_topic_opt[j], epsilon):
+                    print("\nVALIDATION FAILED")
+                    print("Validation threshold: %f" % epsilon)
+                    print("Word %d in topic %d: %f %f" % (j, i, one_topic_ref[j], one_topic_opt[j]))
+                    print("\nAborting validation...\n")
                     return False
 
     return True
