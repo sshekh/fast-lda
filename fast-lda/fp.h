@@ -57,7 +57,12 @@
     #define _mm256_undefined    _mm256_undefined_pd
     #define _mm256_xor          _mm256_xor_pd
 
-    #define _mm256_log          _mm256_log_pd
+    #ifdef __INTEL_COMPILER
+        #define _mm256_log          _mm256_log_pd
+    #else
+        // GCC doesn't have this intrinsic
+        __m256d _mm256_log(__m256d x);
+    #endif
 
     #define _mm256_rcp(a)       _mm256_div_pd(_mm256_set1_pd(1.0), a)
 
@@ -122,12 +127,18 @@
     #define _mm256_undefined    _mm256_undefined_ps
     #define _mm256_xor          _mm256_xor_ps
 
-    #define _mm256_log          _mm256_log_ps
 
     #define _mm256_rcp          _mm256_rcp_ps
-
     // c * 1/a is faster than c / a when using the rcp instruction
     #define _rcp_const(c, a)    _mm256_mul_ps(c, _mm256_rcp_ps(a))
+
+    #ifdef __INTEL_COMPILER
+        #define _mm256_log          _mm256_log_ps
+    #else
+        // GCC doesn't have this intrinsic
+        __m256 _mm256_log(__m256 x);
+    #endif
+
 
 #endif
 
