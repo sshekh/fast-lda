@@ -1,8 +1,18 @@
-2) Generate smaller reference outputs from the various parameter ranges decided upon
+1) Script for automatic memory transfers counters which uses the caller/callee DAG. 
 
-6) Script to run the timings for different input size and plot performance.
-7) Update project descriptions:
-		point 4 - decribe validation
-		point 7 - performance plot decription
+2) ! The printing of the model is suppressed but the actualy call to inference 
+	is not so computation is performed outside RUN_EM. 
 
-8) Script for Automatic flop, memeory transfers counters which uses the caller/callee DAG. 
+3) Benchmark float against double - tradeoff between precision and speed muhaha
+
+4) Computational optimization - Cache results of function called repetedly 
+
+5) "Better"  pie-chart
+
+6) Bechmark functions individualy, Fred suggest independent timings
+
+7) All the otehr optimizations: ILP, scalar replacement, register level optimizations
+
+8) SIMD
+
+

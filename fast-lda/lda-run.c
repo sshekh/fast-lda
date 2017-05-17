@@ -31,8 +31,6 @@ int main(int argc, char* argv[])
             NTOPICS = atoi(argv[4]);
             read_settings(argv[5]);
             corpus = read_data(argv[6], doc_limit);
-            sprintf(cmd_mkdir, "mkdir %s", argv[8]);
-            system(cmd_mkdir);
 
             init_timing_infrastructure();
             run_em(argv[7], argv[8], corpus);
@@ -41,7 +39,6 @@ int main(int argc, char* argv[])
             if (argc == 10 && strcmp(argv[9], "-out") == 0) {
                 f = stdout;
             } else {
-                system("mkdir results");
                 f = fopen("results/timings.csv","w");
             }
 

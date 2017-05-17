@@ -7,6 +7,7 @@
 
 #include "lda.h"
 #include <stdio.h>
+#include <string.h>
 
 /*
  * Saves the gamma parameters of the current dataset
@@ -25,6 +26,21 @@ void write_word_assignment(FILE* f, document* doc, fp_t* phi, lda_model* model);
  *
  */
 int max_corpus_length(corpus* c);
+
+/*
+ * Gather all rows from matrices used per document.
+ *
+ */
+void gatherDocWords(fp_t* entire_matrix, fp_t* reduced_matrix,
+					document* doc, size_t row_size);
+
+/*
+ * Scatter all rows from matrix used per document to the original large matrix.
+ *
+ */
+void scatterDocWords(fp_t* entire_matrix, fp_t* reduced_matrix,
+					 document* doc, size_t row_size);
+
 
 
 #endif

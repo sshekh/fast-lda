@@ -3,8 +3,6 @@
  * Time Stamp Counter. The Intel manuals contain more information.
  */
 
-#undef WIN32
-
 #ifndef RDTSC_H_INCLUDED
 #define RDTSC_H_INCLUDED
 
