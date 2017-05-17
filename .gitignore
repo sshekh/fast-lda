@@ -18,7 +18,9 @@ obj/*
 # Compile output
 **/*.o
 **/lda
-**/lda.exe
+
+# Windows
+**/*.exe
 **/*.ilk
 **/*.pdb
 
