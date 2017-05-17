@@ -23,12 +23,13 @@ OBJ=-o
 OUTNAME=-olda
 
 # CC should be either gcc (default), icc (intel linux) or icl (intel windows)
+#_CRT_SECURE_NO_WARNINGS: silence warnings about scanf, fopen and other stuff.
 ifeq ($(CC),gcc)
-	CFLAGS= -O3 -Wall -g -std=c99
+	CFLAGS= -O3 -Wall -g -std=c99 -D_CRT_SECURE_NO_WARNINGS
 	LDFLAGS= -lm
 else
 	ifeq ($(CC),icl)
-		CFLAGS= /O3 /Wall /Z7 /std=c99 /DWIN32
+		CFLAGS= /O3 /Wall /Z7 /std=c99 /DWIN32 /D_CRT_SECURE_NO_WARNINGS
 		LDFLAGS=
 		PARTIAL=/c
 		OBJ=/Fo
