@@ -48,7 +48,7 @@ LOBJECTS= rdtsc-helper.o lda-estimate-helper.o lda-run.o lda-estimate.o lda-mode
 	$(CC) $(CFLAGS) $(XCFLAGS) $(PARTIAL) $< $(OBJ)$@
 
 lda:	$(LOBJECTS)
-	$(CC) $(LOBJECTS) $(LDFLAGS) $(OUTNAME)
+	$(CC) $(CFLAGS) $(LOBJECTS) $(LDFLAGS) $(OUTNAME)
 
 clean:
 	-rm -f *.o *.ilk *.pdb lda.exe lda
