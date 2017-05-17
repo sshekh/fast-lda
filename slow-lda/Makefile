@@ -30,4 +30,4 @@ lda:	$(LOBJECTS)
 	$(CC) $(CFLAGS) $(LOBJECTS) -o lda $(LDFLAGS)
 
 clean:
-	-rm -f *.o
+	-rm -f *.o ../fast-lda/rdtsc-helper.o
