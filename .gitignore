@@ -19,6 +19,8 @@ obj/*
 **/*.o
 **/lda
 **/lda.exe
+**/*.ilk
+**/*.pdb
 
 # Output files from running
 **/*.gamma
