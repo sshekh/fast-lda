@@ -62,7 +62,6 @@ fp_t doc_e_step(document* doc, fp_t* gamma, fp_t* phi,
     {
         for (k = 0; k < model->num_topics; k++)
         {
-            // <BG> non-sequential matrix access
             ss->class_word[doc->words[n] * model->num_topics + k] += doc->counts[n]*phi[n * model->num_topics + k];
             ss->class_total[k] += doc->counts[n]*phi[n * model->num_topics + k];
         }

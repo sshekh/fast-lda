@@ -14,5 +14,3 @@
 7) All the otehr optimizations: ILP, scalar replacement, register level optimizations
 
 8) SIMD
-
-
