@@ -165,7 +165,7 @@ def perf(k, n, which):
 
         target = TIMING_FOLDER % RUN_NAME + ('/perf_%s_%d_%d.txt' % (which, k, n))
 
-        run_cmd(perf_part + ' ' + lda_part + ' > ' + target)
+        run_cmd(perf_part + ' ' + lda_part + ' 2> ' + target)
 
 def record_vitals(comment):
     os.makedirs(TIMING_FOLDER % RUN_NAME)
