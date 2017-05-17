@@ -76,6 +76,86 @@ fp_t digamma(fp_t x)
     return p;
 }
 
+__m256fp digamma_vec(__m256fp x)
+{
+    timer rdtsc = start_timer(DIGAMMA);
+
+
+    __m256fp HALVES = _mm256_set1(0.5);
+    __m256fp ONES = _mm256_set1(1);
+    __m256fp TWOS = _mm256_set1(2);
+    __m256fp THREES = _mm256_set1(3);
+    __m256fp FOURS = _mm256_set1(4);
+    __m256fp FIVES = _mm256_set1(5);
+    __m256fp SIXES = _mm256_set1(6);
+    __m256fp ONE_120TH = _mm256_set1((fp_t) 0.008333333333333);
+    __m256fp ONE_240TH = _mm256_set1((fp_t) 0.004166666666667);
+    // <FL> I have no idea what this is. Google returns other implementations of
+    // the digamma function or things like "the epic floating point battle".
+    __m256fp DIGAMMA_CONST = _mm256_set1((fp_t) 0.003968253986254);
+
+    // x = x + 6
+    __m256fp x6  = _mm256_add(x, SIXES);
+
+    // p = 1 / (x*x)
+    __m256fp xsq = _mm256_mul(x6, x6);
+    __m256fp p   = _mm256_rcp(xsq);
+
+    /* <FL>
+     * Use fp associativity.
+     * We go from (((p/240 - const)p + 1/120)p - 1/240)p
+     * to (p/240 - const) p^3 + p^2/120 - p/240
+     * This strikes a balance between making the tree shallower and increasing
+     * the number of flops. The first version takes 28 cycles, while this one
+     * takes 20.
+     */
+    __m256fp p240 = _mm256_mul(p, ONE_240TH);
+    __m256fp psq = _mm256_mul(p, p);
+
+    __m256fp psq120 = _mm256_mul(psq, ONE_120TH);
+    __m256fp pcu = _mm256_mul(psq, p);
+    __m256fp p240c = _mm256_sub(p240, DIGAMMA_CONST);
+
+    // No ILP here
+    __m256fp r = _mm256_mul(p240c, pcu);
+    __m256fp q = _mm256_add(r, psq120);
+    p = _mm256_sub(q, p240);
+
+
+    // p+log(x)-0.5/x-1/(x-1)-1/(x-2)-1/(x-3)-1/(x-4)-1/(x-5)-1/(x-6)
+    // Tons of ILP here
+    __m256fp logx = _mm256_log(x6);
+    __m256fp hox = _rcp_const(HALVES, x6);
+
+    __m256fp xm1 = _mm256_sub(x6, ONES);
+    __m256fp xm2 = _mm256_sub(x6, TWOS);
+    __m256fp xm3 = _mm256_sub(x6, THREES);
+    __m256fp xm4 = _mm256_sub(x6, FOURS);
+    __m256fp xm5 = _mm256_sub(x6, FIVES);
+    __m256fp xm6 = _mm256_sub(x6, SIXES);
+
+    __m256fp xm1r = _mm256_rcp(xm1);
+    __m256fp xm2r = _mm256_rcp(xm2);
+    __m256fp xm3r = _mm256_rcp(xm3);
+    __m256fp xm4r = _mm256_rcp(xm4);
+    __m256fp xm5r = _mm256_rcp(xm5);
+    __m256fp xm6r = _mm256_rcp(xm6);
+
+    // Maximally exploit associativity
+    __m256fp logx_m_hox = _mm256_sub(logx, hox);
+    __m256fp xm12r = _mm256_add(xm1r, xm2r);
+    __m256fp xm34r = _mm256_add(xm3r, xm4r);
+    __m256fp xm56r = _mm256_add(xm5r, xm6r);
+
+    __m256fp a = _mm256_sub(logx_m_hox, xm12r);
+    __m256fp b = _mm256_add(xm34r, xm56r);
+    __m256fp c = _mm256_sub(a, b);
+    __m256fp result = _mm256_add(p, c);
+
+    stop_timer(rdtsc);
+    return result;
+}
+
 
 fp_t log_gamma(fp_t x)
 {
