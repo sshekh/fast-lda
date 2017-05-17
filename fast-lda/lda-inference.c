@@ -102,33 +102,41 @@ fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
 
 fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_gamma)
 {
-    fp_t likelihood = 0, digsum = 0, var_gamma_sum = 0, dig[model->num_topics];
+    fp_t likelihood = 0, dig[model->num_topics];
     int k, n;
 
     timer rdtsc = start_timer(LIKELIHOOD);
 
+    // Initialize dig and var_gamma_sum
+    __m256fp var_gamma_sum = _mm256_setzero();
     int kk;
     __m256i kmask;
     STRIDE_SPLIT(model->num_topics, &kk, &kmask);
     for (k = 0; k < kk; k += STRIDE)
     {
         __m256fp vga = _mm256_loadu(var_gamma + k);
-       _mm256_storeu(dig + k, digamma_vec(vga));
+        var_gamma_sum = _mm256_add(var_gamma_sum, vga);
+        __m256fp vdga = digamma_vec(vga);
+       _mm256_storeu(dig + k, vdga);
     }
     if (LEFTOVER(model->num_topics)) {
         __m256fp vga = _mm256_maskload(var_gamma + kk, kmask);
-        _mm256_maskstore(dig + kk, kmask, digamma_vec(vga));
+        var_gamma_sum = _mm256_add(var_gamma_sum, vga);
+        __m256fp vdga = digamma_vec(vga);
+        _mm256_maskstore(dig + kk, kmask, vdga);
     }
 
-    // <FL> TODO incorporate in above loop
-    for (k = 0 ; k < model->num_topics ; k++)
-        var_gamma_sum += var_gamma[k];
-    digsum = digamma(var_gamma_sum);
+    // TODO Accumulate out the sum!
+
+    // debug debug
+    fp_t digsum = 0;
+    /*
+    __m256fp digsum = digamma_vec(var_gamma_sum);
 
     // <BG>: lgamma is a math library function
     likelihood = lgamma(model->alpha * model -> num_topics)
                 - model -> num_topics * lgamma(model->alpha)
-                - (lgamma(var_gamma_sum));
+                - (lgamma(var_gamma_sum)); */
 
     // Compute the log likelihood dependent on the variational parameters
     // as per equation (15).

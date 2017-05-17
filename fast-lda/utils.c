@@ -173,6 +173,74 @@ fp_t log_gamma(fp_t x)
     return z;
 }
 
+__m256fp log_gamma_vec(__m256fp x)
+{
+    timer rdtsc = start_timer(LOG_GAMMA);
+
+    __m256fp HALVES = _mm256_set1(0.5);
+    __m256fp ONES = _mm256_set1(1);
+    __m256fp TWOS = _mm256_set1(2);
+    __m256fp THREES = _mm256_set1(3);
+    __m256fp FOURS = _mm256_set1(4);
+    __m256fp FIVES = _mm256_set1(5);
+    __m256fp SIXES = _mm256_set1(6);
+    __m256fp RM1680 = _mm256_set1(-0.000595238095238);
+    __m256fp R1260 = _mm256_set1(0.000793650793651);
+    __m256fp R360 = _mm256_set1(0.002777777777778);
+    __m256fp R12 = _mm256_set1(0.083333333333333);
+    //<FL> Another unexplainable constant
+    __m256fp LGAM_CONST = _mm256_set1(0.918938533204673);
+
+    // z = 1 / (x*x)
+    __m256fp xsq = _mm256_mul(x, x);
+    __m256fp z = _mm256_rcp(xsq);
+
+    // x = x + 6
+    x = _mm256_add(x, SIXES);
+
+    // <FL> Sadly we cannot take advantage of fp associativity for this z update
+    z = _mm256_mul(RM1680, z);
+    z = _mm256_add(z, R1260);
+    z = _mm256_mul(z, z);
+    z = _mm256_sub(z, R360);
+    z = _mm256_mul(z, z);
+    z = _mm256_add(z, R12);
+    z = _rcp_const(z, x);
+
+    __m256fp xh = _mm256_sub(x, HALVES);
+    __m256fp x1 = _mm256_sub(x, ONES);
+    __m256fp x2 = _mm256_sub(x, TWOS);
+    __m256fp x3 = _mm256_sub(x, THREES);
+    __m256fp x4 = _mm256_sub(x, FOURS);
+    __m256fp x5 = _mm256_sub(x, FIVES);
+    __m256fp x6 = _mm256_sub(x, SIXES);
+
+    __m256fp lx = _mm256_log(x);
+    __m256fp lx1 = _mm256_log(x1);
+    __m256fp lx2 = _mm256_log(x2);
+    __m256fp lx3 = _mm256_log(x3);
+    __m256fp lx4 = _mm256_log(x4);
+    __m256fp lx5 = _mm256_log(x5);
+    __m256fp lx6 = _mm256_log(x6);
+
+    // EXPLOITATIVE ASSOCIATION
+    __m256fp xh_lx = _mm256_mul(xh, lx);
+    __m256fp cz = _mm256_add(LGAM_CONST, z);
+    __m256fp lx12 = _mm256_add(lx1, lx2);
+    __m256fp lx34 = _mm256_add(lx3, lx4);
+    __m256fp lx56 = _mm256_add(lx5, lx6);
+
+    __m256fp r = _mm256_sub(xh_lx, x);
+    __m256fp lx1234 = _mm256_add(lx12, lx34);
+
+    __m256fp s = _mm256_add(r, cz);
+    __m256fp lx1_6 = _mm256_add(lx1234, lx56);
+
+    __m256fp t = _mm256_sub(s, lx1_6);
+
+    stop_timer(rdtsc);
+    return t;
+}
 
 
 /*

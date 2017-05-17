@@ -13,6 +13,7 @@ fp_t trigamma(fp_t x);
 fp_t digamma(fp_t x);
 __m256fp digamma_vec(__m256fp x);
 fp_t log_gamma(fp_t x);
+__m256fp log_gamma_vec(__m256fp x);
 int argmax(fp_t* x, int n);
 
 #endif
