@@ -32,6 +32,8 @@ fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
 
     // Initialize the phi for all topics and all words in the doc
     // and compute digamma of the sum of variational gammas over all the topics.
+
+    // <FL> TODO: Only compute these values once, since they don't depend on k.
     for (k = 0; k < model->num_topics; k++)
     {
         var_gamma[k] = model->alpha + (doc->total/((fp_t) model->num_topics));
@@ -104,11 +106,22 @@ fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_ga
 
     timer rdtsc = start_timer(LIKELIHOOD);
 
-    for (k = 0; k < model->num_topics; k++)
+    int kk;
+    __m256i kmask;
+    STRIDE_SPLIT(model->num_topics, &kk, &kmask);
+    for (k = 0; k < kk; k += STRIDE)
     {
-       dig[k] = digamma(var_gamma[k]);
-       var_gamma_sum += var_gamma[k];
+        __m256fp vga = _mm256_loadu(var_gamma + k);
+       _mm256_storeu(dig + k, digamma_vec(vga));
     }
+    if (LEFTOVER(model->num_topics)) {
+        __m256fp vga = _mm256_maskload(var_gamma + kk, kmask);
+        _mm256_maskstore(dig + kk, kmask, digamma_vec(vga));
+    }
+
+    // <FL> TODO incorporate in above loop
+    for (k = 0 ; k < model->num_topics ; k++)
+        var_gamma_sum += var_gamma[k];
     digsum = digamma(var_gamma_sum);
 
     // <BG>: lgamma is a math library function
