@@ -6,7 +6,7 @@
 #include <float.h>
 #include <stdlib.h>
 
-#include "rdtsc-helper.h"
+#include "fp.h"
 
 fp_t log_sum(fp_t log_a, fp_t log_b);
 fp_t trigamma(fp_t x);

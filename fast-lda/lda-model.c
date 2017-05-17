@@ -21,6 +21,8 @@
  * Implemetation of functionality for LDA model construction and MLE.
 
  */
+
+#include "fp.h"
 #include "lda-model.h"
 #include "rdtsc-helper.h"
 

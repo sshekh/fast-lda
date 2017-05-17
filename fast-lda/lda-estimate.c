@@ -21,6 +21,7 @@
  * Implementation of the LDA parameter estimation functionality.
  */
 
+#include "fp.h"
 #include "lda-estimate.h"
 #include "lda-estimate-helper.h"
 #include "rdtsc-helper.h"
