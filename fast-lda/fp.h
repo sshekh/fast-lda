@@ -139,8 +139,8 @@
         __m256 _mm256_log(__m256 x);
     #endif
 
-
 #endif
 
+__m256fp hsum(__m256fp);
 
 #endif
