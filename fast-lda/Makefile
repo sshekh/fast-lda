@@ -29,7 +29,7 @@ ifeq ($(CC),gcc)
 	LDFLAGS= -lm
 else
 	ifeq ($(CC),icl)
-		CFLAGS= /O3 /Wall /Z7 /std=c99 /DWIN32 /D_CRT_SECURE_NO_WARNINGS /arch:CORE-AVX2
+		CFLAGS= /O3 /Wall /Z7 /std=c99 /DWIN32 /D_CRT_SECURE_NO_WARNINGS /arch:CORE-AVX2 /nologo
 		LDFLAGS=
 		PARTIAL=/c
 		OBJ=/Fo
