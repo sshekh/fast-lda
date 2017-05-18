@@ -181,7 +181,11 @@ def record_vitals(comment, options):
 
         # git information
         repo = Repo('.')
-        branch = repo.active_branch.name
+        try:
+            branch = repo.active_branch.name
+        except:
+            branch = "[Detached HEAD]"
+
         commit = repo.commit().hexsha[:8] # commit by itself returns the last commit
 
         minilog.write('Latest commit at time of writing:\n')
