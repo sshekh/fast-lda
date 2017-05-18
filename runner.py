@@ -104,7 +104,7 @@ def generate(k, n, dbl, overwrite=False):
     os.renames(LDA_OUT_BETA % 'slow', dst)
 
 
-def test(k, n, dbl="", epsilon=0):
+def test(k, n, dbl=""):
     global ALWAYS_GENERATE_REF
     global ALWAYS_USE_REF
     # Run the fast LDA and compare the resulting final beta against the reference.
@@ -134,7 +134,7 @@ def test(k, n, dbl="", epsilon=0):
     created = open(LDA_OUT_BETA % 'fast', 'r')
 
     print('Comparing against the reference...')
-    good = beta_comp.compare(reference, created, epsilon=epsilon)
+    good = beta_comp.compare(reference, created)
 
     reference.close()
     created.close()
@@ -165,22 +165,27 @@ def perf(k, n, which):
 
         target = TIMING_FOLDER % RUN_NAME + ('/perf_%s_%d_%d.txt' % (which, k, n))
 
-        run_cmd(perf_part + ' ' + lda_part + ' > ' + target)
+        run_cmd(perf_part + ' ' + lda_part + ' 2> ' + target)
 
-def record_vitals(comment):
+def record_vitals(comment, options):
     os.makedirs(TIMING_FOLDER % RUN_NAME)
 
     with open((TIMING_FOLDER % RUN_NAME) + '/info.txt', 'w') as minilog:
 
         # Header
         minilog.write('Bench run %s\n' % RUN_NAME)
+        minilog.write('Ran with the options `' + ' '.join(options) + '`\n')
         minilog.write('"' + comment + '"\n')
         minilog.write('===============================\n\n')
 
 
         # git information
         repo = Repo('.')
-        branch = repo.active_branch.name
+        try:
+            branch = repo.active_branch.name
+        except:
+            branch = "[Detached HEAD]"
+
         commit = repo.commit().hexsha[:8] # commit by itself returns the last commit
 
         minilog.write('Latest commit at time of writing:\n')
@@ -237,7 +242,7 @@ def usage_and_quit():
     print('Other options:')
     print('')
     print('\t-m: Do not run make before running a task. Ignored in bench mode.')
-    print('\t-d: Use doubles instead of floats.')
+    print('\t-d: Use doubles instead of floats in the fast.')
     print('\t-s: Silence lda output (always enabled in bench mode).')
     print('\t-i: Compile the fast with icc instead of gcc.')
     print('\t-a: No-prompt mode (always generate missing refs / reuse existing).')
@@ -341,33 +346,29 @@ if __name__ == '__main__':
     if do_make:
 
         # Check which defines we need to add
-        defines = []
+        defines_fast = []
+        defines_slow = ['DOUBLE'] # ALWAYS compile with doubles in the slow.
         if use_doubles:
-            defines.append('DOUBLE')
+            defines_fast.append('DOUBLE')
         if silence_output:
-            defines.append('IGNORE_PRINTF')
-
-
+            defines_fast.append('IGNORE_PRINTF')
+            defines_slow.append('IGNORE_PRINTF')
 
         # Actually make the programs
         print('Preparing the fast...')
         # Use specified compiler for the fast (gcc or icc)
-        run_cmd(construct_make_command('fast', defines, use_icc))
+        run_cmd(construct_make_command('fast', defines_fast, use_icc))
 
         print('Preparing the slow...')
         # Always use gcc for the slow
-        run_cmd(construct_make_command('slow', defines, use_icc=False))
+        run_cmd(construct_make_command('slow', defines_slow, use_icc=False))
 
     # Use different names for the reference files depending on whether we're
     # using floats or doubles.
-    # Use different validation thresholds.
-    # REPORT TO THE GROUP if thresholds are changed
     if use_doubles:
         ref_type_name = 'dbl'
-        validation_threshold = 1e-6
     else:
         ref_type_name = 'flt'
-        validation_threshold = 1e-1
 
     # Create folders as required
     if not exists(REFERENCE_FOLDER):
@@ -383,7 +384,7 @@ if __name__ == '__main__':
     if mode == 'gen':
         fn = lambda x, y: generate(x, y, ref_type_name)
     elif mode == 'test':
-        fn = lambda x, y: test(x, y, ref_type_name, validation_threshold)
+        fn = lambda x, y: test(x, y, 'dbl')
     elif mode == 'perf' or mode == 'bench':
         if not do_fast and not do_slow:
             raise ValueError('When benchmarking, specify at least one of -s (slow), -f (fast)')
@@ -395,7 +396,7 @@ if __name__ == '__main__':
         if do_slow:
             which.append('slow')
 
-        record_vitals(comment)
+        record_vitals(comment, options)
 
         if mode == 'perf':
             sub_fn = perf

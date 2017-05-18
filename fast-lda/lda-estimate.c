@@ -172,8 +172,6 @@ void run_em(char* start, char* directory, corpus* corpus)
     // run expectation maximization
     int var_iter = 0;
     fp_t likelihood, likelihood_old = 0, converged = 1;
-    sprintf(filename, "%s/likelihood.dat", directory);
-    FILE* likelihood_file = fopen(filename, "w");
 
     timer rdtsc = start_timer(RUN_EM);
 
@@ -216,17 +214,6 @@ void run_em(char* start, char* directory, corpus* corpus)
     sprintf(filename,"%s/final.gamma",directory);
     save_gamma(filename, var_gamma, corpus->num_docs, model->num_topics);
 
-    // output the word assignments (for visualization)
-    sprintf(filename, "%s/word-assignments.dat", directory);
-    FILE* w_asgn_file = fopen(filename, "w");
-    for (d = 0; d < corpus->num_docs; d++)
-    {
-        if ((d % 100) == 0) printf("final e step document %d\n",d);
-        likelihood += lda_inference(&(corpus->docs[d]), model, var_gamma[d], phi);
-        // printf("likelihood calculated\n");
-        write_word_assignment(w_asgn_file, &(corpus->docs[d]), phi, model);
-    }
-    fclose(w_asgn_file);
-    fclose(likelihood_file);
+    // <BG>: output the word assignments (for visualization) were removed
 }
 
