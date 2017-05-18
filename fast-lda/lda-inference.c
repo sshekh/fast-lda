@@ -17,7 +17,6 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
 // USA
 
-#include "fp.h"
 #include "lda-inference.h"
 #include "rdtsc-helper.h"
 
@@ -33,8 +32,6 @@ fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
 
     // Initialize the phi for all topics and all words in the doc
     // and compute digamma of the sum of variational gammas over all the topics.
-
-    // <FL> TODO: Only compute these values once, since they don't depend on k.
     for (k = 0; k < model->num_topics; k++)
     {
         var_gamma[k] = model->alpha + (doc->total/((fp_t) model->num_topics));
@@ -102,41 +99,22 @@ fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
 
 fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_gamma)
 {
-    fp_t likelihood = 0, dig[model->num_topics];
+    fp_t likelihood = 0, digsum = 0, var_gamma_sum = 0, dig[model->num_topics];
     int k, n;
 
     timer rdtsc = start_timer(LIKELIHOOD);
 
-    // Initialize dig and var_gamma_sum
-    __m256fp var_gamma_sum = _mm256_setzero();
-    int kk;
-    __m256i kmask;
-    STRIDE_SPLIT(model->num_topics, &kk, &kmask);
-    for (k = 0; k < kk; k += STRIDE)
+    for (k = 0; k < model->num_topics; k++)
     {
-        __m256fp vga = _mm256_loadu(var_gamma + k);
-        var_gamma_sum = _mm256_add(var_gamma_sum, vga);
-        __m256fp vdga = digamma_vec(vga);
-       _mm256_storeu(dig + k, vdga);
+       dig[k] = digamma(var_gamma[k]);
+       var_gamma_sum += var_gamma[k];
     }
-    if (LEFTOVER(model->num_topics)) {
-        __m256fp vga = _mm256_maskload(var_gamma + kk, kmask);
-        var_gamma_sum = _mm256_add(var_gamma_sum, vga);
-        __m256fp vdga = digamma_vec(vga);
-        _mm256_maskstore(dig + kk, kmask, vdga);
-    }
-
-    // TODO Accumulate out the sum!
-
-    // debug debug
-    fp_t digsum = 0;
-    /*
-    __m256fp digsum = digamma_vec(var_gamma_sum);
+    digsum = digamma(var_gamma_sum);
 
     // <BG>: lgamma is a math library function
     likelihood = lgamma(model->alpha * model -> num_topics)
                 - model -> num_topics * lgamma(model->alpha)
-                - (lgamma(var_gamma_sum)); */
+                - (lgamma(var_gamma_sum));
 
     // Compute the log likelihood dependent on the variational parameters
     // as per equation (15).
