@@ -8,7 +8,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "../fast-lda/rdtsc-helper.h"
+#include "../fast-lda/fp.h"
 
 fp_t log_sum(fp_t log_a, fp_t log_b);
 fp_t trigamma(fp_t x);
