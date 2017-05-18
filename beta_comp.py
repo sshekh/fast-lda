@@ -13,29 +13,29 @@ def topic_intersection(p, q, top_x):
     opt_topics = set(np.argsort(q)[::-1][:top_x])
     return float(len(ref_topics & opt_topics)) / top_x
 
-def klDivergence(p, q):
-    sum = 0
-    for i,log_p_i in enumerate(p):
-        if log_p_i > -100:
-            sum += math.exp(log_p_i) * (log_p_i - q[i])
-    return sum
+# def klDivergence(p, q):
+#     sum = 0
+#     for i,log_p_i in enumerate(p):
+#         if log_p_i > -100:
+#             sum += math.exp(log_p_i) * (log_p_i - q[i])
+#     return sum
 
-def IsApproximatelyEqual(x, y, epsilon):
-    """Returns True iff y is within relative or absolute 'epsilon' of x.
-    By default, 'epsilon' is 1e-6.
-    """
-    # Check absolute precision.
-    if -epsilon <= x - y <= epsilon:
-        return True
+# def IsApproximatelyEqual(x, y, epsilon):
+#     """Returns True iff y is within relative or absolute 'epsilon' of x.
+#     By default, 'epsilon' is 1e-6.
+#     """
+#     # Check absolute precision.
+#     if -epsilon <= x - y <= epsilon:
+#         return True
 
-    # Since these are log values, difference doesn't matter if both values
-    # are < 100
-    if x < -100 and y < -100:
-        return True
+#     # Since these are log values, difference doesn't matter if both values
+#     # are < 100
+#     if x < -100 and y < -100:
+#         return True
 
-    return False
+#     return False
 
-def compare(f_ref, f_opt, top_x = 30, epsilon = 0.8):
+def compare(f_ref, f_opt, top_x = 20, epsilon = 0.8):
     topics_ref = f_ref.readlines()
     topics_opt = f_opt.readlines()
     if len(topics_ref) != len(topics_opt):
@@ -49,6 +49,7 @@ def compare(f_ref, f_opt, top_x = 30, epsilon = 0.8):
             return False
         else:
             overlap = topic_intersection(one_topic_ref, one_topic_opt, top_x)
+            print("Overlap for topic %d: %f" % (i, overlap))
             if overlap < epsilon:
                 print("\nVALIDATION FAILED")
                 print("Overlap threshold: %f" % epsilon)

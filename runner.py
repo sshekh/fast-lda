@@ -104,7 +104,7 @@ def generate(k, n, dbl, overwrite=False):
     os.renames(LDA_OUT_BETA % 'slow', dst)
 
 
-def test(k, n, dbl="", epsilon=0):
+def test(k, n, dbl=""):
     global ALWAYS_GENERATE_REF
     global ALWAYS_USE_REF
     # Run the fast LDA and compare the resulting final beta against the reference.
@@ -134,7 +134,7 @@ def test(k, n, dbl="", epsilon=0):
     created = open(LDA_OUT_BETA % 'fast', 'r')
 
     print('Comparing against the reference...')
-    good = beta_comp.compare(reference, created, epsilon=epsilon)
+    good = beta_comp.compare(reference, created)
 
     reference.close()
     created.close()
@@ -365,14 +365,10 @@ if __name__ == '__main__':
 
     # Use different names for the reference files depending on whether we're
     # using floats or doubles.
-    # Use different validation thresholds.
-    # REPORT TO THE GROUP if thresholds are changed
     if use_doubles:
         ref_type_name = 'dbl'
-        validation_threshold = 1e-6
     else:
         ref_type_name = 'flt'
-        validation_threshold = 1e-1
 
     # Create folders as required
     if not exists(REFERENCE_FOLDER):
@@ -388,7 +384,7 @@ if __name__ == '__main__':
     if mode == 'gen':
         fn = lambda x, y: generate(x, y, ref_type_name)
     elif mode == 'test':
-        fn = lambda x, y: test(x, y, ref_type_name, validation_threshold)
+        fn = lambda x, y: test(x, y, 'dbl')
     elif mode == 'perf' or mode == 'bench':
         if not do_fast and not do_slow:
             raise ValueError('When benchmarking, specify at least one of -s (slow), -f (fast)')
