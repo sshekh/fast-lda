@@ -37,6 +37,7 @@
     #define _mm_cmp_sd          _mm_cmp_sd_pd
     #define _mm256_div          _mm256_div_pd
     #define _mm256_floor        _mm256_floor_pd
+    #define _mm256_fmadd        _mm256_fmadd_pd
     #define _mm256_insertf128   _mm256_insertf128_pd
     #define _mm256_load         _mm256_load_pd
     #define _mm256_loadu        _mm256_loadu_pd
@@ -108,6 +109,7 @@
     #define _mm_cmp_sd          _mm_cmp_sd_ps
     #define _mm256_div          _mm256_div_ps
     #define _mm256_floor        _mm256_floor_ps
+    #define _mm256_fmadd        _mm256_fmadd_ps
     #define _mm256_insertf128   _mm256_insertf128_ps
     #define _mm256_load         _mm256_load_ps
     #define _mm256_loadu        _mm256_loadu_ps

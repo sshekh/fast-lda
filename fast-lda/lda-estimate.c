@@ -77,18 +77,47 @@ fp_t doc_e_step(document* doc, fp_t* gamma, fp_t* phi,
     __m256fp gamma_totals = hsum(gamma_accs);
     __m256fp alpha_totals = hsum(alpha_accs);
     fp_t gamma_sum = first(gamma_totals);
-    ss->alpha_suffstats += first(alpha_totals);
 
     //Update alpha.
+    ss->alpha_suffstats += first(alpha_totals);
     ss->alpha_suffstats -= model->num_topics * digamma(gamma_sum);
+
+
     //Update beta.
     for (n = 0; n < doc->length; n++)
     {
-        for (k = 0; k < model->num_topics; k++)
+        int di = doc->words[n] * model->num_topics;
+        int ni = n * model->num_topics;
+        __m256fp doc_counts = _mm256_set1(doc->counts[n]);
+        for (k = 0; k < KK; k += STRIDE)
         {
-            // <BG> non-sequential matrix access
-            ss->class_word[doc->words[n] * model->num_topics + k] += doc->counts[n]*phi[n * model->num_topics + k];
-            ss->class_total[k] += doc->counts[n]*phi[n * model->num_topics + k];
+            __m256fp cw = _mm256_loadu(ss->class_word + di + k);
+            __m256fp ct = _mm256_loadu(ss->class_total + k);
+            __m256fp ph = _mm256_loadu(phi + ni + k);
+
+            //ss->class_word[di + k] += doc->counts[n]*phi[ni + k];
+            cw = _mm256_fmadd(doc_counts, ph, cw);
+
+            //ss->class_total[k] += doc->counts[n]*phi[ni + k];
+            ct = _mm256_fmadd(doc_counts, ph, ct);
+
+            _mm256_storeu(ss->class_word + di + k, cw);
+            _mm256_storeu(ss->class_total + k, ct);
+        }
+
+        if (LEFTOVER(model->num_topics)) {
+            __m256fp cw = _mm256_maskload(ss->class_word + di + KK, KMASK);
+            __m256fp ct = _mm256_maskload(ss->class_total + KK, KMASK);
+            __m256fp ph = _mm256_maskload(phi + ni + KK, KMASK);
+
+            //ss->class_word[di + k] += doc->counts[n]*phi[ni + k];
+            cw = _mm256_fmadd(doc_counts, ph, cw);
+
+            //ss->class_total[k] += doc->counts[n]*phi[ni + k];
+            ct = _mm256_fmadd(doc_counts, ph, ct);
+
+            _mm256_maskstore(ss->class_word + di + KK, KMASK, cw);
+            _mm256_maskstore(ss->class_total + KK, KMASK, ct);
         }
     }
 
