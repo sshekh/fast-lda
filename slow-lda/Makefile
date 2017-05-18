@@ -19,7 +19,7 @@
 
 .SUFFIXES: .c .u
 CC= gcc
-CFLAGS= -O3 -Wall -g -std=c99 $(XCFLAGS)
+CFLAGS= -O3 -Wall -g -std=c99 -march=core-avx2 $(XCFLAGS) 
 LDFLAGS= -lm
 
 LOBJECTS= ../fast-lda/rdtsc-helper.o lda-data.o lda-estimate.o lda-model.o lda-inference.o utils.o cokus.o lda-alpha.o
