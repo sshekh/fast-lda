@@ -167,17 +167,21 @@ def perf(k, n, which):
 
         run_cmd(perf_part + ' ' + lda_part + ' 2> ' + target)
 
-def record_vitals(comment, options):
+def record_vitals(comment, options, cmdline):
     os.makedirs(TIMING_FOLDER % RUN_NAME)
 
     with open((TIMING_FOLDER % RUN_NAME) + '/info.txt', 'w') as minilog:
 
         # Header
         minilog.write('Bench run %s\n' % RUN_NAME)
-        minilog.write('Ran with the options `' + ' '.join(options) + '`\n')
-        minilog.write('"' + comment + '"\n')
+        minilog.write('Ran with the command-line `' + ' '.join(cmdline) + '`\n')
+        minilog.write('Comment: "' + comment + '"\n')
         minilog.write('===============================\n\n')
 
+        minilog.write('OPTIONS\n')
+        for k, v in options.items():
+            minilog.write(str(k) + '=' + str(v) + '\n')
+        minilog.write('END OPTIONS\n\n')
 
         # git information
         repo = Repo('.')
@@ -396,7 +400,12 @@ if __name__ == '__main__':
         if do_slow:
             which.append('slow')
 
-        record_vitals(comment, options)
+        params = {
+            'use_doubles': use_doubles,
+            'use_icc': use_icc
+        }
+
+        record_vitals(comment, params, options)
 
         if mode == 'perf':
             sub_fn = perf
