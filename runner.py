@@ -65,9 +65,6 @@ def make_lda_params(which, k, n):
             'random',                           # Initialization method (only random)
             LDA_EXE_LOG % which]                # Output directory
 
-def run_lda(which, k, n):
-    run_cmd(make_lda_params(which, k, n))
-
 def exists(path):
     try:
         os.stat(path)
@@ -149,14 +146,6 @@ def bench(k, n, which):
 
     print('Benchmarking %s k=%d n=%d' % (str(which), k, n))
     for lda in which:
-        run_lda(lda, k, n)
-        timing_out = (TIMING_FOLDER % RUN_NAME) + (TIMING_FILENAME % (lda, k, n))
-        os.rename(LDA_OUT_TIMING, timing_out)
-
-def perf(k, n, which):
-
-    print('Running perf on %s k=%d n=%d' % (str(which), k, n))
-    for lda in which:
         lda_part = ' '.join(make_lda_params(lda, k, n))
         perf_part = ('perf stat -e instructions,cycles,cache-references,' +
                     'cache-misses,LLC-loads,LLC-load-misses,LLC-stores,' +
@@ -166,6 +155,9 @@ def perf(k, n, which):
         target = TIMING_FOLDER % RUN_NAME + ('/perf_%s_%d_%d.txt' % (which, k, n))
 
         run_cmd(perf_part + ' ' + lda_part + ' 2> ' + target)
+
+        timing_out = (TIMING_FOLDER % RUN_NAME) + (TIMING_FILENAME % (lda, k, n))
+        os.rename(LDA_OUT_TIMING, timing_out)
 
 def record_vitals(comment, options, cmdline):
     os.makedirs(TIMING_FOLDER % RUN_NAME)
@@ -216,7 +208,7 @@ def record_vitals(comment, options, cmdline):
 def usage_and_quit():
     print('Fast runner')
     print('')
-    print('usage: %s [ gen | test | bench | perf ] options...' % sys.argv[0])
+    print('usage: %s [ gen | test | bench ] options...' % sys.argv[0])
     print('')
     print('Options: ')
     print('The following two options recieve as argument either one number,\n' +
@@ -231,7 +223,6 @@ def usage_and_quit():
     print('\ttest:  Obtain results from the fast implementation, and compare ')
     print('\t       against reference output from the slow implementation.')
     print('\tbench: Check speed of fast (-f) and/or slow (-s) implementations')
-    print('\tperf: Run the fast (-f) and/or slow (-s) under linux perf.')
     print('')
     print('If a double-dash appears, it signals the end of the options and\n' +
         'the beginning of a comment. This comment is mandatory in benchnamrk\n' +
@@ -246,10 +237,10 @@ def usage_and_quit():
     print('Other options:')
     print('')
     print('\t-m: Do not run make before running a task. Ignored in bench mode.')
-    print('\t-d: Use doubles instead of floats in the fast.')
     print('\t-s: Silence lda output (always enabled in bench mode).')
-    print('\t-i: Compile the fast with icc instead of gcc.')
     print('\t-a: No-prompt mode (always generate missing refs / reuse existing).')
+    print('\t-d: Use doubles instead of floats in the fast.')
+    print('\t-i: Compile the fast with icc instead of gcc.')
 
     sys.exit()
 
@@ -294,7 +285,7 @@ def construct_make_command(which, defines, use_icc):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2 or sys.argv[1] not in {'gen', 'test', 'bench', 'perf'}:
+    if len(sys.argv) < 2 or sys.argv[1] not in {'gen', 'test', 'bench'}:
         usage_and_quit()
 
     mode = sys.argv[1]
@@ -389,7 +380,7 @@ if __name__ == '__main__':
         fn = lambda x, y: generate(x, y, ref_type_name)
     elif mode == 'test':
         fn = lambda x, y: test(x, y, 'dbl')
-    elif mode == 'perf' or mode == 'bench':
+    elif mode == 'bench':
         if not do_fast and not do_slow:
             raise ValueError('When benchmarking, specify at least one of -s (slow), -f (fast)')
 
@@ -407,12 +398,7 @@ if __name__ == '__main__':
 
         record_vitals(comment, params, options)
 
-        if mode == 'perf':
-            sub_fn = perf
-        else:
-            sub_fn = bench
-
-        fn = lambda x, y: sub_fn(x, y, which)
+        fn = lambda x, y: bench(x, y, which)
 
     for k in ks:
         for n in ns:
