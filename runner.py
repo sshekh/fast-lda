@@ -167,13 +167,14 @@ def perf(k, n, which):
 
         run_cmd(perf_part + ' ' + lda_part + ' 2> ' + target)
 
-def record_vitals(comment):
+def record_vitals(comment, options):
     os.makedirs(TIMING_FOLDER % RUN_NAME)
 
     with open((TIMING_FOLDER % RUN_NAME) + '/info.txt', 'w') as minilog:
 
         # Header
         minilog.write('Bench run %s\n' % RUN_NAME)
+        minilog.write('Ran with the options `' + ' '.join(options) + '`\n')
         minilog.write('"' + comment + '"\n')
         minilog.write('===============================\n\n')
 
@@ -395,7 +396,7 @@ if __name__ == '__main__':
         if do_slow:
             which.append('slow')
 
-        record_vitals(comment)
+        record_vitals(comment, options)
 
         if mode == 'perf':
             sub_fn = perf
