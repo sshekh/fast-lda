@@ -97,7 +97,7 @@ def generate(k, n, dbl, overwrite=False):
             print('Already exists. Skipping...')
             return
 
-    run_lda('slow', k, n)
+    run_cmd(make_lda_params('slow', k, n))
     os.renames(LDA_OUT_BETA % 'slow', dst)
 
 
@@ -125,7 +125,7 @@ def test(k, n, dbl=""):
                 generate(k, n, dbl, overwrite=True)
 
 
-    run_lda('fast', k, n)
+    run_cmd(make_lda_params('fast', k, n))
 
     reference = open(which, 'r')
     created = open(LDA_OUT_BETA % 'fast', 'r')
