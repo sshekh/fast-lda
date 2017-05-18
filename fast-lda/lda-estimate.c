@@ -49,13 +49,36 @@ fp_t doc_e_step(document* doc, fp_t* gamma, fp_t* phi,
     scatterDocWords(model->log_prob_w, model->log_prob_w_doc, doc,
                     model->num_topics);
 
+    int KK;
+    __m256i KMASK;
+    STRIDE_SPLIT(model->num_topics, &KK, &KMASK);
+
     // Update sufficient statistics.
-    fp_t gamma_sum = 0;
-    for (k = 0; k < model->num_topics; k++)
+    __m256fp gamma_accs = _mm256_setzero();
+    __m256fp alpha_accs = _mm256_setzero();
+    for (k = 0; k < KK; k += STRIDE)
     {
-        gamma_sum += gamma[k];
-        ss->alpha_suffstats += digamma(gamma[k]);
+        __m256fp gams = _mm256_loadu(gamma + k);
+        //gamma_sum += gamma[k];
+        gamma_accs = _mm256_add(gamma_accs, gams);
+
+        //ss->alpha_suffstats += digamma(gamma[k]);
+        __m256fp digams = digamma_vec(gams);
+        alpha_accs = _mm256_add(alpha_accs, digams);
     }
+    if (LEFTOVER(model->num_topics)) {
+        __m256fp gams = _mm256_maskload(gamma + KK, KMASK);
+        __m256fp digams = digamma_vec_mask(gams, KMASK);
+
+        gamma_accs = _mm256_add(gamma_accs, gams);
+        alpha_accs = _mm256_add(alpha_accs, digams);
+    }
+    // Collect all the partial sums
+    __m256fp gamma_totals = hsum(gamma_accs);
+    __m256fp alpha_totals = hsum(alpha_accs);
+    fp_t gamma_sum = first(gamma_totals);
+    ss->alpha_suffstats += first(alpha_totals);
+
     //Update alpha.
     ss->alpha_suffstats -= model->num_topics * digamma(gamma_sum);
     //Update beta.

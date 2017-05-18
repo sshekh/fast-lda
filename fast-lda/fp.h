@@ -11,9 +11,9 @@
         *(q) = (n) - ((n) % 4);\
         switch ((n) % 4) {\
             case 0: *(m) = _mm256_setzero_si256(); break;\
-            case 1: *(m) = _mm256_set_epi64x(0, 0, 0, 1LL << 63); break;\
-            case 2: *(m) = _mm256_set_epi64x(0, 0, 1LL << 63, 1LL << 63); break;\
-            case 3: *(m) = _mm256_set_epi64x(0, 1LL << 63, 1LL << 63, 1LL << 63); break;\
+            case 1: *(m) = _mm256_set_epi64x(0, 0, 0, 0xFFFFFFFFFFFFFFFF); break;\
+            case 2: *(m) = _mm256_set_epi64x(0, 0, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF); break;\
+            case 3: *(m) = _mm256_set_epi64x(0, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF); break;\
         }\
     }
 
@@ -30,6 +30,7 @@
     #define _mm256_broadcast_sd _mm256_broadcast_sd_pd
     #define _mm_broadcastsd     _mm_broadcastsd_pd
     #define _mm256_broadcastsd  _mm256_broadcastsd_pd
+    #define _mm256_castsi256    _mm256_castsi256_pd
     #define _mm256_ceil         _mm256_ceil_pd
     #define _mm_cmp             _mm_cmp_pd
     #define _mm256_cmp          _mm256_cmp_pd
@@ -77,13 +78,13 @@
         *(q) = (n) - ((n) % 8);\
         switch ((n) % 8) {\
             case 0: *(m) = _mm256_setzero_si256(); break;\
-            case 1: *(m) = _mm256_set_epi32(0,0,0,0,0,0,0,1 << 31); break;\
-            case 2: *(m) = _mm256_set_epi32(0,0,0,0,0,0, 1 << 31, 1 << 31); break;\
-            case 3: *(m) = _mm256_set_epi32(0,0,0,0,0, 1 << 31, 1 << 31, 1 << 31); break;\
-            case 4: *(m) = _mm256_set_epi32(0,0,0,0, 1 << 31, 1 << 31, 1 << 31, 1 << 31); break;\
-            case 5: *(m) = _mm256_set_epi32(0,0,0, 1 << 31, 1 << 31, 1 << 31, 1 << 31, 1 << 31); break;\
-            case 6: *(m) = _mm256_set_epi32(0,0, 1 << 31, 1 << 31, 1 << 31, 1 << 31, 1 << 31, 1 << 31); break;\
-            case 7: *(m) = _mm256_set_epi32(0, 1 << 31, 1 << 31, 1 << 31, 1 << 31, 1 << 31, 1 << 31, 1 << 31); break;\
+            case 1: *(m) = _mm256_set_epi32(0,0,0,0,0,0,0,0xFFFFFFFF); break;\
+            case 2: *(m) = _mm256_set_epi32(0,0,0,0,0,0, 0xFFFFFFFF, 0xFFFFFFFF); break;\
+            case 3: *(m) = _mm256_set_epi32(0,0,0,0,0, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF); break;\
+            case 4: *(m) = _mm256_set_epi32(0,0,0,0, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF); break;\
+            case 5: *(m) = _mm256_set_epi32(0,0,0, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF); break;\
+            case 6: *(m) = _mm256_set_epi32(0,0, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF); break;\
+            case 7: *(m) = _mm256_set_epi32(0, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF); break;\
         }\
     }
 
@@ -100,6 +101,7 @@
     #define _mm256_broadcast_sd _mm256_broadcast_sd_ps
     #define _mm_broadcastsd     _mm_broadcastsd_ps
     #define _mm256_broadcastsd  _mm256_broadcastsd_ps
+    #define _mm256_castsi256    _mm256_castsi256_ps
     #define _mm256_ceil         _mm256_ceil_ps
     #define _mm_cmp             _mm_cmp_ps
     #define _mm256_cmp          _mm256_cmp_ps
@@ -141,6 +143,45 @@
 
 #endif
 
-__m256fp hsum(__m256fp);
+// hsum(x): return a vector where all elements are set to the sum of elements of x.
+#ifdef DOUBLE
+    inline __m256d hsum(__m256d x) {
+        // [A, B, C, D] -> [AB, AB, CD, CD]
+        x = _mm256_hadd_pd(x, x);
+        // -> [AB, CD, AB, CD]
+        // Immediate:
+        // 11 01 10 00 = 216
+        // ^  ^  ^  ^-- 1st dst = 1st src
+        // |  |  +-- 2nd dst = 3rd src
+        // |  +-- 3rd dst = 2nd dst
+        // +-- 4th dst = 4th src
+        x = _mm256_permute4x64_pd(x, 216);
+
+        // -> [A..D * 4]
+        return _mm256_hadd_pd(x, x);
+    }
+#else
+    inline __m256 hsum(__m256 x) {
+        // [A,B,C,D,E,F,G,H] -> [AB, CD, AB, CD, EF, GH, EF, GH]
+        x = _mm256_hadd_ps(x, x);
+        // -> [A..D * 4, E..H * 4]
+        x = _mm256_hadd_ps(x, x);
+
+        // -> [(A..D, E..H) * 4]
+        __m256i perm = _mm256_set_epi32(4,0,4,0,4,0,4,0);
+        x = _mm256_permutevar8x32_ps(x, perm);
+
+        // -> [A..H * 8]
+        return _mm256_hadd_ps(x, x);
+    }
+#endif
+
+
+inline fp_t first(__m256fp x) {
+    fp_t a[STRIDE];
+    _mm256_storeu(a, x);
+    return a[0];
+}
+
 
 #endif

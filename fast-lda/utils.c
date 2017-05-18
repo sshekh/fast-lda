@@ -156,6 +156,10 @@ __m256fp digamma_vec(__m256fp x)
     return result;
 }
 
+__m256fp digamma_vec_mask(__m256fp x, __m256i mask) {
+    __m256fp dig = digamma_vec(x);
+    return _mm256_and(dig, _mm256_castsi256(mask));
+}
 
 fp_t log_gamma(fp_t x)
 {
