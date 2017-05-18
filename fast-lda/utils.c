@@ -107,7 +107,7 @@ __m256fp digamma_vec(__m256fp x)
      * to (p/240 - const) p^3 + p^2/120 - p/240
      * This strikes a balance between making the tree shallower and increasing
      * the number of flops. The first version takes 28 cycles, while this one
-     * takes 20.
+     * takes 20. The main gain comes from p/240 appearing twice, as well as p^2.
      */
     __m256fp p240 = _mm256_mul(p, ONE_240TH);
     __m256fp psq = _mm256_mul(p, p);

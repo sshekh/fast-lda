@@ -35,16 +35,41 @@ void lda_mle(lda_model* model, lda_suffstats* ss, int estimate_alpha)
 
     for (w = 0; w < model->num_terms; w++)
     {
-        for (k = 0; k < model->num_topics; k++)
+        int kk;
+        __m256i rem;
+        STRIDE_SPLIT(model->num_topics, &kk, &rem);
+
+        for (k = 0; k < kk; k += STRIDE)
         {
-            if (ss->class_word[w * model->num_topics + k] > 0)
-            {
-                model->log_prob_w[w * model->num_topics + k] =
-                log(ss->class_word[w * model->num_topics + k]) -
-                log(ss->class_total[k]);
-            }
-            else
-                model->log_prob_w[w * model->num_topics + k] = -100;
+            __m256fp cw = _mm256_loadu(ss->class_word + (w * model->num_topics + k));
+            __m256fp ct = _mm256_loadu(ss->class_total + k);
+
+            __m256fp lcw = _mm256_log(cw);
+            __m256fp lct = _mm256_log(ct);
+
+            __m256fp r = _mm256_sub(lcw, lct);
+
+            // <FL> Instead of using an if, we just do the log. If we had a zero
+            // we'll get -INF, and this max operation will get rid of it.
+            __m256fp l = _mm256_set1(-100);
+            __m256fp f = _mm256_max(r, l);
+
+            _mm256_storeu(model->log_prob_w + (w * model->num_topics + k), f);
+        }
+
+        if (LEFTOVER(model->num_topics)) {
+            __m256fp cw = _mm256_maskload(ss->class_word + (w * model->num_topics + kk), rem);
+            __m256fp ct = _mm256_maskload(ss->class_total + kk, rem);
+
+            __m256fp lcw = _mm256_log(cw);
+            __m256fp lct = _mm256_log(ct);
+
+            __m256fp r = _mm256_sub(lcw, lct);
+
+            __m256fp l = _mm256_set1(-100);
+            __m256fp f = _mm256_max(r, l);
+
+            _mm256_maskstore(model->log_prob_w + (w * model->num_topics + k), rem, f);
         }
     }
 
