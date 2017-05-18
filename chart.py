@@ -49,7 +49,7 @@ def doc_e_step(N, K):
     return tot_flops["LDA_INFERENCE"] + K * 0 + 0 + tot_flops["DIGAMMA"] + K * N * 0
 
 def run_em(N, K):
-    return random_initialize_ss(N, K) + tot_flops["MLE"] + iters["EM_CONVERGE"] * (N * tot_flops["DOC_E_STEP"] + 0 + \
+    return 0 + tot_flops["MLE"] + iters["EM_CONVERGE"] * (N * tot_flops["DOC_E_STEP"] + 0 + \
             tot_flops["MLE"] + 0)
 
 impurity = { "RUN_EM" : run_em, "LDA_INFERENCE" : lda_inference, "DIGAMMA" : digamma, "LOG_SUM" : log_sum,
