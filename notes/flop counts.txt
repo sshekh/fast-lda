@@ -8,7 +8,7 @@ Where;
 LDA_MLE
 
     N * K * (
-        2       (1-, 1+)
+        2       (1-, 1>)
       + 2       (log)
     ) 
     + OPT_ALPHA

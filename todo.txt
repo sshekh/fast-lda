@@ -1,9 +1,6 @@
-2) ! The printing of the model is suppressed but the actualy call to inference 
-	is not so computation is performed outside RUN_EM. 
+4) Computational optimization - Cache results of function called repetedly
 
-3) Benchmark float against double - tradeoff between precision and speed muhaha
-
-4) Computational optimization - Cache results of function called repetedly 
+4.1) static inline on util functions
 
 5) "Better"  pie-chart
 
