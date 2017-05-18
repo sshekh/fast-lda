@@ -242,7 +242,7 @@ def usage_and_quit():
     print('Other options:')
     print('')
     print('\t-m: Do not run make before running a task. Ignored in bench mode.')
-    print('\t-d: Use doubles instead of floats.')
+    print('\t-d: Use doubles instead of floats in the fast.')
     print('\t-s: Silence lda output (always enabled in bench mode).')
     print('\t-i: Compile the fast with icc instead of gcc.')
     print('\t-a: No-prompt mode (always generate missing refs / reuse existing).')
@@ -346,22 +346,22 @@ if __name__ == '__main__':
     if do_make:
 
         # Check which defines we need to add
-        defines = []
+        defines_fast = []
+        defines_slow = ['DOUBLE'] # ALWAYS compile with doubles in the slow.
         if use_doubles:
-            defines.append('DOUBLE')
+            defines_fast.append('DOUBLE')
         if silence_output:
-            defines.append('IGNORE_PRINTF')
-
-
+            defines_fast.append('IGNORE_PRINTF')
+            defines_slow.append('IGNORE_PRINTF')
 
         # Actually make the programs
         print('Preparing the fast...')
         # Use specified compiler for the fast (gcc or icc)
-        run_cmd(construct_make_command('fast', defines, use_icc))
+        run_cmd(construct_make_command('fast', defines_fast, use_icc))
 
         print('Preparing the slow...')
         # Always use gcc for the slow
-        run_cmd(construct_make_command('slow', defines, use_icc=False))
+        run_cmd(construct_make_command('slow', defines_slow, use_icc=False))
 
     # Use different names for the reference files depending on whether we're
     # using floats or doubles.
