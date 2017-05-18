@@ -4,12 +4,65 @@ import sys
 import matplotlib.pyplot as plt
 
 
-colors = { "RUN_EM" : "green", "LDA_INFERENCE" : "blue", "DIGAMMA" : "black", "LOG_SUM" : "purple",
-        "LOG_GAMMA" : "purple", "TRIGAMMA" : "cyan", "DOC_E_STEP" : "orange", "LIKELIHOOD" : "red", "MLE" : "cyan", "OPT_ALPHA" : "cyan"}       
+D = 135
+# A little bird told us that this is the proper value
+V = 10473
+
+iters = {"EM_CONVERGE" : 0, "INFERENCE_CONVERGE" : 0, "ALPHA_CONVERGE" : 0}  # conv counts for var iterations 
 
 fns = ["RUN_EM", "LDA_INFERENCE", "DIGAMMA", "LOG_SUM", "DOC_E_STEP", "LIKELIHOOD", "MLE", "OPT_ALPHA", "TRIGAMMA", "LOG_GAMMA"]
 
-def read_one_output(f):
+def digamma(N, K):
+    return 0 
+
+def log_sum(N, K):
+    return 0
+
+def log_gamma(N, K):
+    return 0  
+
+def trigamma(N, K):
+    return 0 + 6 * 0 
+
+def random_initialize_ss(N, K):
+    return K * N * 0
+
+def opt_alpha(N, K):
+    return iters["ALPHA_CONVERGE"] * ( \
+            0 + 0 + 2 * tot_flops["LOG_GAMMA"] + \
+            0 + 2 * tot_flops["DIGAMMA"] + 0 + 2 * tot_flops["TRIGAMMA"]) + \
+            0 # poor lonely exp
+
+def mle(N, K):
+    return N * K * 0 + tot_flops["OPT_ALPHA"]
+
+def likelihood(N, K):
+    return K * tot_flops["DIGAMMA"] + 0 + tot_flops["DIGAMMA"] + 0 + 3 * tot_flops["LOG_GAMMA"] + \
+            K * 0 + K * D * 6 * 0
+
+def lda_inference(N, K):
+    return K * 0 + K * tot_flops["DIGAMMA"] + K * D * 0 + \
+        iters["INFERENCE_CONVERGE"] * (D * K * (tot_flops["DIGAMMA"] + 0 + tot_flops["LOG_SUM"]) + \
+            tot_flops["LIKELIHOOD"] + 0)
+
+def doc_e_step(N, K):
+    return tot_flops["LDA_INFERENCE"] + K * 0 + 0 + tot_flops["DIGAMMA"] + K * N * 0
+
+def run_em(N, K):
+    return random_initialize_ss(N, K) + tot_flops["MLE"] + iters["EM_CONVERGE"] * (N * tot_flops["DOC_E_STEP"] + 0 + \
+            tot_flops["MLE"] + 0)
+
+impurity = { "RUN_EM" : run_em, "LDA_INFERENCE" : lda_inference, "DIGAMMA" : digamma, "LOG_SUM" : log_sum,
+        "LOG_GAMMA" : log_gamma, "TRIGAMMA" : trigamma, "DOC_E_STEP" : doc_e_step, "LIKELIHOOD" : likelihood, "MLE" : mle, "OPT_ALPHA" : opt_alpha}
+
+tot_flops = {"RUN_EM" : 0., "LDA_INFERENCE" : 0., "DIGAMMA" : 0., "LOG_SUM" : 0., "DOC_E_STEP" : 0., "LIKELIHOOD" : 0., "MLE" : 0., \
+        "OPT_ALPHA" : 0., "TRIGAMMA" : 0., "LOG_GAMMA" : 0.}
+pur_flops = {"RUN_EM" : 0., "LDA_INFERENCE" : 0., "DIGAMMA" : 0., "LOG_SUM" : 0., "DOC_E_STEP" : 0., "LIKELIHOOD" : 0., "MLE" : 0., \
+        "OPT_ALPHA" : 0., "TRIGAMMA" : 0., "LOG_GAMMA" : 0.}
+avg_flops = {"RUN_EM" : 0., "LDA_INFERENCE" : 0., "DIGAMMA" : 0., "LOG_SUM" : 0., "DOC_E_STEP" : 0., "LIKELIHOOD" : 0., "MLE" : 0., \
+        "OPT_ALPHA" : 0., "TRIGAMMA" : 0., "LOG_GAMMA" : 0.}
+
+def read_one_output(f, K, N):
     header = f.readline().split(',')
     header = [h.strip() for h in header]
     assert header[0] == 'Accumulator' \
@@ -17,23 +70,42 @@ def read_one_output(f):
        and header[2] == 'Average count', "Output file not in proper format"
     lines = f.readlines()
 
-    tot_flops = [0.] * len(fns)
+    for fn in fns:
+        tot_flops[fn] = 0.
+        pur_flops[fn] = 0.
+        avg_flops[fn] = 0.
+        pass
+    for itr in iters: iters[itr] = 0.
+
     for i in range(len(lines)):
         s = lines[i].split(',')
         fn = s[0].strip()
         if 'CONVERGE' not in fn:
             if s[2].strip() is not '0':     # code inside function not called case
-                total_cnt = float(s[1])
-                idx = fns.index(fn)
-                tot_flops[idx] += total_cnt
+                tot_cnt = float(s[1])
+                avg_cnt = float(s[2])
+                tot_flops[fn] = tot_cnt
+                avg_flops[fn] = avg_cnt
+        else:
+            iters[fn] = float(s[2])
         pass
-    return tot_flops
-    pass
 
-def stacked_bar_plot(filenames, xticklabels=None):
+    # purifying
+    pur_flop_list = [0] * len(fns)
+    for i, fn in enumerate(fns):
+        pur_flops[fn] = tot_flops[fn] - impurity[fn](N, K)
+        print("Pure flops ", fn, pur_flops[fn])
+        pur_flop_list[i] = pur_flops[fn]
+    pass
+    return pur_flop_list 
+
+colors = { "RUN_EM" : "green", "LDA_INFERENCE" : "blue", "DIGAMMA" : "black", "LOG_SUM" : "purple",
+        "LOG_GAMMA" : "purple", "TRIGAMMA" : "cyan", "DOC_E_STEP" : "orange", "LIKELIHOOD" : "red", "MLE" : "cyan", "OPT_ALPHA" : "cyan"}       
+
+def stacked_bar_plot(filenames, KNs, xticklabels=None):
     flops = []
-    for f in filenames:
-        flps = read_one_output(open(f, "r"))
+    for i, f in enumerate(filenames):
+        flps = read_one_output(open(f, "r"), KNs[i][0], KNs[i][1])
         flops.append(flps)
         pass
     flops = np.array(flops)
@@ -59,13 +131,13 @@ def stacked_bar_plot(filenames, xticklabels=None):
 
 
 colors2 = ['red', 'blue', 'green', 'yellow', 'cyan']
-def bar_plot(filenames, legends=None):
+def bar_plot(filenames, KNs, legends=None):
     width = 1 / (len(filenames) + 1.)   # width of bars
     ind = np.arange(len(fns))
     fig, ax = plt.subplots()
     p = [None] * len(filenames)
     for i in range(len(filenames)): 
-        flops = read_one_output(open(filenames[i], "r")) 
+        flops = read_one_output(open(filenames[i], "r"), KNs[i][0], KNs[i][1]) 
         p[i] = ax.bar(ind + i * width, flops, width, color = colors2[i])
 
     ax.set_ylabel('flop count')
@@ -84,15 +156,17 @@ if __name__ == "__main__":
         print("python chart.py -f|s folder1 k1 n1 <-f|s folder2 k2 n2>...")
         sys.exit(1)
     filenames = []
+    KNs = []
     legends = []
     for i in range(1, len(sys.argv), 4):
         mode = "fast"
         if sys.argv[i] == '-s': mode = 'slow'
         filename = sys.argv[i + 1] + "/" + mode + "_timings_" + sys.argv[i + 2] + "_" + sys.argv[i + 3] + ".csv"
         filenames.append(filename)
-        legend = mode + "_" + sys.argv[i + 3] + "_" + sys.argv[i + 2]
+        KNs.append((int(sys.argv[i + 2]), int(sys.argv[i + 3])))
+        legend = mode + "_" + sys.argv[i + 2] + "_" + sys.argv[i + 3]
         legends.append(legend)
         pass
 
-    bar_plot(filenames, legends)
-    stacked_bar_plot(filenames, legends)
+    bar_plot(filenames, KNs, legends)
+    stacked_bar_plot(filenames, KNs, legends)
