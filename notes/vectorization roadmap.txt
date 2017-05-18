@@ -1,0 +1,171 @@
+1) We would like to support both floats and doubles in the same program to avoid
+having to maintain multiple versions of the code.
+
+2) We already have a double/float switch for the non-vectorized version
+
+3) Therefore we should see whether it's feasible to use this switch to
+automatically switch between float and double intrinsics.
+
+4) Some intrinsics are straightforwardly translated (add_ps <-> add_pd)
+
+5) Some intrinsics have no equivalent in the other representation
+(dp_ps, permute4x64) or have different behaviors (hadd) or use masks (permute)
+which make it difficult to have the "same" behavior except on more values.
+
+6) The way in which we go through our data differs depending on whether we use
+floats or doubles.
+
+7) Therefore we need to study the code and see what kind of operations we need
+to do, how we can vectorize them and in what way, if possible, can we write them
+so that there is as little behavioral difference as possible between the
+two versions.
+
+======
+
+-- Defines --
+
+We can define our own version of many intrinsics, which switches to the proper
+version depending on whether we are using floats or not. In the same way, we
+can define our own __mm256 and __mm128 types which will switch either to the
+single or double precision variants. There are then two questions:
+
+    How do we deal with instructions which exist only on one side? Some of them
+    we can mitigate; for example rcp_ps(a) can be written as:
+
+        rcp_pd(a) {
+            t = set1_pd(1)
+            return div_pd(t, a)
+        }
+
+    However we don't really know whether this applies straightforwardly in ALL
+    cases or whether we can instead find another approach that's (maybe) faster.
+
+
+    The other question is what to do with instructions that have no easy
+    analogue, or that have different behaviors. I presume there we need to go
+    case-by-case. I'll avoid the question for now until we get to the code in
+    detail.
+
+
+-- Data movement --
+
+If we make a double/float switch, we need to go through the data differently;
+we load different amounts of data at once. In other words, we need something
+that goes between:
+
+    for (i = 0 ; i < p ; i+= 4)
+
+    and
+
+    for (i = 0 ; i < p ; i += 8)
+
+So we can define a stride depending on floats/doubles.
+However, we also need something that deals with remaining data. In other words,
+starting from:
+
+    for (i = 0 ; i < p ; i++) {
+        body // use a[i]
+    }
+
+    We go to:
+
+    t = p - (p % STRIDE);
+    for (i = 0 ; i < t ; i += STRIDE) {
+        body // use a[i:i + STRIDE]
+    }
+
+    r = masked_load(a + p, make_mask(p % stride))
+    body // use r
+
+Where make_mask is some kind of macro that will create the appropriate mask.
+The good thing here is that in this particular case, the version of the masked
+load doesn't matter, since the mask has the same meaning in both cases. So we're
+good for that.
+
+
+======
+
+-- Files --
+
+We now look at various files to determine exactly what kind of work needs to be
+done in them. It seems that the main problem will not be the mathematical
+operations themselves but rather the data movement.
+
+
+utils.c
+
+This file contains small mathematical functions. We divide them into the
+following two categories:
+
+    - Functions which get called over an entire array.
+        Those functions can be changed so that their input is a vector itself.
+        This makes writing their body significantly simpler.
+
+            - digamma: can be converted pretty straightforwardly. Occurs in
+            several loops but also in the calculation for the optimal alpha.
+
+
+    - Functions which get called value-by-value.
+        Those functions get called on only one value at a time (typically in
+        some form of update/convergence loop). It's therefore not easy to
+        convert the input to a vector.
+
+            - log_sum: Called in a vector loop; the problem being that we use
+            the value of the previous iteration. Therefore to vectorize we
+            need to look closer at the mathematics
+
+            - trigamma: occurs in a convergence loop. Therefore there's no real
+            way of calling it with a vector. In addition, the operations inside
+            seem to be awfully difficult to parallelize.
+
+            - argmax: this is only called when saving the model, therefore it's
+              low-priority for now.
+
+    Additionally, log_gamma is unused (lgamma is used in its place for now).
+
+
+lda-alpha.c
+
+This contains the optimization for alpha. This alpha value itself is one scalar,
+something which we cannot change. Futher, every iteration depends on the
+previous one. Finally, the amount of iterations is not known. Therefore, this
+ticks basically every vectorization blocker we can think of.
+
+
+lda-model.c
+
+We ignore the functions related to loading, initializing and saving the model.
+This leaves lda_mle (which should really be in lda-estimate.c).
+
+This is the function where we had trouble because of the if. However, perhaps we
+can find a way to fix it without the if now that we have the assurance that
+things work.
+
+lda-estimate.c
+
+    run_em seems like it should be left alone, not much computation happening.
+
+    doc_e_step:
+        updating sufficient stats seems vectorizable; we tile the updates.
+        This also requires a vectorized version of digamma.
+
+        The next matrix walk is a very straightforward matrix walk with FMAs,
+        so should be easily vectorizable.
+
+
+lda-inference.c
+
+    lda_inference:
+        The first initialization loop, amazingly, doesn't depend on k. So with
+        judicious use of set1's or broadcasts we can fill up the arrays quickly.
+
+        The second loop is also an initial value which can be done with a memset
+        (which we should look at on its own).
+
+        We then have the convergence loop.
+
+        compute_likelihood
+            the first two k-loops seem relatively simple to vectorize
+            the n-k loop has an annoying if which is in fact the same as in the
+            lda_mle (same style at least). This we can also try to deal in the
+            same way.

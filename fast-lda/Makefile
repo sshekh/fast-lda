@@ -25,11 +25,11 @@ OUTNAME=-olda
 # CC should be either gcc (default), icc (intel linux) or icl (intel windows)
 #_CRT_SECURE_NO_WARNINGS: silence warnings about scanf, fopen and other stuff.
 ifeq ($(CC),gcc)
-	CFLAGS= -O3 -Wall -g -std=c99 -D_CRT_SECURE_NO_WARNINGS
+	CFLAGS= -O3 -Wall -g -std=c99 -D_CRT_SECURE_NO_WARNINGS -march=core-avx2
 	LDFLAGS= -lm
 else
 	ifeq ($(CC),icl)
-		CFLAGS= /O3 /Wall /Z7 /std=c99 /DWIN32 /D_CRT_SECURE_NO_WARNINGS
+		CFLAGS= /O3 /Wall /Z7 /std=c99 /DWIN32 /D_CRT_SECURE_NO_WARNINGS /arch:CORE-AVX2 /nologo
 		LDFLAGS=
 		PARTIAL=/c
 		OBJ=/Fo
@@ -42,7 +42,7 @@ endif
 
 
 
-LOBJECTS= rdtsc-helper.o lda-estimate-helper.o lda-run.o lda-estimate.o lda-model.o lda-inference.o utils.o cokus.o lda-alpha.o
+LOBJECTS= rdtsc-helper.o lda-estimate-helper.o lda-run.o lda-estimate.o lda-model.o lda-inference.o utils.o cokus.o lda-alpha.o fp.o
 
 %.o : %.c
 	$(CC) $(CFLAGS) $(XCFLAGS) $(PARTIAL) $< $(OBJ)$@
