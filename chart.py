@@ -4,6 +4,8 @@ import sys
 import matplotlib.pyplot as plt
 
 
+PURIFY = False
+
 D = 135
 # A little bird told us that this is the proper value
 V = 10473
@@ -96,14 +98,18 @@ def read_one_output(fname, K, N):
             iters[fn] = float(s[2])
         pass
 
-    # purifying
-    pur_flop_list = [0] * len(fns)
-    for i, fn in enumerate(fns):
-        pur_flops[fn] = tot_flops[fn] - impurity[fn](N, K)
-        print("flops ", fn, tot_flops[fn], pur_flops[fn])
-        pur_flop_list[i] = pur_flops[fn]
-    pass
-    return pur_flop_list 
+    ret_flop_list = [0] * len(fns)
+    if PURIFY:
+        # purifying
+        for i, fn in enumerate(fns):
+            pur_flops[fn] = tot_flops[fn] - impurity[fn](N, K)
+            print("flops ", fn, tot_flops[fn], pur_flops[fn])
+            ret_flop_list[i] = pur_flops[fn]
+    else
+        for i, fn in enumerate(fns):
+            ret_flop_list[i] = tot_flops[fn]
+
+    return ret_flop_list 
 
 colors = { "RUN_EM" : "green", "LDA_INFERENCE" : "blue", "DIGAMMA" : "black", "LOG_SUM" : "purple",
         "LOG_GAMMA" : "purple", "TRIGAMMA" : "cyan", "DOC_E_STEP" : "orange", "LIKELIHOOD" : "red", "MLE" : "cyan", "OPT_ALPHA" : "cyan"}       
