@@ -1,0 +1,82 @@
+Bench run 2017-05-19_18-42-37
+Ran with the command-line `bench -f --k=50 --n=1000 -d`
+Comment: "Float vs double comparison part II run double"
+===============================
+
+OPTIONS
+use_icc=False
+use_doubles=True
+END OPTIONS
+
+Latest commit at time of writing:
+109e4af7 (on branch stage2)
+
+Additionally, the repo contained the following untracked files:
+	timings/2017-05-18_18-24-18/fast_timings_20_200.csv
+	timings/2017-05-18_18-24-18/info.txt
+	timings/2017-05-18_18-27-06/fast_timings_20_200.csv
+	timings/2017-05-18_18-27-06/info.txt
+	timings/2017-05-18_18-31-17/fast_timings_20_200.csv
+	timings/2017-05-18_18-31-17/info.txt
+	timings/2017-05-18_23-44-41/fast_timings_50_100.csv
+	timings/2017-05-18_23-44-41/fast_timings_50_1100.csv
+	timings/2017-05-18_23-44-41/fast_timings_50_1300.csv
+	timings/2017-05-18_23-44-41/fast_timings_50_1500.csv
+	timings/2017-05-18_23-44-41/fast_timings_50_1700.csv
+	timings/2017-05-18_23-44-41/fast_timings_50_1900.csv
+	timings/2017-05-18_23-44-41/fast_timings_50_300.csv
+	timings/2017-05-18_23-44-41/fast_timings_50_500.csv
+	timings/2017-05-18_23-44-41/fast_timings_50_700.csv
+	timings/2017-05-18_23-44-41/fast_timings_50_900.csv
+	timings/2017-05-18_23-44-41/info.txt
+	timings/2017-05-18_23-44-41/perf_[fast,
+	timings/2017-05-18_23-44-41/slow_timings_50_100.csv
+	timings/2017-05-18_23-44-41/slow_timings_50_1100.csv
+	timings/2017-05-18_23-44-41/slow_timings_50_1300.csv
+	timings/2017-05-18_23-44-41/slow_timings_50_1500.csv
+	timings/2017-05-18_23-44-41/slow_timings_50_1700.csv
+	timings/2017-05-18_23-44-41/slow_timings_50_1900.csv
+	timings/2017-05-18_23-44-41/slow_timings_50_300.csv
+	timings/2017-05-18_23-44-41/slow_timings_50_500.csv
+	timings/2017-05-18_23-44-41/slow_timings_50_700.csv
+	timings/2017-05-18_23-44-41/slow_timings_50_900.csv
+	timings/2017-05-19_18-29-18/fast_timings_50_1000.csv
+	timings/2017-05-19_18-29-18/info.txt
+	timings/2017-05-19_18-29-18/perf_[fast]_50_1000.txt
+	timings/2017-05-19_18-42-37/info.txt
+	timings/vector-bench-double/fast_timings_50_100.csv
+	timings/vector-bench-double/fast_timings_50_1100.csv
+	timings/vector-bench-double/fast_timings_50_1300.csv
+	timings/vector-bench-double/fast_timings_50_1500.csv
+	timings/vector-bench-double/fast_timings_50_1700.csv
+	timings/vector-bench-double/fast_timings_50_1900.csv
+	timings/vector-bench-double/fast_timings_50_300.csv
+	timings/vector-bench-double/fast_timings_50_500.csv
+	timings/vector-bench-double/fast_timings_50_700.csv
+	timings/vector-bench-double/fast_timings_50_900.csv
+	timings/vector-bench-double/info.txt
+	timings/vector-bench-double/perf_[fast,
+	timings/vector-bench-double/slow_timings_50_100.csv
+	timings/vector-bench-double/slow_timings_50_1100.csv
+	timings/vector-bench-double/slow_timings_50_1300.csv
+	timings/vector-bench-double/slow_timings_50_1500.csv
+	timings/vector-bench-double/slow_timings_50_1700.csv
+	timings/vector-bench-double/slow_timings_50_1900.csv
+	timings/vector-bench-double/slow_timings_50_300.csv
+	timings/vector-bench-double/slow_timings_50_500.csv
+	timings/vector-bench-double/slow_timings_50_700.csv
+	timings/vector-bench-double/slow_timings_50_900.csv
+
+The diff, if any, follows:
+
+
+
+===============================
+
+Settings file:
+var max iter 20
+var convergence 1e-6
+em max iter 100
+em convergence 1e-4
+alpha estimate
+
