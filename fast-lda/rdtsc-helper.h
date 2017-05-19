@@ -37,18 +37,16 @@ enum accumulator_ids{
     ALPHA_CONVERGE,
     N_ACCUMULATORS};
 
-extern char* accumulator_names[N_ACCUMULATORS];
-
-
 typedef struct {
     long long sum;
     long counter;
 } accumulator;
 
-extern accumulator timing_infrastructure[N_ACCUMULATORS];
-
 void init_timing_infrastructure();
 void print_timings();
+
+// Gives direct access to a counter (basically only used for the converge counters)
+void timer_manual_increment(int id, long long amount);
 
 #endif
 

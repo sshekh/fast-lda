@@ -1,8 +1,8 @@
 #include "rdtsc-helper.h"
 
 
-accumulator timing_infrastructure[N_ACCUMULATORS];
-char* accumulator_names[] = {
+static accumulator timing_infrastructure[N_ACCUMULATORS];
+static char* accumulator_names[] = {
     "RUN_EM",
     "LDA_INFERENCE",
     "DIGAMMA",
@@ -41,14 +41,19 @@ void stop_timer(timer t){
     // printf("Run EM - Performance [flops/cycle]: %f\n", t.flops/t.cycles);
 }
 
-void init_timing_infrastructure(){
+void timer_manual_increment(int id, long long amount) {
+    timing_infrastructure[id].sum += amount;
+    timing_infrastructure[id].counter++;
+}
+
+void init_timing_infrastructure() {
     for (int i=0;i<N_ACCUMULATORS;i++){
         timing_infrastructure[i].sum = 0;
         timing_infrastructure[i].counter = 0;
     }
 }
 
-void print_timings(FILE* f){
+void print_timings(FILE* f) {
     fprintf(f, "Accumulator, Total count, Average count\n");
     for (int i=0;i<N_ACCUMULATORS;i++){
         if (timing_infrastructure[i].counter == 0){

@@ -91,8 +91,7 @@ fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
 
     stop_timer(rdtsc);
 
-    timing_infrastructure[INFERENCE_CONVERGE].sum += var_iter;
-    timing_infrastructure[INFERENCE_CONVERGE].counter++;
+    timer_manual_increment(INFERENCE_CONVERGE, var_iter);
 
     return likelihood;
 }
