@@ -12,6 +12,10 @@ iters = {"EM_CONVERGE" : 0, "INFERENCE_CONVERGE" : 0, "ALPHA_CONVERGE" : 0}  # c
 
 fns = ["RUN_EM", "LDA_INFERENCE", "DIGAMMA", "LOG_SUM", "DOC_E_STEP", "LIKELIHOOD", "MLE", "OPT_ALPHA", "TRIGAMMA", "LOG_GAMMA"]
 
+def memoize(f):
+    cache = {}
+    return lambda *args: cache[args] if args in cache else cache.update({args: f(*args)}) or cache[args]
+
 def digamma(N, K):
     return 0 
 
@@ -29,28 +33,28 @@ def random_initialize_ss(N, K):
 
 def opt_alpha(N, K):
     return iters["ALPHA_CONVERGE"] * ( \
-            0 + 0 + 2 * tot_flops["LOG_GAMMA"] + \
-            0 + 2 * tot_flops["DIGAMMA"] + 0 + 2 * tot_flops["TRIGAMMA"]) + \
+            0 + 0 + 2 * avg_flops["LOG_GAMMA"] + \
+            0 + 2 * avg_flops["DIGAMMA"] + 0 + 2 * avg_flops["TRIGAMMA"]) + \
             0 # poor lonely exp
 
 def mle(N, K):
-    return N * K * 0 + tot_flops["OPT_ALPHA"]
+    return N * K * 0 + avg_flops["OPT_ALPHA"]
 
 def likelihood(N, K):
-    return K * tot_flops["DIGAMMA"] + 0 + tot_flops["DIGAMMA"] + 0 + 3 * tot_flops["LOG_GAMMA"] + \
+    return K * avg_flops["DIGAMMA"] + 0 + avg_flops["DIGAMMA"] + 0 + 3 * avg_flops["LOG_GAMMA"] + \
             K * 0 + K * D * 6 * 0
 
 def lda_inference(N, K):
-    return K * 0 + K * tot_flops["DIGAMMA"] + K * D * 0 + \
-        iters["INFERENCE_CONVERGE"] * (D * K * (tot_flops["DIGAMMA"] + 0 + tot_flops["LOG_SUM"]) + \
-            tot_flops["LIKELIHOOD"] + 0)
+    return K * 0 + K * avg_flops["DIGAMMA"] + K * D * 0 + \
+        iters["INFERENCE_CONVERGE"] * (D * K * (avg_flops["DIGAMMA"] + 0 + avg_flops["LOG_SUM"]) + \
+            avg_flops["LIKELIHOOD"] + 0)
 
 def doc_e_step(N, K):
-    return tot_flops["LDA_INFERENCE"] + K * 0 + 0 + tot_flops["DIGAMMA"] + K * N * 0
+    return avg_flops["LDA_INFERENCE"] + K * 0 + 0 + avg_flops["DIGAMMA"] + K * N * 0
 
 def run_em(N, K):
-    return 0 + tot_flops["MLE"] + iters["EM_CONVERGE"] * (N * tot_flops["DOC_E_STEP"] + 0 + \
-            tot_flops["MLE"] + 0)
+    return 0 + avg_flops["MLE"] + iters["EM_CONVERGE"] * (N * avg_flops["DOC_E_STEP"] + 0 + \
+            avg_flops["MLE"] + 0)
 
 impurity = { "RUN_EM" : run_em, "LDA_INFERENCE" : lda_inference, "DIGAMMA" : digamma, "LOG_SUM" : log_sum,
         "LOG_GAMMA" : log_gamma, "TRIGAMMA" : trigamma, "DOC_E_STEP" : doc_e_step, "LIKELIHOOD" : likelihood, "MLE" : mle, "OPT_ALPHA" : opt_alpha}
@@ -62,7 +66,9 @@ pur_flops = {"RUN_EM" : 0., "LDA_INFERENCE" : 0., "DIGAMMA" : 0., "LOG_SUM" : 0.
 avg_flops = {"RUN_EM" : 0., "LDA_INFERENCE" : 0., "DIGAMMA" : 0., "LOG_SUM" : 0., "DOC_E_STEP" : 0., "LIKELIHOOD" : 0., "MLE" : 0., \
         "OPT_ALPHA" : 0., "TRIGAMMA" : 0., "LOG_GAMMA" : 0.}
 
-def read_one_output(f, K, N):
+@memoize
+def read_one_output(fname, K, N):
+    f = open(fname, "r")
     header = f.readline().split(',')
     header = [h.strip() for h in header]
     assert header[0] == 'Accumulator' \
@@ -94,7 +100,7 @@ def read_one_output(f, K, N):
     pur_flop_list = [0] * len(fns)
     for i, fn in enumerate(fns):
         pur_flops[fn] = tot_flops[fn] - impurity[fn](N, K)
-        print("Pure flops ", fn, pur_flops[fn])
+        print("flops ", fn, tot_flops[fn], pur_flops[fn])
         pur_flop_list[i] = pur_flops[fn]
     pass
     return pur_flop_list 
@@ -105,7 +111,7 @@ colors = { "RUN_EM" : "green", "LDA_INFERENCE" : "blue", "DIGAMMA" : "black", "L
 def stacked_bar_plot(filenames, KNs, xticklabels=None):
     flops = []
     for i, f in enumerate(filenames):
-        flps = read_one_output(open(f, "r"), KNs[i][0], KNs[i][1])
+        flps = read_one_output(f, KNs[i][0], KNs[i][1])
         flops.append(flps)
         pass
     flops = np.array(flops)
@@ -137,7 +143,7 @@ def bar_plot(filenames, KNs, legends=None):
     fig, ax = plt.subplots()
     p = [None] * len(filenames)
     for i in range(len(filenames)): 
-        flops = read_one_output(open(filenames[i], "r"), KNs[i][0], KNs[i][1]) 
+        flops = read_one_output(filenames[i], KNs[i][0], KNs[i][1]) 
         p[i] = ax.bar(ind + i * width, flops, width, color = colors2[i])
 
     ax.set_ylabel('flop count')
