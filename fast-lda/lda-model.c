@@ -33,7 +33,7 @@ void lda_mle(lda_model* model, lda_suffstats* ss, int estimate_alpha)
 
     timer t = start_timer(MLE);
 
-    int tiling_factor = 2;
+    int tiling_factor = 4;
 
     for (w = 0; w + tiling_factor - 1 < model->num_terms; w+=tiling_factor)
     {
@@ -66,6 +66,26 @@ void lda_mle(lda_model* model, lda_suffstats* ss, int estimate_alpha)
             // we'll get -INF, and this max operation will get rid of it.
             __m256fp f2 = _mm256_max(r2, l);
             _mm256_storeu(model->log_prob_w + ((w + 1) * model->num_topics + k), f2);
+
+            __m256fp cw3 = _mm256_loadu(ss->class_word + ((w + 2) * model->num_topics + k));
+
+            __m256fp lcw3 = _mm256_log(cw3);
+            __m256fp r3 = _mm256_sub(lcw3, lct);
+
+            // <FL> Instead of using an if, we just do the log. If we had a zero
+            // we'll get -INF, and this max operation will get rid of it.
+            __m256fp f3 = _mm256_max(r3, l);
+            _mm256_storeu(model->log_prob_w + ((w + 2) * model->num_topics + k), f3);
+
+            __m256fp cw4 = _mm256_loadu(ss->class_word + ((w + 3) * model->num_topics + k));
+
+            __m256fp lcw4 = _mm256_log(cw4);
+            __m256fp r4 = _mm256_sub(lcw4, lct);
+
+            // <FL> Instead of using an if, we just do the log. If we had a zero
+            // we'll get -INF, and this max operation will get rid of it.
+            __m256fp f4 = _mm256_max(r4, l);
+            _mm256_storeu(model->log_prob_w + ((w + 3) * model->num_topics + k), f4);
         }
 
         if (LEFTOVER(model->num_topics, 0)) {
@@ -93,6 +113,26 @@ void lda_mle(lda_model* model, lda_suffstats* ss, int estimate_alpha)
             // we'll get -INF, and this max operation will get rid of it.
             __m256fp f2 = _mm256_max(r2, l);
             _mm256_storeu(model->log_prob_w + ((w + 1) * model->num_topics + k), f2);
+
+            __m256fp cw3 = _mm256_loadu(ss->class_word + ((w + 2) * model->num_topics + k));
+
+            __m256fp lcw3 = _mm256_log(cw3);
+            __m256fp r3 = _mm256_sub(lcw3, lct);
+
+            // <FL> Instead of using an if, we just do the log. If we had a zero
+            // we'll get -INF, and this max operation will get rid of it.
+            __m256fp f3 = _mm256_max(r3, l);
+            _mm256_storeu(model->log_prob_w + ((w + 2) * model->num_topics + k), f3);
+
+            __m256fp cw4 = _mm256_loadu(ss->class_word + ((w + 3) * model->num_topics + k));
+
+            __m256fp lcw4 = _mm256_log(cw4);
+            __m256fp r4 = _mm256_sub(lcw4, lct);
+
+            // <FL> Instead of using an if, we just do the log. If we had a zero
+            // we'll get -INF, and this max operation will get rid of it.
+            __m256fp f4 = _mm256_max(r4, l);
+            _mm256_storeu(model->log_prob_w + ((w + 1) * model->num_topics + k), f4);
 
         }
     }
