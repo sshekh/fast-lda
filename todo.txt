@@ -1,11 +1,14 @@
-4) Computational optimization - Cache results of function called repetedly
+4) Computational optimization - Cache results of function called repeatedly
+    i.e. use lookup tables
 
-4.1) static inline on util functions
+4.1) Force inline of util functions
 
 5) "Better"  pie-chart
 
-6) Bechmark functions individualy, Fred suggest independent timings
+6) Benchmark functions individually, Fred suggests independent timings
 
-7) All the otehr optimizations: ILP, scalar replacement, register level optimizations
+7) All the other optimizations: ILP, scalar replacement, register level optimizations
 
 8) SIMD
+    compute_likelihood and lda_inference are two big ones
+    Perhaps something can be done inside the convergence loop for alpha
