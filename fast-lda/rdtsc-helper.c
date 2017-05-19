@@ -21,11 +21,18 @@ timer start_timer(int id){
     timer t;
     t.id = id;
 
+    // This CPUID thing seems to do nothing, but is required so that the CPU
+    // doesn't schedule the RDTSC out-of-order.
+    CPUID();
     RDTSC(t.start);
     return t;
 }
 
 void stop_timer(timer t){
+
+    // This CPUID thing seems to do nothing, but is required so that the CPU
+    // doesn't schedule the RDTSC out-of-order.
+    CPUID();
     RDTSC(t.end);
     t.cycles = (long long) ((COUNTER_DIFF(t.end, t.start)));
     timing_infrastructure[t.id].sum += t.cycles;
