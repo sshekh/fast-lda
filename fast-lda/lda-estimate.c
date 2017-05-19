@@ -84,9 +84,69 @@ fp_t doc_e_step(document* doc, fp_t* gamma, fp_t* phi,
     ss->alpha_suffstats += first(alpha_totals);
     ss->alpha_suffstats -= model->num_topics * digamma(gamma_sum);
 
+    // <CC> Tile by 2 on n (two words in parallel)
+    int tiling_factor = 2;
+    for (n = 0; n + tiling_factor - 1 < doc->length; n+=tiling_factor)
+    {
+
+        int di1 = doc->words[n] * model->num_topics;
+        int di2 = doc->words[n + 1] * model->num_topics;
+
+        int ni1 = n * model->num_topics;
+        int ni2 = (n + 1) * model->num_topics;
+
+        __m256fp doc_counts1 = _mm256_set1(doc->counts[n]);
+        __m256fp doc_counts2 = _mm256_set1(doc->counts[n + 1]);
+        for (k = 0; k < KK; k += STRIDE)
+        {
+            __m256fp cw1 = _mm256_loadu(ss->class_word + di1 + k);
+            __m256fp cw2 = _mm256_loadu(ss->class_word + di2 + k);
+            
+            __m256fp ct = _mm256_loadu(ss->class_total + k);
+
+            __m256fp ph1 = _mm256_loadu(phi + ni1 + k);
+            __m256fp ph2 = _mm256_loadu(phi + ni2 + k);
+
+            //ss->class_word[di + k] += doc->counts[n]*phi[ni + k];
+            cw1 = _mm256_fmadd(doc_counts1, ph1, cw1);
+            cw2 = _mm256_fmadd(doc_counts2, ph2, cw2);
+
+
+            //ss->class_total[k] += doc->counts[n]*phi[ni + k];
+            ct = _mm256_fmadd(doc_counts1, ph1, ct);
+            ct = _mm256_fmadd(doc_counts2, ph2, ct);
+
+            _mm256_storeu(ss->class_word + di1 + k, cw1);
+            _mm256_storeu(ss->class_word + di2 + k, cw2);
+
+            _mm256_storeu(ss->class_total + k, ct);
+        }
+ 
+        if (LEFTOVER(model->num_topics)) {
+            __m256fp cw1 = _mm256_maskload(ss->class_word + di1 + KK, KMASK);
+            __m256fp cw2 = _mm256_maskload(ss->class_word + di2 + KK, KMASK);
+
+            __m256fp ct = _mm256_maskload(ss->class_total + KK, KMASK);
+
+            __m256fp ph1 = _mm256_maskload(phi + ni1 + KK, KMASK);
+            __m256fp ph2 = _mm256_maskload(phi + ni2 + KK, KMASK);
+ 
+            //ss->class_word[di + k] += doc->counts[n]*phi[ni + k];
+            cw1 = _mm256_fmadd(doc_counts1, ph1, cw1);
+            cw2 = _mm256_fmadd(doc_counts2, ph2, cw2);
+ 
+            //ss->class_total[k] += doc->counts[n]*phi[ni + k];
+            ct = _mm256_fmadd(doc_counts1, ph1, ct);
+            ct = _mm256_fmadd(doc_counts2, ph2, ct);
+ 
+            _mm256_maskstore(ss->class_word + di1 + KK, KMASK, cw1);
+            _mm256_maskstore(ss->class_word + di2 + KK, KMASK, cw2);
+            _mm256_maskstore(ss->class_total + KK, KMASK, ct);
+        }
+     }
 
      //Update beta.
-    for (n = 0; n < doc->length; n++)
+    for (; n < doc->length; n++)
     {
         int di = doc->words[n] * model->num_topics;
         int ni = n * model->num_topics;
