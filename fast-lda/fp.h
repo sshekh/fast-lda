@@ -1,6 +1,9 @@
 #ifndef VECTORIZE_H
 #define VECTORIZE_H
 
+/* Contains the essential architecture and definitions used to switch between
+single and double precision. */
+
 #include <immintrin.h>
 
 #ifdef DOUBLE
@@ -59,11 +62,9 @@
     #define _mm256_undefined    _mm256_undefined_pd
     #define _mm256_xor          _mm256_xor_pd
 
+    // Intrinsic only available on intel
     #ifdef __INTEL_COMPILER
         #define _mm256_log          _mm256_log_pd
-    #else
-        // GCC doesn't have this intrinsic
-        __m256d _mm256_log(__m256d x);
     #endif
 
     #define _mm256_rcp(a)       _mm256_div_pd(_mm256_set1_pd(1.0), a)
@@ -138,52 +139,8 @@
 
     #ifdef __INTEL_COMPILER
         #define _mm256_log          _mm256_log_ps
-    #else
-        // GCC doesn't have this intrinsic
-        __m256 _mm256_log(__m256 x);
     #endif
 
 #endif
-
-// hsum(x): return a vector where all elements are set to the sum of elements of x.
-#ifdef DOUBLE
-    inline __m256d hsum(__m256d x) {
-        // [A, B, C, D] -> [AB, AB, CD, CD]
-        x = _mm256_hadd_pd(x, x);
-        // -> [AB, CD, AB, CD]
-        // Immediate:
-        // 11 01 10 00 = 216
-        // ^  ^  ^  ^-- 1st dst = 1st src
-        // |  |  +-- 2nd dst = 3rd src
-        // |  +-- 3rd dst = 2nd dst
-        // +-- 4th dst = 4th src
-        x = _mm256_permute4x64_pd(x, 216);
-
-        // -> [A..D * 4]
-        return _mm256_hadd_pd(x, x);
-    }
-#else
-    inline __m256 hsum(__m256 x) {
-        // [A,B,C,D,E,F,G,H] -> [AB, CD, AB, CD, EF, GH, EF, GH]
-        x = _mm256_hadd_ps(x, x);
-        // -> [A..D * 4, E..H * 4]
-        x = _mm256_hadd_ps(x, x);
-
-        // -> [(A..D, E..H) * 4]
-        __m256i perm = _mm256_set_epi32(4,0,4,0,4,0,4,0);
-        x = _mm256_permutevar8x32_ps(x, perm);
-
-        // -> [A..H * 8]
-        return _mm256_hadd_ps(x, x);
-    }
-#endif
-
-
-inline fp_t first(__m256fp x) {
-    fp_t a[STRIDE];
-    _mm256_storeu(a, x);
-    return a[0];
-}
-
 
 #endif
