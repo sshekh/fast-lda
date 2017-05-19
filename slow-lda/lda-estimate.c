@@ -199,8 +199,7 @@ void run_em(char* start, char* directory, corpus* corpus)
 
     stop_timer(rdtsc);
 
-    timing_infrastructure[EM_CONVERGE].sum += i;
-    timing_infrastructure[EM_CONVERGE].counter++;
+    timer_manual_increment(EM_CONVERGE, i);
 
     // output the final model
 

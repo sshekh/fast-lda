@@ -71,8 +71,8 @@ fp_t opt_alpha(fp_t ss, int D, int K)
     a = exp(log_a);
 
     stop_timer(t);
-    timing_infrastructure[ALPHA_CONVERGE].counter++;
-    timing_infrastructure[ALPHA_CONVERGE].sum += iter;
+
+    timer_manual_increment(ALPHA_CONVERGE, iter);
 
     return(a);
 }
