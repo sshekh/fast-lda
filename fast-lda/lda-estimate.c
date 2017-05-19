@@ -68,7 +68,9 @@ fp_t doc_e_step(document* doc, fp_t* gamma, fp_t* phi,
     }
     if (LEFTOVER(model->num_topics)) {
         __m256fp gams = _mm256_maskload(gamma + KK, KMASK);
-        __m256fp digams = digamma_vec_mask(gams, KMASK);
+
+        __m256fp dig_unmasked = digamma_vec(gams);
+        __m256fp digams = _mm256_and(dig_unmasked, _mm256_castsi256(KMASK));
 
         gamma_accs = _mm256_add(gamma_accs, gams);
         alpha_accs = _mm256_add(alpha_accs, digams);

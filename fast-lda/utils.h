@@ -32,14 +32,13 @@ int argmax(fp_t* x, int n);
 
     HINT_INLINE
     __m256fp _mm256_log(__m256fp x) {
-        // This is pretty terrible but it's basically the only thing we can do.
-        fp_t vals[STRIDE];
-        _mm256_storeu(vals, x);
+        fp_t* vals = (fp_t*) &x;
 
+        // This is pretty terrible but it's basically the only thing we can do.
         for (int i = 0 ; i < STRIDE ; i++)
             vals[i] = (fp_t) log(vals[i]);
 
-        return _mm256_loadu(vals);
+        return x;
     }
 
 #endif // __INTEL_COMPILER
@@ -337,13 +336,7 @@ __m256fp log_gamma_vec(__m256fp x)
     }
 #endif // DOUBLE
 
-
-HINT_INLINE
-fp_t first(__m256fp x) {
-    fp_t a[STRIDE];
-    _mm256_storeu(a, x);
-    return a[0];
-}
-
+// First element of this vector
+#define first(x) *((fp_t*) &(x))
 
 #endif // UTILS_H
