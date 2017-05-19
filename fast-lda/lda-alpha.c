@@ -44,7 +44,7 @@ fp_t d2_alhood(fp_t a, int N, int K)
 fp_t opt_alpha(fp_t ss, int N, int K)
 {
     fp_t a, log_a, init_a = 100;
-    fp_t f, df, d2f;
+    fp_t df, d2f;
     int iter = 0;
 
     timer t = start_timer(OPT_ALPHA);
@@ -61,11 +61,9 @@ fp_t opt_alpha(fp_t ss, int N, int K)
             a = init_a;
             log_a = log(a);
         }
-        f = alhood(a, ss, N, K);
         df = d_alhood(a, ss, N, K);
         d2f = d2_alhood(a, N, K);
         log_a = log_a - df/(d2f * a + df);
-        // printf("alpha maximization : %5.5f   %5.5f\n", f, df);
     }
     while ((fabs(df) > NEWTON_THRESH) && (iter < MAX_ALPHA_ITER));
 

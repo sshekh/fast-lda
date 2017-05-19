@@ -1,5 +1,6 @@
 #include "fp.h"
 #include <math.h>
+#include <stdio.h>
 
 #ifndef __INTEL_COMPILER
     /* These are some replacements for the icc-specific intrinsics. The

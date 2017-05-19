@@ -20,8 +20,6 @@ int main(int argc, char* argv[])
     // seedMT(t1);
     seedMT(4357U);
 
-    char cmd_mkdir[500];
-
     if (argc > 8)
     {
         if (strcmp(argv[1], "est")==0)
