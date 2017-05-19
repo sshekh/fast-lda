@@ -153,7 +153,7 @@ def bench(k, n, which):
                     'LLC-store-misses,dTLB-loads,dTLB-load-misses,dTLB-stores,' +
                     'dTLB-store-misses')
 
-        target = TIMING_FOLDER % RUN_NAME + ('/perf_%s_%d_%d.txt' % (which, k, n))
+        target = TIMING_FOLDER % RUN_NAME + ('/perf_%s_%d_%d.txt' % (lda, k, n))
 
         if platform.system() == 'Linux':
             run_cmd(perf_part + ' ' + lda_part + ' 2> ' + target)
