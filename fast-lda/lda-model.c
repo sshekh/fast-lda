@@ -34,9 +34,8 @@ void lda_mle(lda_model* model, lda_suffstats* ss, int estimate_alpha)
     timer t = start_timer(MLE);
 
     int tiling_factor = 2;
-    int leftover_tiling = model->num_terms % tiling_factor;
 
-    for (w = 0; w < model->num_terms - leftover_tiling; w+=tiling_factor)
+    for (w = 0; w + tiling_factor - 1 < model->num_terms; w+=tiling_factor)
     {
         int kk;
         __m256i rem;
@@ -61,7 +60,6 @@ void lda_mle(lda_model* model, lda_suffstats* ss, int estimate_alpha)
             __m256fp cw2 = _mm256_loadu(ss->class_word + ((w + 1) * model->num_topics + k));
 
             __m256fp lcw2 = _mm256_log(cw2);
-
             __m256fp r2 = _mm256_sub(lcw2, lct);
 
             // <FL> Instead of using an if, we just do the log. If we had a zero
@@ -77,7 +75,6 @@ void lda_mle(lda_model* model, lda_suffstats* ss, int estimate_alpha)
             __m256fp ct = _mm256_maskload(ss->class_total + kk, rem);
 
             __m256fp lcw1 = _mm256_log(cw1);
-
             __m256fp lct = _mm256_log(ct);
 
             __m256fp r1 = _mm256_sub(lcw1, lct);
@@ -90,7 +87,6 @@ void lda_mle(lda_model* model, lda_suffstats* ss, int estimate_alpha)
             __m256fp cw2 = _mm256_loadu(ss->class_word + ((w + 1) * model->num_topics + k));
 
             __m256fp lcw2 = _mm256_log(cw2);
-
             __m256fp r2 = _mm256_sub(lcw2, lct);
 
             // <FL> Instead of using an if, we just do the log. If we had a zero
@@ -101,7 +97,7 @@ void lda_mle(lda_model* model, lda_suffstats* ss, int estimate_alpha)
         }
     }
 
-    for (w = 0; w < leftover_tiling; w++)
+    for (; w < model->num_terms; w++)
     {
         int kk;
         __m256i rem;
