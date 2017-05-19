@@ -3,6 +3,7 @@ import os
 import getopt
 import subprocess
 import time
+import platform
 
 from colorama import init, Fore, Style
 from git import Repo
@@ -154,7 +155,11 @@ def bench(k, n, which):
 
         target = TIMING_FOLDER % RUN_NAME + ('/perf_%s_%d_%d.txt' % (which, k, n))
 
-        run_cmd(perf_part + ' ' + lda_part + ' 2> ' + target)
+        if platform.system() == 'Linux':
+            run_cmd(perf_part + ' ' + lda_part + ' 2> ' + target)
+        else:
+            with open(target,'a') as tar:
+                tar.write("\n'perf stat' could not be executed as this command is only available on Linux!\n")
 
         timing_out = (TIMING_FOLDER % RUN_NAME) + (TIMING_FILENAME % (lda, k, n))
         os.rename(LDA_OUT_TIMING, timing_out)
