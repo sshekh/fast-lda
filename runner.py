@@ -245,7 +245,7 @@ def usage_and_quit():
     print('\t-s: Silence lda output (always enabled in bench mode).')
     print('\t-a: No-prompt mode (always generate missing refs / reuse existing).')
     print('\t-d: Use doubles instead of floats in the fast.')
-    print('\t-i: Compile the fast with icc instead of gcc.')
+    print('\t-i: Compile with icc instead of gcc.')
 
     sys.exit()
 
@@ -360,8 +360,7 @@ if __name__ == '__main__':
         run_cmd(construct_make_command('fast', defines_fast, use_icc))
 
         print('Preparing the slow...')
-        # Always use gcc for the slow
-        run_cmd(construct_make_command('slow', defines_slow, use_icc=False))
+        run_cmd(construct_make_command('slow', defines_slow, use_icc))
 
     # Use different names for the reference files depending on whether we're
     # using floats or doubles.
