@@ -36,7 +36,7 @@ void lda_mle(lda_model* model, lda_suffstats* ss, int estimate_alpha)
     int tiling_factor = 2;
     int leftover_tiling = model->num_terms % tiling_factor;
 
-    for (w = 0; w < model->num_terms; w+=tiling_factor)
+    for (w = 0; w < model->num_terms - leftover_tiling; w+=tiling_factor)
     {
         int kk;
         __m256i rem;
