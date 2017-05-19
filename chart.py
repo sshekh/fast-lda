@@ -10,7 +10,7 @@ D = 135
 # A little bird told us that this is the proper value
 V = 10473
 
-iters = {"EM_CONVERGE" : 0, "INFERENCE_CONVERGE" : 0, "ALPHA_CONVERGE" : 0}  # conv counts for var iterations 
+iters = {"EM_CONVERGE" : 0, "INFERENCE_CONVERGE" : 0, "ALPHA_CONVERGE" : 0}  # conv counts for var iterations
 
 fns = ["RUN_EM", "LDA_INFERENCE", "DIGAMMA", "LOG_SUM", "DOC_E_STEP", "LIKELIHOOD", "MLE", "OPT_ALPHA", "TRIGAMMA", "LOG_GAMMA"]
 
@@ -19,16 +19,16 @@ def memoize(f):
     return lambda *args: cache[args] if args in cache else cache.update({args: f(*args)}) or cache[args]
 
 def digamma(N, K):
-    return 0 
+    return 0
 
 def log_sum(N, K):
     return 0
 
 def log_gamma(N, K):
-    return 0  
+    return 0
 
 def trigamma(N, K):
-    return 0 + 6 * 0 
+    return 0 + 6 * 0
 
 def random_initialize_ss(N, K):
     return K * N * 0
@@ -105,14 +105,14 @@ def read_one_output(fname, K, N):
             pur_flops[fn] = tot_flops[fn] - impurity[fn](N, K)
             print("flops ", fn, tot_flops[fn], pur_flops[fn])
             ret_flop_list[i] = pur_flops[fn]
-    else
+    else:
         for i, fn in enumerate(fns):
             ret_flop_list[i] = tot_flops[fn]
 
-    return ret_flop_list 
+    return ret_flop_list
 
 colors = { "RUN_EM" : "green", "LDA_INFERENCE" : "blue", "DIGAMMA" : "black", "LOG_SUM" : "purple",
-        "LOG_GAMMA" : "purple", "TRIGAMMA" : "cyan", "DOC_E_STEP" : "orange", "LIKELIHOOD" : "red", "MLE" : "cyan", "OPT_ALPHA" : "cyan"}       
+        "LOG_GAMMA" : "purple", "TRIGAMMA" : "cyan", "DOC_E_STEP" : "orange", "LIKELIHOOD" : "red", "MLE" : "cyan", "OPT_ALPHA" : "cyan"}
 
 def stacked_bar_plot(filenames, KNs, xticklabels=None):
     flops = []
@@ -131,7 +131,7 @@ def stacked_bar_plot(filenames, KNs, xticklabels=None):
     for i in range(len(fns)):
         p[i] = ax.bar(ind, flops[i], width, bottom=bottom, color=colors[fns[i]])
         bottom = np.sum([bottom, flops[i]], axis=0)
-    
+
     plt.legend(p, fns)
     if xticklabels is not None:
         ax.set_xticklabels(xticklabels)
@@ -148,8 +148,8 @@ def bar_plot(filenames, KNs, legends=None):
     ind = np.arange(len(fns))
     fig, ax = plt.subplots()
     p = [None] * len(filenames)
-    for i in range(len(filenames)): 
-        flops = read_one_output(filenames[i], KNs[i][0], KNs[i][1]) 
+    for i in range(len(filenames)):
+        flops = read_one_output(filenames[i], KNs[i][0], KNs[i][1])
         p[i] = ax.bar(ind + i * width, flops, width, color = colors2[i])
 
     ax.set_ylabel('flop count')
