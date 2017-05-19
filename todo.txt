@@ -1,8 +1,6 @@
 4) Computational optimization - Cache results of function called repeatedly
     i.e. use lookup tables
 
-4.1) Force inline of util functions
-
 5) "Better"  pie-chart
 
 6) Benchmark functions individually, Fred suggests independent timings
@@ -12,3 +10,6 @@
 8) SIMD
     compute_likelihood and lda_inference are two big ones
     Perhaps something can be done inside the convergence loop for alpha
+
+
+9) Use _mm_malloc to force alignment and then only use aligned loads/stores.
