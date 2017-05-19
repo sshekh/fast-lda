@@ -205,8 +205,7 @@ void run_em(char* start, char* directory, corpus* corpus)
 
     stop_timer(rdtsc);
 
-    timing_infrastructure[EM_CONVERGE].sum += var_iter;
-    timing_infrastructure[EM_CONVERGE].counter++;
+    timer_manual_increment(EM_CONVERGE, var_iter);
 
     // output the final model
     sprintf(filename,"%s/final",directory);
