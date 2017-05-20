@@ -93,7 +93,7 @@ single and double precision. */
         }\
     }
 
-    #define LEFTOVER(n) ((n - s) % 8)
+    #define LEFTOVER(n, s) ((n - s) % 8)
 
     #define __m256fp            __m256
 
