@@ -321,7 +321,22 @@ __m256fp log_gamma_vec(__m256fp x)
 
 
 // hsum(x): return a vector where all elements are set to the sum of elements of x.
-#ifdef DOUBLE
+#ifdef FLOAT
+    INLINE
+    __m256 hsum(__m256 x) {
+        // [A,B,C,D,E,F,G,H] -> [AB, CD, AB, CD, EF, GH, EF, GH]
+        x = _mm256_hadd_ps(x, x);
+        // -> [A..D * 4, E..H * 4]
+        x = _mm256_hadd_ps(x, x);
+
+        // -> [(A..D, E..H) * 4]
+        __m256i perm = _mm256_set_epi32(4,0,4,0,4,0,4,0);
+        x = _mm256_permutevar8x32_ps(x, perm);
+
+        // -> [A..H * 8]
+        return _mm256_hadd_ps(x, x);
+    }
+#else
     INLINE
     __m256d hsum(__m256d x) {
         // [A, B, C, D] -> [AB, AB, CD, CD]
@@ -337,21 +352,6 @@ __m256fp log_gamma_vec(__m256fp x)
 
         // -> [A..D * 4]
         return _mm256_hadd_pd(x, x);
-    }
-#else
-    INLINE
-    __m256 hsum(__m256 x) {
-        // [A,B,C,D,E,F,G,H] -> [AB, CD, AB, CD, EF, GH, EF, GH]
-        x = _mm256_hadd_ps(x, x);
-        // -> [A..D * 4, E..H * 4]
-        x = _mm256_hadd_ps(x, x);
-
-        // -> [(A..D, E..H) * 4]
-        __m256i perm = _mm256_set_epi32(4,0,4,0,4,0,4,0);
-        x = _mm256_permutevar8x32_ps(x, perm);
-
-        // -> [A..H * 8]
-        return _mm256_hadd_ps(x, x);
     }
 #endif // DOUBLE
 

@@ -244,8 +244,8 @@ def usage_and_quit():
     print('\t-m: Do not run make before running a task. Ignored in bench mode.')
     print('\t-s: Silence lda output (always enabled in bench mode).')
     print('\t-a: No-prompt mode (always generate missing refs / reuse existing).')
-    print('\t-d: Use doubles instead of floats in the fast.')
-    print('\t-i: Compile with icc instead of gcc.')
+    print('\t-r: Reduce precision to floats instead of doubles in the fast.')
+    print('\t-g: Compile with gcc instead of icc.')
 
     sys.exit()
 
@@ -304,7 +304,7 @@ if __name__ == '__main__':
         if mode == 'bench':
             raise ValueError('When benchmarking, please include a comment.')
 
-    opts, args = getopt.gnu_getopt(options, "fsmdsia",
+    opts, args = getopt.gnu_getopt(options, "fsmrsga",
         ["num-topics=",
         "num-docs=",
         "n=",
@@ -313,9 +313,9 @@ if __name__ == '__main__':
     do_fast = False
     do_slow = False
     do_make = True
-    use_doubles = False
+    use_doubles = True
     silence_output = mode == 'bench'
-    use_icc = False
+    use_icc = True
 
 
     ks = [50]
@@ -332,24 +332,24 @@ if __name__ == '__main__':
             do_slow = True
         elif o == '-m' and mode != 'bench': # ALWAYS make in bench mode
             do_make = False
-        elif o == '-d':
-            use_doubles = True
+        elif o == '-r':
+            use_doubles = False
         elif o == '-s':
             silence_output = True
         elif o == '-a':
             NO_PROMPT = True
-        elif o == '-i':
-            use_icc = True
+        elif o == '-g':
+            use_icc = False
 
     RUN_NAME = time.strftime('%Y-%m-%d_%H-%M-%S')
 
     if do_make:
 
         # Check which defines we need to add
-        defines_fast = []
-        defines_slow = ['DOUBLE'] # ALWAYS compile with doubles in the slow.
-        if use_doubles:
-            defines_fast.append('DOUBLE')
+        defines_fast = [] 
+        defines_slow = [] # ALWAYS compile with doubles in the slow.
+        if not use_doubles:
+            defines_fast.append('FLOAT')
         if silence_output:
             defines_fast.append('IGNORE_PRINTF')
             defines_slow.append('IGNORE_PRINTF')

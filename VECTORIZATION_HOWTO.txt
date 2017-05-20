@@ -30,7 +30,7 @@ differentiate between floats and doubles. Therefore, you do things like:
     __m256fp ab = _mm256_add(a, b)
     __m256fp ab_sq = _mm256_mul(ab, ab)
 
-Once again, the correct version is selected by the DOUBLE define. Note that not
+Once again, the correct version is selected by the FLOAT define. Note that not
 all intrinsics are defined in this way. Specifically, I did not define the ones
 that have markedly different behavior between floats and doubles (e.g. unpacks).
 If you need to use such an intrinsic, talk to me.
