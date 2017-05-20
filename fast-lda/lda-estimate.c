@@ -122,7 +122,7 @@ fp_t doc_e_step(document* doc, fp_t* gamma, fp_t* phi,
             _mm256_storeu(ss->class_total + k, ct);
         }
  
-        if (LEFTOVER(model->num_topics)) {
+        if (LEFTOVER(model->num_topics, 0)) {
             __m256fp cw1 = _mm256_maskload(ss->class_word + di1 + KK, KMASK);
             __m256fp cw2 = _mm256_maskload(ss->class_word + di2 + KK, KMASK);
 

@@ -127,10 +127,6 @@ void lda_mle(lda_model* model, lda_suffstats* ss, int estimate_alpha)
 
     for (; w < model->num_terms; w++)
     {
-        int kk;
-        __m256i rem;
-        STRIDE_SPLIT(model->num_topics, &kk, &rem);
-
         for (k = 0; k < kk; k += STRIDE)
         {
             __m256fp cw = _mm256_loadu(ss->class_word + (w * model->num_topics + k));
@@ -146,7 +142,7 @@ void lda_mle(lda_model* model, lda_suffstats* ss, int estimate_alpha)
             _mm256_storeu(model->log_prob_w + (w * model->num_topics + k), f);
         }
 
-        if (LEFTOVER(model->num_topics)) {
+        if (LEFTOVER(model->num_topics, 0)) {
             __m256fp cw = _mm256_maskload(ss->class_word + (w * model->num_topics + kk), rem);
             __m256fp ct = _mm256_maskload(ss->class_total + kk, rem);
 
