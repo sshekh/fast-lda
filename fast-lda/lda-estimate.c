@@ -51,7 +51,7 @@ fp_t doc_e_step(document* doc, fp_t* gamma, fp_t* phi,
 
     int KK;
     __m256i KMASK;
-    STRIDE_SPLIT(model->num_topics, &KK, &KMASK);
+    STRIDE_SPLIT(model->num_topics, 0, &KK, &KMASK);
 
     // Update sufficient statistics.
     __m256fp gamma_accs = _mm256_setzero();
@@ -66,7 +66,7 @@ fp_t doc_e_step(document* doc, fp_t* gamma, fp_t* phi,
         __m256fp digams = digamma_vec(gams);
         alpha_accs = _mm256_add(alpha_accs, digams);
     }
-    if (LEFTOVER(model->num_topics)) {
+    if (LEFTOVER(model->num_topics, 0)) {
         __m256fp gams = _mm256_maskload(gamma + KK, KMASK);
 
         __m256fp dig_unmasked = digamma_vec(gams);
@@ -107,7 +107,7 @@ fp_t doc_e_step(document* doc, fp_t* gamma, fp_t* phi,
             _mm256_storeu(ss->class_total + k, ct);
         }
 
-        if (LEFTOVER(model->num_topics)) {
+        if (LEFTOVER(model->num_topics, 0)) {
             __m256fp cw = _mm256_maskload(ss->class_word + di + KK, KMASK);
             __m256fp ct = _mm256_maskload(ss->class_total + KK, KMASK);
             __m256fp ph = _mm256_maskload(phi + ni + KK, KMASK);

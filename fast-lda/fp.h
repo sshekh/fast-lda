@@ -11,9 +11,11 @@ single and double precision. */
     #define fp_t double
     #define STRIDE 4
 
-    #define STRIDE_SPLIT(n, q, m) {\
-        *(q) = (n) - ((n) % 4);\
-        switch ((n) % 4) {\
+    #define LEFTOVER(n, s) ((n - s) % 4)
+
+    #define STRIDE_SPLIT(n, s, q, m) {\
+        *(q) = (n) - ((n - s) % 4);\
+        switch ((n - s) % 4) {\
             case 0: *(m) = _mm256_setzero_si256(); break;\
             case 1: *(m) = _mm256_set_epi64x(0, 0, 0, 0xFFFFFFFFFFFFFFFF); break;\
             case 2: *(m) = _mm256_set_epi64x(0, 0, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF); break;\
@@ -21,7 +23,6 @@ single and double precision. */
         }\
     }
 
-    #define LEFTOVER(n) ((n) % 4)
 
     #define __m256fp            __m256d
 
@@ -77,9 +78,9 @@ single and double precision. */
     
     #define STRIDE 8
 
-    #define STRIDE_SPLIT(n, q, m) {\
-        *(q) = (n) - ((n) % 8);\
-        switch ((n) % 8) {\
+    #define STRIDE_SPLIT(n, s, q, m) {\
+        *(q) = (n) - ((n - s) % 8);\
+        switch ((n - s) % 8) {\
             case 0: *(m) = _mm256_setzero_si256(); break;\
             case 1: *(m) = _mm256_set_epi32(0,0,0,0,0,0,0,0xFFFFFFFF); break;\
             case 2: *(m) = _mm256_set_epi32(0,0,0,0,0,0, 0xFFFFFFFF, 0xFFFFFFFF); break;\
@@ -91,7 +92,7 @@ single and double precision. */
         }\
     }
 
-    #define LEFTOVER(n) ((n) % 8)
+    #define LEFTOVER(n) ((n - s) % 8)
 
     #define __m256fp            __m256
 
