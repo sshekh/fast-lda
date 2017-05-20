@@ -31,20 +31,16 @@ single and double precision. */
     #define _mm256_blendv       _mm256_blendv_pd
     #define _mm256_broadcast    _mm256_broadcast_pd
     #define _mm256_broadcast_sd _mm256_broadcast_sd_pd
-    #define _mm_broadcastsd     _mm_broadcastsd_pd
     #define _mm256_broadcastsd  _mm256_broadcastsd_pd
     #define _mm256_castsi256    _mm256_castsi256_pd
     #define _mm256_ceil         _mm256_ceil_pd
-    #define _mm_cmp             _mm_cmp_pd
     #define _mm256_cmp          _mm256_cmp_pd
-    #define _mm_cmp_sd          _mm_cmp_sd_pd
     #define _mm256_div          _mm256_div_pd
     #define _mm256_floor        _mm256_floor_pd
     #define _mm256_fmadd        _mm256_fmadd_pd
     #define _mm256_insertf128   _mm256_insertf128_pd
     #define _mm256_load         _mm256_load_pd
     #define _mm256_loadu        _mm256_loadu_pd
-    #define _mm_maskload        _mm_maskload_pd
     #define _mm256_maskload     _mm256_maskload_pd
     #define _mm256_maskstore    _mm256_maskstore_pd
     #define _mm256_max          _mm256_max_pd
@@ -101,20 +97,16 @@ single and double precision. */
     #define _mm256_blendv       _mm256_blendv_ps
     #define _mm256_broadcast    _mm256_broadcast_ps
     #define _mm256_broadcast_sd _mm256_broadcast_sd_ps
-    #define _mm_broadcastsd     _mm_broadcastsd_ps
     #define _mm256_broadcastsd  _mm256_broadcastsd_ps
     #define _mm256_castsi256    _mm256_castsi256_ps
     #define _mm256_ceil         _mm256_ceil_ps
-    #define _mm_cmp             _mm_cmp_ps
     #define _mm256_cmp          _mm256_cmp_ps
-    #define _mm_cmp_sd          _mm_cmp_sd_ps
     #define _mm256_div          _mm256_div_ps
     #define _mm256_floor        _mm256_floor_ps
     #define _mm256_fmadd        _mm256_fmadd_ps
     #define _mm256_insertf128   _mm256_insertf128_ps
     #define _mm256_load         _mm256_load_ps
     #define _mm256_loadu        _mm256_loadu_ps
-    #define _mm_maskload        _mm_maskload_ps
     #define _mm256_maskload     _mm256_maskload_ps
     #define _mm256_maskstore    _mm256_maskstore_ps
     #define _mm256_max          _mm256_max_ps
