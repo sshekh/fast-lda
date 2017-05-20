@@ -4,6 +4,7 @@
 /* Contains the essential architecture and definitions used to switch between
 single and double precision. */
 
+#include <math.h>
 #include <immintrin.h>
 
 #ifdef DOUBLE
@@ -70,6 +71,10 @@ single and double precision. */
 
 #else
     #define fp_t float
+    #define exp expf
+    #define log logf
+    #define fabs fabsf
+    
     #define STRIDE 8
 
     #define STRIDE_SPLIT(n, q, m) {\
