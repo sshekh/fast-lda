@@ -11,15 +11,22 @@
 #include "fp.h"
 #include "rdtsc-helper.h"
 
-// Tell the compiler we'd like this to be inlined.
-#define HINT_INLINE inline
 
-// Tell the compiler to inline this at all costs.
-#ifdef __INTEL_COMPILER
-    #define FORCE_INLINE _Pragma("forceinline")
+
+#ifdef FORCE_INLINE
+    // Tell the compiler to inline this at all costs.
+    #ifndef __INTEL_COMPILER
+        #define INLINE inline __attribute__((always_inline))
+    #else
+        // There is a pragrma in icc, however I can't get it to work right now.
+        #define INLINE inline
+    #endif // __INTEL_COMPILER
 #else
-    #define FORCE_INLINE __attribute__((always_inline))
-#endif // __INTEL_COMPILER
+    // Only tell the compiler we'd like this to be inlined.
+    // Note: icc seems to be more eager to inline than gcc
+    #define INLINE inline
+#endif // FORCE_INLINE
+
 
 // This is not really a performance-critical function.
 int argmax(fp_t* x, int n);
@@ -30,7 +37,7 @@ int argmax(fp_t* x, int n);
     performance is of course gonna be much worse, but they're here so that we
     can at least compile on gcc. */
 
-    HINT_INLINE
+    INLINE
     __m256fp _mm256_log(__m256fp x) {
         fp_t* vals = (fp_t*) &x;
 
@@ -48,7 +55,8 @@ int argmax(fp_t* x, int n);
 // ====================================================
 
 /* given log(a) and log(b), return log(a + b) */
-HINT_INLINE
+
+INLINE
 fp_t log_sum(fp_t log_a, fp_t log_b)
 {
   timer rdtsc = start_timer(LOG_SUM);
@@ -74,7 +82,7 @@ fp_t log_sum(fp_t log_a, fp_t log_b)
  * recurrence formula 6.4.6.  Each requires workspace at least 5
  * times the size of X.
  */
-HINT_INLINE
+INLINE
 fp_t trigamma(fp_t x)
 {
     fp_t p;
@@ -99,7 +107,7 @@ fp_t trigamma(fp_t x)
 
 
 /* taylor approximation of first derivative of the log gamma function. */
-HINT_INLINE
+INLINE
 fp_t digamma(fp_t x)
 {
     timer rdtsc = start_timer(DIGAMMA);
@@ -116,7 +124,7 @@ fp_t digamma(fp_t x)
 }
 
 
-HINT_INLINE
+INLINE
 fp_t log_gamma(fp_t x)
 {
     timer rdtsc = start_timer(LOG_GAMMA);
@@ -137,7 +145,7 @@ fp_t log_gamma(fp_t x)
 // ======== Vector-argument math functions ========
 // ================================================
 
-HINT_INLINE
+INLINE
 __m256fp digamma_vec(__m256fp x)
 {
     timer rdtsc = start_timer(DIGAMMA);
@@ -220,13 +228,13 @@ __m256fp digamma_vec(__m256fp x)
 
 /* Masked version of digamma. I'm not entirely convinced that this needs to be
  * actually defined. */
-HINT_INLINE
+INLINE
 __m256fp digamma_vec_mask(__m256fp x, __m256i mask) {
     __m256fp dig = digamma_vec(x);
     return _mm256_and(dig, _mm256_castsi256(mask));
 }
 
-HINT_INLINE
+INLINE
 __m256fp log_gamma_vec(__m256fp x)
 {
     timer rdtsc = start_timer(LOG_GAMMA);
@@ -303,7 +311,7 @@ __m256fp log_gamma_vec(__m256fp x)
 
 // hsum(x): return a vector where all elements are set to the sum of elements of x.
 #ifdef DOUBLE
-    HINT_INLINE
+    INLINE
     __m256d hsum(__m256d x) {
         // [A, B, C, D] -> [AB, AB, CD, CD]
         x = _mm256_hadd_pd(x, x);
@@ -320,7 +328,7 @@ __m256fp log_gamma_vec(__m256fp x)
         return _mm256_hadd_pd(x, x);
     }
 #else
-    HINT_INLINE
+    INLINE
     __m256 hsum(__m256 x) {
         // [A,B,C,D,E,F,G,H] -> [AB, CD, AB, CD, EF, GH, EF, GH]
         x = _mm256_hadd_ps(x, x);
