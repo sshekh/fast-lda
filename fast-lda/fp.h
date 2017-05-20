@@ -63,6 +63,7 @@ single and double precision. */
     // Intrinsic only available on intel
     #ifdef __INTEL_COMPILER
         #define _mm256_log          _mm256_log_pd
+        #define _mm256_exp          _mm256_exp_pd
     #endif
 
     #define _mm256_rcp(a)       _mm256_div_pd(_mm256_set1_pd(1.0), a)
@@ -137,6 +138,7 @@ single and double precision. */
 
     #ifdef __INTEL_COMPILER
         #define _mm256_log          _mm256_log_ps
+        #define _mm256_exp          _mm256_exp_ps
     #endif
 
 #endif
