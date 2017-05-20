@@ -48,7 +48,7 @@ int argmax(fp_t* x, int n);
         return x;
     }
 
-    HINT_INLINE
+    INLINE
     __m256fp _mm256_exp(__m256fp x) {
         fp_t* vals = (fp_t*) &x;
 
