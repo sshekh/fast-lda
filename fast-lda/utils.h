@@ -48,6 +48,17 @@ int argmax(fp_t* x, int n);
         return x;
     }
 
+    HINT_INLINE
+    __m256fp _mm256_exp(__m256fp x) {
+        fp_t* vals = (fp_t*) &x;
+
+        // This is pretty terrible but it's basically the only thing we can do.
+        for (int i = 0 ; i < STRIDE ; i++)
+            vals[i] = (fp_t) exp(vals[i]);
+
+        return x;
+    }
+
 #endif // __INTEL_COMPILER
 
 
