@@ -6,6 +6,8 @@
 #include <assert.h>
 #include "lda.h"
 #include "utils.h"
+#include "rdtsc-helper.h"
+
 
 float VAR_CONVERGED;
 int VAR_MAX_ITER;

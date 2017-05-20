@@ -18,10 +18,13 @@
 // USA
 
 #include "lda-inference.h"
-#include "rdtsc-helper.h"
 
 fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
 {
+    int kk;
+    __m256i rem;
+    STRIDE_SPLIT(model->num_topics, &kk, &rem);
+
     fp_t converged = 1;
     fp_t phisum = 0, likelihood = 0;
     fp_t likelihood_old = 0, oldphi[model->num_topics];
@@ -32,16 +35,36 @@ fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
 
     // Initialize the phi for all topics and all words in the doc
     // and compute digamma of the sum of variational gammas over all the topics.
-    for (k = 0; k < model->num_topics; k++)
+    double var_gamma_init_value = model->alpha + (doc->total/((fp_t) model->num_topics));
+
+    for (k = 0; k < kk; k += STRIDE)
     {
-        var_gamma[k] = model->alpha + (doc->total/((fp_t) model->num_topics));
-        digamma_gam[k] = digamma(var_gamma[k]);
+        __m256fp vg = _mm256_set1(var_gamma_init_value);
+        __m256fp dg = digamma_vec(vg);
+
+        _mm256_storeu(var_gamma + k, vg);
+        _mm256_storeu(digamma_gam + k, dg);
+    }    
+
+    if (LEFTOVER(model->num_topics))
+    {
+        __m256fp vg = _mm256_set1(var_gamma_init_value);
+        __m256fp dg = digamma_vec(vg);
+
+        _mm256_maskstore(var_gamma + k, rem, vg);
+        _mm256_maskstore(digamma_gam + k, rem, dg);
     }
+
+    __m256fp phi_init_value = _mm256_set1(1.0/model->num_topics);
     for (n = 0; n < doc->length; n++)
     {
-        for (k = 0; k < model->num_topics; k++)
+        for (k = 0; k < kk; k += STRIDE)
         {
-            phi[n * model->num_topics + k] = 1.0/model->num_topics;
+            _mm256_storeu(phi + (n * model->num_topics + k), phi_init_value);
+        }
+        if (LEFTOVER(model->num_topics))
+        {
+            _mm256_maskstore(phi + (n * model->num_topics + kk), rem, phi_init_value);
         }
     }
 
@@ -56,29 +79,106 @@ fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
        for (n = 0; n < doc->length; n++)
        {
             // <BG, SS> Moved if else initialization of phisum outside of the loop
+
             oldphi[0] = phi[n * model->num_topics + 0];
             phi[n * model->num_topics + 0] = digamma_gam[0] + model->log_prob_w[doc->words[n] * model->num_topics + 0];
             phisum = phi[n * model->num_topics + 0];
+
+            // for (k = 1; k < kk; k += STRIDE)
+            // {
+            //     //oldphi[k] = phi[n * model->num_topics + k];
+            //     __m256fp ph = _mm256_loadu(phi + (n * model->num_topics + k));
+            //     _mm256_storeu(oldphi + k, ph);
+
+            //     //phi[n * model->num_topics + k] = digamma_gam[k] + model->log_prob_w_doc[n * model->num_topics + k];
+            //     __m256fp dg = _mm256_loadu(digamma_gam + k);
+            //     __m256fp lpwd = _mm256_loadu(model->log_prob_w_doc + (n * model->num_topics + k));
+
+            //     ph = _mm256_add(dg, lpwd);
+            //     _mm256_storeu(phi + (n * model->num_topics + k), ph);
+            // }  
+
+            // if (LEFTOVER(model->num_topics)) {
+            //     __m256fp ph = _mm256_maskload(phi + (n * model->num_topics + k), rem);
+            //     _mm256_maskstore(oldphi + k, rem, ph);
+
+            //     __m256fp dg = _mm256_maskload(digamma_gam + k, rem);
+            //     __m256fp lpwd = _mm256_maskload(model->log_prob_w_doc + (n * model->num_topics + k), rem);
+
+            //     ph = _mm256_add(dg, lpwd);
+            //     _mm256_maskstore(phi + (n * model->num_topics + k), rem, ph);
+            // } 
+
+            //  for (k = 1; k < model->num_topics; k++)
+            // {
+            //     phisum = log_sum(phisum, phi[n * model->num_topics + k]);
+            // }
+
+
             for (k = 1; k < model->num_topics; k++)
             {
                 oldphi[k] = phi[n * model->num_topics + k];
-                // Eq (16)
-
                 phi[n * model->num_topics + k] = digamma_gam[k] + model->log_prob_w_doc[n * model->num_topics + k];
 
                 phisum = log_sum(phisum, phi[n * model->num_topics + k]);
             }
 
+            __m256fp doc_counts = _mm256_set1(doc->counts[n]);
+
             //Update equation (17) for variational gamma for each topic
-            for (k = 0; k < model->num_topics; k++)
+            for (k = 0; k < kk; k += STRIDE)
             {
                 // Write the final value of the update for phi.
-                phi[n * model->num_topics + k] = exp(phi[n * model->num_topics + k] - phisum);
-                var_gamma[k] = var_gamma[k] + doc->counts[n]*(phi[n * model->num_topics + k] - oldphi[k]);
+                __m256fp ph = _mm256_loadu(phi + (n * model->num_topics + k));
+                __m256fp pho = _mm256_loadu(oldphi + k);
+                __m256fp vg = _mm256_loadu(var_gamma + k);
+                __m256fp phsum = _mm256_set1(phisum);
+
+                // phi[n * model->num_topics + k] = exp(phi[n * model->num_topics + k] - phisum);
+                __m256fp ph_diff_sum = _mm256_sub(ph, phsum);
+                ph = _mm256_exp(ph_diff_sum);
+                _mm256_storeu(phi + (n * model->num_topics + k), ph);
+
+                // var_gamma[k] = var_gamma[k] + doc->counts[n]*(phi[n * model->num_topics + k] - oldphi[k]);
+                __m256fp ph_diff_old = _mm256_sub(ph, pho);
+                __m256fp ph_diff_times_doc_counts = _mm256_mul(doc_counts, ph_diff_old);
+                vg = _mm256_add(vg, ph_diff_times_doc_counts);
+                _mm256_store(var_gamma + k, vg);
+
                 // !!! a lot of extra digamma's here because of how we're computing it
                 // !!! but its more automatically updated too.
-                digamma_gam[k] = digamma(var_gamma[k]);
+                // digamma_gam[k] = digamma(var_gamma[k]);
+                __m256fp dg = digamma_vec(vg);
+                _mm256_storeu(digamma_gam + k, dg);
+                
             }
+
+            if (LEFTOVER(model->num_topics))
+            {
+                // Write the final value of the update for phi.
+                __m256fp ph = _mm256_maskload(phi + (n * model->num_topics + k), rem);
+                __m256fp pho = _mm256_maskload(oldphi + k, rem);
+                __m256fp vg = _mm256_maskload(var_gamma + k, rem);
+                __m256fp phsum = _mm256_set1(phisum);
+
+                // phi[n * model->num_topics + k] = exp(phi[n * model->num_topics + k] - phisum);
+                __m256fp ph_diff_sum = _mm256_sub(ph, phsum);
+                ph = _mm256_exp(ph_diff_sum);
+                _mm256_maskstore(phi + (n * model->num_topics + k), rem, ph);
+
+                // var_gamma[k] = var_gamma[k] + doc->counts[n]*(phi[n * model->num_topics + k] - oldphi[k]);
+                __m256fp ph_diff_old = _mm256_sub(ph, pho);
+                __m256fp ph_diff_times_doc_counts = _mm256_mul(doc_counts, ph_diff_old);
+                vg = _mm256_add(vg, ph_diff_times_doc_counts);
+                _mm256_maskstore(var_gamma + k, rem, vg);
+
+                // !!! a lot of extra digamma's here because of how we're computing it
+                // !!! but its more automatically updated too.
+                // digamma_gam[k] = digamma(var_gamma[k]);
+                __m256fp dg = digamma_vec(vg);
+                _mm256_maskstore(digamma_gam + k, rem, dg);
+            }
+
         }
 
         likelihood = compute_likelihood(doc, model, phi, var_gamma);
