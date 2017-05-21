@@ -3,7 +3,7 @@
 9) Use _mm_malloc to force alignment and then only use aligned loads/stores. <- ??
 
 10) i. Finalize log_sum (lookup/expansion + vectorization) <- BG
-   ii. vectorize compute likelihood <- SS
+   ii. compute likelihood lgamma loop vectorize using mkl, tiling <- BG
   iii. optimize digamma (lookup/approx + vectorization) <- lookup <- CC, approx <- SS then vectorize BG
    iv. Tiling inference <- FL
     v. Bugfix pure computation chart <- SS
