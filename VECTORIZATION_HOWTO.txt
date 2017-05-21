@@ -107,4 +107,7 @@ If there are any, we can use the mask we created earlier:
         _mm256_maskstore(a + i, leftover_mask, v); // or wherever we need.
     }
 
+EDIT: STRIDE_SPLIT() and LEFTOVER() have been changed to include the starting position s as well
+    STRIDE_SPLIT(n, s, &new_n, &leftover_mask)
+
 That's it. Happy vectorization!

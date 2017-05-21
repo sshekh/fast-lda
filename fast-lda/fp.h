@@ -7,6 +7,7 @@ single and double precision. */
 #include <math.h>
 #include <immintrin.h>
 
+#define MAX(a, b) ((a) > (b) ? (a) : (b)) 
 #ifdef FLOAT
 
     #define fp_t float

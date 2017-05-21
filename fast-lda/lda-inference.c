@@ -192,45 +192,144 @@ fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
 
 fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_gamma)
 {
-    fp_t likelihood = 0, digsum = 0, var_gamma_sum = 0, dig[model->num_topics];
+    fp_t likelihood = 0, digsum = 0, var_gamma_sum = 0;
+    fp_t dig[model->num_topics];
+    __m256fp v_likelihood = _mm256_set1(0), 
+             v_var_gamma_sum = _mm256_set1(0);
     int k, n;
+
+    int kk;
+    __m256i leftover_mask;
 
     timer rdtsc = start_timer(LIKELIHOOD);
 
-    for (k = 0; k < model->num_topics; k++)
+    STRIDE_SPLIT(model->num_topics, 0, &kk, &leftover_mask);
+
+    for (k = 0; k < kk; k += STRIDE)
     {
-       dig[k] = digamma(var_gamma[k]);
-       var_gamma_sum += var_gamma[k];
+       //dig[k] = digamma(var_gamma[k]);
+       __m256fp v_var_gamma = _mm256_loadu(var_gamma + k);
+       __m256fp v_dig = digamma_vec(v_var_gamma);
+       _mm256_storeu(dig + k, v_dig);
+
+       //var_gamma_sum += var_gamma[k];
+       v_var_gamma_sum = _mm256_add(v_var_gamma_sum, v_var_gamma);
     }
+
+    if (LEFTOVER(model->num_topics, 0)) {
+       //dig[k] = digamma(var_gamma[k]);
+       __m256fp v_var_gamma = _mm256_maskload(var_gamma + k, leftover_mask);
+       __m256fp v_dig = digamma_vec(v_var_gamma);
+       _mm256_maskstore(dig + k, leftover_mask, v_dig);
+
+       //var_gamma_sum += var_gamma[k];
+       v_var_gamma_sum = _mm256_add(v_var_gamma_sum, v_var_gamma);
+    }
+
+    __m256fp var_gamma_totals = hsum(v_var_gamma_sum);
+    var_gamma_sum = first(var_gamma_totals);
+    
     digsum = digamma(var_gamma_sum);
+
+    __m256fp v_digsum = _mm256_set1(digsum);
+    for (k = 0; k < kk; k += STRIDE) {
+      //dig[k] = dig[k] - digsum;
+      __m256fp v_dig = _mm256_loadu(dig + k);
+      v_dig = _mm256_sub(v_dig, v_digsum);
+      _mm256_storeu(dig + k, v_dig);
+    }
+    if (LEFTOVER(model->num_topics, 0)) {
+      //dig[k] = dig[k] - digsum;
+      __m256fp v_dig = _mm256_maskload(dig + k, leftover_mask);
+      v_dig = _mm256_sub(v_dig, v_digsum);
+      _mm256_maskstore(dig + k, leftover_mask, v_dig);
+    }
+
 
     // <BG>: lgamma is a math library function
     likelihood = lgamma(model->alpha * model -> num_topics)
                 - model -> num_topics * lgamma(model->alpha)
                 - (lgamma(var_gamma_sum));
 
+    // <SS> vectorized lgamma from mkl needed
     // Compute the log likelihood dependent on the variational parameters
     // as per equation (15).
     for (k = 0; k < model->num_topics; k++)
     {
-        likelihood += (model->alpha - 1)*(dig[k] - digsum)
+        likelihood += (model->alpha - 1)*dig[k]
                     + lgamma(var_gamma[k])
-                    - (var_gamma[k] - 1)*(dig[k] - digsum);
+                    - (var_gamma[k] - 1)*dig[k];
     }
 
     // <CC> Swapped loop to have the strided access to the transposed
     for (n = 0; n < doc->length; n++)
     {
-        for (k = 0; k < model->num_topics; k++)
+        __m256fp v_doc_counts = _mm256_set1(doc->counts[n]); 
+
+        for (k = 0; k < kk; k += STRIDE)
         {
-            if (phi[n * model->num_topics + k] > 0)
-            {
-                likelihood += doc->counts[n]*
-                (phi[n * model->num_topics + k]*((dig[k] - digsum) - log(phi[n * model->num_topics + k])
-                    + model->log_prob_w_doc[n * model->num_topics + k]));
-            }
+            //t1 = dig[k];
+            __m256fp v_dig = _mm256_loadu(dig + k);
+
+            // t2 = phi[n * model->num_topics + k];
+            __m256fp v_phi = _mm256_loadu(phi + n * model->num_topics + k);
+
+            // t3 = log(t2)
+            __m256fp v_log_phi = _mm256_log(v_phi); 
+
+            // <SS> seems like this can be removed, the original code
+            // has nothing going into else condition
+            // t3 = MAX(t3, -100);
+            __m256fp LOW = _mm256_set1(-100);
+            v_log_phi = _mm256_max(v_log_phi, LOW);
+
+            // t4 = model->log_prob_w_doc[n * model->num_topics + k];
+            // <SS> variable names are going out of hand -.-
+            __m256fp v_l_p_w_doc = _mm256_loadu(model->log_prob_w_doc + n * model->num_topics + k);
+
+            // t5 = (t1 - t3 + t4);
+            __m256fp v_t5 = _mm256_add(_mm256_sub(v_dig, v_log_phi), v_l_p_w_doc);
+
+            // t6 = doc->counts[n] * ( t2 *  t5);
+            __m256fp v_doc_likelihood = _mm256_mul(v_doc_counts, _mm256_mul(v_phi, v_t5));
+
+            // likelihood = likelihood + t6;
+            v_likelihood = _mm256_add(v_likelihood, v_doc_likelihood);
+        }
+        if (LEFTOVER(model->num_topics, 0)) {
+            //t1 = dig[k];
+            __m256fp v_dig = _mm256_maskload(dig + k, leftover_mask);
+
+            // t2 = phi[n * model->num_topics + k];
+            __m256fp v_phi = _mm256_maskload(phi + n * model->num_topics + k, leftover_mask);
+
+            // t3 = log(t2)
+            __m256fp v_log_phi = _mm256_log(v_phi); 
+
+            // <SS> seems like this can be removed, the original code
+            // has nothing going into else condition
+            // t3 = MAX(t3, -100);
+            __m256fp LOW = _mm256_set1(-100);
+            v_log_phi = _mm256_max(v_log_phi, LOW);
+
+            // t4 = model->log_prob_w_doc[n * model->num_topics + k];
+            // <SS> variable names are going out of hand -.-
+            __m256fp v_l_p_w_doc = _mm256_maskload(model->log_prob_w_doc + n * model->num_topics + k, leftover_mask);
+
+            // t5 = (t1 - t3 + t4);
+            __m256fp v_t5 = _mm256_add(_mm256_sub(v_dig, v_log_phi), v_l_p_w_doc);
+
+            // t6 = doc->counts[n] * ( t2 *  t5);
+            __m256fp v_doc_likelihood = _mm256_mul(v_doc_counts, _mm256_mul(v_phi, v_t5));
+
+            // likelihood = likelihood + t6;
+            v_likelihood = _mm256_add(v_likelihood, v_doc_likelihood);
         }
     }
+
+    __m256fp likelihood_totals = hsum(v_likelihood);
+    // NOTE += and not = because some part of likelihood is scalar computed
+    likelihood += first(likelihood_totals);
 
     stop_timer(rdtsc);
 
