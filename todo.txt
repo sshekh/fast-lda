@@ -4,7 +4,7 @@
 
 10) i. Finalize log_sum (lookup/expansion + vectorization) <- BG
    ii. compute likelihood lgamma loop vectorize using mkl, tiling <- BG
-  iii. optimize digamma (lookup/approx + vectorization) <- lookup <- CC, approx <- SS then vectorize BG
+  iii. optimize digamma (lookup/approx + vectorization) <- lookup <- CC, approx <- SS then vectorize
    iv. Tiling inference <- FL
     v. Bugfix pure computation chart <- SS
    vi. Plots (roofline, performance, cycle distribution) for each stage <- FL
