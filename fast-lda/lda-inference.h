@@ -4,6 +4,7 @@
 #include <math.h>
 #include <float.h>
 #include <assert.h>
+#include </opt/intel/compilers_and_libraries/mac/mkl/include/mkl.h>
 #include "lda.h"
 #include "utils.h"
 #include "rdtsc-helper.h"

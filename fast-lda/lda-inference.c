@@ -190,12 +190,20 @@ fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
     return likelihood;
 }
 
+FILE* f = NULL;
+
 fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_gamma)
 {
     fp_t likelihood = 0, digsum = 0, var_gamma_sum = 0;
     fp_t dig[model->num_topics];
     __m256fp v_likelihood = _mm256_set1(0), 
              v_var_gamma_sum = _mm256_set1(0);
+    // if(f == NULL)
+    // {
+    //     f = fopen("phi_domain", "w");
+    // }
+
+    
     int k, n;
 
     int kk;
@@ -261,6 +269,7 @@ fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_ga
                     - (var_gamma[k] - 1)*dig[k];
     }
 
+    fp_t logcheck;
     // <CC> Swapped loop to have the strided access to the transposed
     for (n = 0; n < doc->length; n++)
     {
