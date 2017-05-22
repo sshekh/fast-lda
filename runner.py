@@ -343,6 +343,13 @@ if __name__ == '__main__':
 
     RUN_NAME = time.strftime('%Y-%m-%d_%H-%M-%S')
 
+    config_script= "mklvars.sh"
+    if os.name == 'posix':
+        os.system("source " + config_script + " intel64")
+    else:
+        print("Insert Windows shit to execute the Intel MKL loading script")
+        sys.exit()
+    
     if do_make:
 
         # Check which defines we need to add
@@ -378,14 +385,6 @@ if __name__ == '__main__':
         os.mkdir(LDA_EXE_LOG % 'slow')
     if not exists(LDA_RESULTS):
         os.mkdir(LDA_RESULTS)
-
-    config_script= "mklvars.sh"
-
-    if os.name == 'posix':
-        os.system("source " + config_script + " intel64")
-    else:
-        print("Insert Windows shit to execute the Intel MKL loading script")
-        sys.exit()
 
     if mode == 'gen':
         fn = lambda x, y: generate(x, y, ref_type_name)
