@@ -1,6 +1,6 @@
 Bench run 2017-05-19_22-57-53
 Ran with the command-line `bench -s --k=50 --n=100,2000,200 -d -i`
-Comment: "For slow roofline"
+Comment: "Baseline"
 ===============================
 
 OPTIONS

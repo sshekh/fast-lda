@@ -7,7 +7,7 @@ import os
 from os.path import join
 
 
-X_MAX_LIM = 2**(8)
+X_MAX_LIM = 2**(9)
 X_MIN_LIM = 2**(-8)
 Y_MIN_LIM = 2**(-8)
 
@@ -37,8 +37,6 @@ def create_roofline(paths):
     for run, col in zip(runs, colors):
         plot_run(run, col)
 
-
-    fig.savefig('./profiling/Roofline.png')
     plt.show()
 
 def make_axes(axes):
