@@ -4,6 +4,7 @@ import getopt
 import subprocess
 import time
 import platform
+import subprocess
 
 from colorama import init, Fore, Style
 from git import Repo
@@ -308,8 +309,10 @@ if __name__ == '__main__':
         ["num-topics=",
         "num-docs=",
         "n=",
-        "k="])
+        "k=",
+        "machine="])
 
+    machine = "lab"     #lab is our default machine
     do_fast = False
     do_slow = False
     do_make = True
@@ -326,6 +329,8 @@ if __name__ == '__main__':
             ks = list_from_range(a)
         elif o in {'--num-docs', '--n'}:
             ns = list_from_range(a)
+        elif o == '--machine':
+            machine = str(a)
         elif o == '-f':
             do_fast = True
         elif o == '-s':
@@ -343,13 +348,22 @@ if __name__ == '__main__':
 
     RUN_NAME = time.strftime('%Y-%m-%d_%H-%M-%S')
 
-    config_script= "mklvars.sh"
+    # Set environment variables to use Intel MKL
+    mkl_path = ""
+    if machine == 'lab':
+        mkl_path = "/opt/intel/composer_xe_2013_sp1.1.106/mkl"
+    elif machine == 'ben':
+        mkl_path = "/opt/intel/compilers_and_libraries/mac/mkl"
+    else:
+        print("Add your Intel MKL location to this if statement if needed")
+        sys.exit()
+
     if os.name == 'posix':
-        os.system("source " + config_script + " intel64")
+        os.environ["MKLROOT"] = mkl_path
     else:
         print("Insert Windows shit to execute the Intel MKL loading script")
         sys.exit()
-    
+
     if do_make:
 
         # Check which defines we need to add
@@ -385,6 +399,7 @@ if __name__ == '__main__':
         os.mkdir(LDA_EXE_LOG % 'slow')
     if not exists(LDA_RESULTS):
         os.mkdir(LDA_RESULTS)
+
 
     if mode == 'gen':
         fn = lambda x, y: generate(x, y, ref_type_name)

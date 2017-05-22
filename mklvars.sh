@@ -46,7 +46,10 @@ mkl_help() {
 
 set_mkl_env() {
     CPRO_PATH="/opt/intel/compilers_and_libraries_2017.4.181/mac"
-    export MKLROOT="${CPRO_PATH}/mkl"
+    CPRO_PATH=$2
+	echo "CPRO PATH IS" ${CPRO_PATH}
+    export MKLROOT=${CPRO_PATH}
+	echo ${MKLROOT}
 
     local SCRIPT_NAME=$0
     local MOD_NAME=mod
@@ -84,7 +87,7 @@ set_mkl_env() {
         MKLVARS_VERBOSE="$MKLVARS_VERBOSE"
       fi
     else
-        while [ -n "$1" ]; do
+        if [ -n "$1" ]; then
            if   [ "$1" = "ia32" ]        ; then MKL_TARGET_ARCH=ia32; MKL_TARGET_ARCH_SUBDIR=ia32_mac;
            elif [ "$1" = "intel64" ]     ; then MKL_TARGET_ARCH=intel64; MKL_TARGET_ARCH_SUBDIR=intel64_mac;
            elif [ "$1" = "lp64" ]        ; then MKL_LP64_ILP64=lp64;
@@ -95,8 +98,8 @@ set_mkl_env() {
                MKL_BAD_SWITCH=$1
                break 10
            fi
-           shift;
-        done
+           #shift;
+	   fi
     fi
 
     if [ -n "${MKL_BAD_SWITCH}" ] ; then
