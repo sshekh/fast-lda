@@ -18,6 +18,8 @@
 // USA
 
 #include "lda-inference.h"
+// #include </opt/intel/compilers_and_libraries/mac/mkl/include/mkl.h>
+// #include </opt/intel/compilers_and_libraries/mac/mkl/include/mkl_vml_functions.h>
 
 fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
 {
@@ -190,14 +192,14 @@ fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
     return likelihood;
 }
 
-FILE* f = NULL;
+// FILE* f = NULL;
 
 fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_gamma)
 {
     fp_t likelihood = 0, digsum = 0, var_gamma_sum = 0;
     fp_t dig[model->num_topics];
     __m256fp v_likelihood = _mm256_set1(0), 
-             v_var_gamma_sum = _mm256_set1(0);
+    v_var_gamma_sum = _mm256_set1(0);
     // if(f == NULL)
     // {
     //     f = fopen("phi_domain", "w");
@@ -256,18 +258,61 @@ fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_ga
 
     // <BG>: lgamma is a math library function
     likelihood = lgamma(model->alpha * model -> num_topics)
-                - model -> num_topics * lgamma(model->alpha)
+                - model -> num_topics * lgamma(model->alpha);
                 - (lgamma(var_gamma_sum));
-
-    // <SS> vectorized lgamma from mkl needed
+    
+    // <BG> vectorized lgamma from mkl
     // Compute the log likelihood dependent on the variational parameters
     // as per equation (15).
-    for (k = 0; k < model->num_topics; k++)
+    
+    __m256fp v_likelihood_2 = _mm256_set1(0);
+    fp_t alpha_m_1 = model->alpha - 1;
+    __m256fp v_alpha_m_1 = _mm256_set1(alpha_m_1);
+    __m256fp v_ones = _mm256_set1(1);
+    fp_t lgamma_result[STRIDE];
+    for (k = 0; k < kk; k += STRIDE)
     {
-        likelihood += (model->alpha - 1)*dig[k]
-                    + lgamma(var_gamma[k])
-                    - (var_gamma[k] - 1)*dig[k];
+        // likelihood += (model->alpha - 1)*dig[k]
+        //             + lgamma(var_gamma[k])
+        //             - (var_gamma[k] - 1)*dig[k];
+        vdLGamma(STRIDE, var_gamma + k, lgamma_result);
+        __m256fp v_lgamma_result = _mm256_loadu(lgamma_result);
+
+        __m256fp v_dig = _mm256_loadu(dig + k);
+        __m256fp v_t0 = _mm256_mul(v_dig, v_alpha_m_1);
+
+        __m256fp v_var_gamma = _mm256_loadu(var_gamma + k);
+        v_var_gamma = _mm256_sub(v_var_gamma, v_ones);
+        v_dig = _mm256_mul(v_var_gamma, v_dig);
+
+
+        v_likelihood_2 = _mm256_add(v_likelihood_2, v_lgamma_result);
+        v_likelihood_2 = _mm256_sub(v_likelihood_2, v_dig);
+
+        v_likelihood_2 = _mm256_add(v_likelihood_2, v_t0);
+                  
     }
+    if (LEFTOVER(model->num_topics, 0)) {
+        vdLGamma(LEFTOVER(model->num_topics, 0), var_gamma + k, lgamma_result);
+        __m256fp v_lgamma_result = _mm256_maskload(lgamma_result, leftover_mask);
+
+        __m256fp v_dig = _mm256_maskload(dig + k, leftover_mask);
+        __m256fp v_t0 = _mm256_mul(v_dig, v_alpha_m_1);
+
+        __m256fp v_var_gamma = _mm256_maskload(var_gamma + k, leftover_mask);
+        v_var_gamma = _mm256_sub(v_var_gamma, v_ones);
+        v_dig = _mm256_mul(v_var_gamma, v_dig);
+
+
+        v_likelihood_2 = _mm256_add(v_likelihood_2, v_lgamma_result);
+        v_likelihood_2 = _mm256_sub(v_likelihood_2, v_dig);
+
+        v_likelihood_2 = _mm256_add(v_likelihood_2, v_t0);
+    }
+    v_likelihood_2 = hsum(v_likelihood_2);
+    likelihood += first(v_likelihood_2);
+
+
 
     fp_t logcheck;
     // <CC> Swapped loop to have the strided access to the transposed

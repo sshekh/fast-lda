@@ -35,8 +35,8 @@ else
 		OBJ=/Fo
 		OUTNAME=/Fe:lda.exe
 	else
-		CFLAGS= -O3 -Wall -g -std=c99
-		LDFLAGS= -lm
+		CFLAGS= -O3 -Wall -g -std=c99 -DMKL_ILP64 -I${MKLROOT}/include
+		LDFLAGS= ${MKLROOT}/lib/libmkl_scalapack_ilp64.a ${MKLROOT}/lib/libmkl_cdft_core.a ${MKLROOT}/lib/libmkl_intel_ilp64.a ${MKLROOT}/lib/libmkl_sequential.a ${MKLROOT}/lib/libmkl_core.a ${MKLROOT}/lib/libmkl_blacs_mpich_ilp64.a -lpthread -lm -ldl
 	endif
 endif
 

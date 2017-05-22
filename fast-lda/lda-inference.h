@@ -5,6 +5,7 @@
 #include <float.h>
 #include <assert.h>
 #include </opt/intel/compilers_and_libraries/mac/mkl/include/mkl.h>
+#include </opt/intel/compilers_and_libraries/mac/mkl/include/mkl_vml_functions.h>
 #include "lda.h"
 #include "utils.h"
 #include "rdtsc-helper.h"
