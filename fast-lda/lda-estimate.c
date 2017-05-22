@@ -140,13 +140,13 @@ void run_em(char* start, char* directory, corpus* corpus)
     fp_t **var_gamma, *phi;
 
     // Gamma variational parameter for each doc and for each topic.
-    var_gamma = malloc(sizeof(fp_t*)*(corpus->num_docs));
+    var_gamma = _mm_malloc(sizeof(fp_t*)*(corpus->num_docs), ALIGNMENT);
     for (d = 0; d < corpus->num_docs; d++)
-        var_gamma[d] = malloc(sizeof(fp_t) * NTOPICS);
+        var_gamma[d] = _mm_malloc(sizeof(fp_t) * NTOPICS, ALIGNMENT);
 
     // Phi variational parameter for each term in the vocabulary and for each topic.
     int max_length = max_corpus_length(corpus);
-    phi = malloc(sizeof(fp_t) * max_length * NTOPICS);
+    phi = _mm_malloc(sizeof(fp_t) * max_length * NTOPICS, ALIGNMENT);
 
     // initialize model
     char filename[1000];

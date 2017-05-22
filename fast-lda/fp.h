@@ -6,12 +6,11 @@ single and double precision. */
 
 #include <math.h>
 #include <immintrin.h>
-#include <stdlib.h>
 
 #ifdef FLOAT
 
     #define fp_t float
-    #define malloc(a)             _mm_malloc(a, 32)
+    #define ALIGNMENT             32
 
     #define exp expf
     #define log logf
@@ -86,7 +85,7 @@ single and double precision. */
 #else
 
     #define fp_t double
-    #define malloc(a)           _mm_malloc(a, 64)
+    #define ALIGNMENT           64
 
     #define STRIDE 4
 

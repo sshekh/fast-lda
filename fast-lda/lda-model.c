@@ -91,11 +91,11 @@ lda_model* new_lda_model(int num_terms, int num_topics, int max_doc_length)
     int i,j;
     lda_model* model;
 
-    model = malloc(sizeof(lda_model));
+    model = _mm_malloc(sizeof(lda_model), ALIGNMENT);
     model->num_topics = num_topics;
     model->num_terms = num_terms;
     model->alpha = 1.0;
-    model->log_prob_w = malloc(sizeof(fp_t) * num_terms * num_topics);
+    model->log_prob_w = _mm_malloc(sizeof(fp_t) * num_terms * num_topics, ALIGNMENT);
     for (i = 0; i < num_terms; i++)
     {
         for (j = 0; j < num_topics; j++)
@@ -103,7 +103,7 @@ lda_model* new_lda_model(int num_terms, int num_topics, int max_doc_length)
     }
 
     // <CC> Create matrix for log_prob_w for one doc for optimization no 2.
-    model->log_prob_w_doc = malloc(sizeof(fp_t*)* max_doc_length * num_topics);
+    model->log_prob_w_doc = _mm_malloc(sizeof(fp_t*)* max_doc_length * num_topics, ALIGNMENT);
     for (i = 0; i < max_doc_length; i++)
     {
         for (j = 0; j < num_topics; j++)
@@ -186,9 +186,16 @@ lda_suffstats* new_lda_suffstats(lda_model* model)
     int num_topics = model->num_topics;
     int num_terms = model->num_terms;
 
-    lda_suffstats* ss = malloc(sizeof(lda_suffstats));
-    ss->class_total = calloc(num_topics, sizeof(fp_t));
-    ss->class_word = calloc(num_terms * num_topics, sizeof(fp_t));
+    lda_suffstats* ss = _mm_malloc(sizeof(lda_suffstats), ALIGNMENT);
+    ss->class_total = _mm_malloc(num_topics * sizeof(fp_t), ALIGNMENT);
+    ss->class_word = _mm_malloc(num_terms * num_topics * sizeof(fp_t), ALIGNMENT);
+
+    for (int i = 0; i < num_topics; i++) {
+        ss->class_total[i] = 0;
+    }
+    for (int i = 0; i < num_terms * num_topics; i++) {
+        ss->class_word[i] = 0;
+     }
 
     printf("%d\n", num_terms * num_topics);
 
