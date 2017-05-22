@@ -147,10 +147,6 @@ void run_em(char* start, char* directory, corpus* corpus)
     else if (strcmp(start, "random")==0)
     {
         model = new_lda_model(corpus->num_terms, NTOPICS);
-        ss = new_lda_suffstats(model);
-        random_initialize_ss(ss, model);
-        lda_mle(model, ss, 0);
-        model->alpha = INITIAL_ALPHA;
     }
     else
     {
@@ -164,6 +160,10 @@ void run_em(char* start, char* directory, corpus* corpus)
     // run expectation maximization
 
     timer rdtsc = start_timer(RUN_EM);
+    ss = new_lda_suffstats(model);
+    random_initialize_ss(ss, model);
+    lda_mle(model, ss, 0);
+    model->alpha = INITIAL_ALPHA;
 
     int i = 0;
     fp_t likelihood, likelihood_old = 0, converged = 1;
