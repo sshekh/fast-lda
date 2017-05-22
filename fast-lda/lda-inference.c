@@ -18,8 +18,6 @@
 // USA
 
 #include "lda-inference.h"
-// #include </opt/intel/compilers_and_libraries/mac/mkl/include/mkl.h>
-// #include </opt/intel/compilers_and_libraries/mac/mkl/include/mkl_vml_functions.h>
 
 fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
 {
@@ -258,7 +256,7 @@ fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_ga
 
     // <BG>: lgamma is a math library function
     likelihood = lgamma(model->alpha * model -> num_topics)
-                - model -> num_topics * lgamma(model->alpha);
+                - model -> num_topics * lgamma(model->alpha)
                 - (lgamma(var_gamma_sum));
     
     // <BG> vectorized lgamma from mkl

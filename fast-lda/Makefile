@@ -25,8 +25,8 @@ OUTNAME=-olda
 # CC should be either gcc (default), icc (intel linux) or icl (intel windows)
 #_CRT_SECURE_NO_WARNINGS: silence warnings about scanf, fopen and other stuff.
 ifeq ($(CC),gcc)
-	CFLAGS= -O3 -Wall -g -std=c99 -D_CRT_SECURE_NO_WARNINGS -march=core-avx2
-	LDFLAGS= -lm
+	CFLAGS= -O3 -Wall -g -std=c99 -D_CRT_SECURE_NO_WARNINGS -march=core-avx2 -DMKL_ILP64 -I${MKLROOT}/include
+	LDFLAGS= ${MKLROOT}/lib/libmkl_scalapack_ilp64.a ${MKLROOT}/lib/libmkl_cdft_core.a ${MKLROOT}/lib/libmkl_intel_ilp64.a ${MKLROOT}/lib/libmkl_sequential.a ${MKLROOT}/lib/libmkl_core.a ${MKLROOT}/lib/libmkl_blacs_mpich_ilp64.a -lpthread -lm -ldl
 else
 	ifeq ($(CC),icl)
 		CFLAGS= /O3 /Wall /Z7 /std=c99 /DWIN32 /D_CRT_SECURE_NO_WARNINGS /arch:CORE-AVX2 /nologo
