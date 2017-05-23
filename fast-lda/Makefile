@@ -22,21 +22,28 @@ PARTIAL=-c
 OBJ=-o
 OUTNAME=-olda
 
+ifeq ($(machine),lab)
+	export MKLROOT=/opt/intel/composer_xe_2013_sp1.1.106/mkl
+	LDFLAGS= -L${MKLROOT}/lib/intel64 -lmkl_scalapack_ilp64 -lmkl_cdft_core -lmkl_intel_ilp64 -lmkl_sequential -lmkl_core -lmkl_blacs_intelmpi_ilp64 -lpthread -lm -ldl
+else
+	ifeq ($(machine),ben)
+	export MKLROOT=/opt/intel/compilers_and_libraries/mac/mkl
+	LDFLAGS= ${MKLROOT}/lib/libmkl_scalapack_ilp64.a ${MKLROOT}/lib/libmkl_cdft_core.a ${MKLROOT}/lib/libmkl_intel_ilp64.a ${MKLROOT}/lib/libmkl_sequential.a ${MKLROOT}/lib/libmkl_core.a ${MKLROOT}/lib/libmkl_blacs_mpich_ilp64.a -lpthread -lm -ldl
+	endif
+endif
+
 # CC should be either gcc (default), icc (intel linux) or icl (intel windows)
 #_CRT_SECURE_NO_WARNINGS: silence warnings about scanf, fopen and other stuff.
 ifeq ($(CC),gcc)
 	CFLAGS= -O3 -Wall -g -std=c99 -D_CRT_SECURE_NO_WARNINGS -march=core-avx2 -DMKL_ILP64 -I${MKLROOT}/include
-	LDFLAGS= ${MKLROOT}/lib/libmkl_scalapack_ilp64.a ${MKLROOT}/lib/libmkl_cdft_core.a ${MKLROOT}/lib/libmkl_intel_ilp64.a ${MKLROOT}/lib/libmkl_sequential.a ${MKLROOT}/lib/libmkl_core.a ${MKLROOT}/lib/libmkl_blacs_mpich_ilp64.a -lpthread -lm -ldl
 else
 	ifeq ($(CC),icl)
 		CFLAGS= /O3 /Wall /Z7 /std=c99 /DWIN32 /D_CRT_SECURE_NO_WARNINGS /arch:CORE-AVX2 /nologo
-		LDFLAGS=
 		PARTIAL=/c
 		OBJ=/Fo
 		OUTNAME=/Fe:lda.exe
 	else
 		CFLAGS= -O3 -Wall -g -std=c99 -DMKL_ILP64 -I${MKLROOT}/include
-		LDFLAGS= ${MKLROOT}/lib/libmkl_scalapack_ilp64.a ${MKLROOT}/lib/libmkl_cdft_core.a ${MKLROOT}/lib/libmkl_intel_ilp64.a ${MKLROOT}/lib/libmkl_sequential.a ${MKLROOT}/lib/libmkl_core.a ${MKLROOT}/lib/libmkl_blacs_mpich_ilp64.a -lpthread -lm -ldl
 	endif
 endif
 
