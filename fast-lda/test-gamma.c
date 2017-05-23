@@ -22,28 +22,26 @@ void test_dg_batch(float* vals) {
     for (int i = 0 ; i < 8 ; i++) {
         printf("%f %f\n", ref[i], res[i]);
     }
-}
+}*/
 
-void test_lg_batch(float* vals) {
+void test_lg_batch(double* vals) {
 
-    float ref_h[8];
-    float ref_u[8];
-    float res[8];
-    for (int i = 0 ; i < 8 ; i ++) {
+    double ref_h[4];
+    double ref_u[4];
+    double res[4];
+    for (int i = 0 ; i < 4 ; i ++) {
         ref_h[i] = lgamma(vals[i]);
         ref_u[i] = log_gamma(vals[i]);
     }
 
-    __m256 vecvals = _mm256_loadu_ps(vals);
-    __m256 vecres = log_gamma_vec(vecvals);
-    _mm256_storeu_ps(res, vecres);
+    __m256d vecvals = _mm256_loadu_pd(vals);
+    __m256d vecres = log_gamma_vec(vecvals);
+    _mm256_storeu_pd(res, vecres);
 
-    printf("log_gamma\n");
-    printf("lib,lda,computed\n");
-    for (int i = 0 ; i < 8 ; i++) {
-        printf("%f %f %f\n", ref_h[i], ref_u[i], res[i]);
+    for (int i = 0 ; i < 4 ; i++) {
+        printf("%f,%f,%f,%f\n", ref_h[i], ref_u[i], res[i], ref_h[i] - res[i]);
     }
-}*/
+}
 
 #ifdef DOUBLE
     void test_hsum() {
@@ -81,16 +79,17 @@ void test_lg_batch(float* vals) {
 int main() {
     const float DOM = 3.f;
     srand(time(NULL));
-    /*
-    float vals[8];
-    for (int i = 0 ; i < 8 ; i++)
-        vals[i] = rand() / (float) RAND_MAX * DOM;
 
-    test_dg_batch(vals);
-    printf("\n");
-    test_lg_batch(vals);*/
+    double vals[4];
 
-    test_hsum();
+    printf("lib,lda,us,err\n");
+    for (int i = 0 ; i < 10 ; i++) {
+        for (int i = 0 ; i < 4 ; i++)
+            vals[i] = rand() / (double) RAND_MAX * DOM;
+
+        test_lg_batch(vals);
+    }
+    //test_hsum();
 
     return 0;
 }
