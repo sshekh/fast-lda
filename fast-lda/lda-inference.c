@@ -259,7 +259,10 @@ fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_ga
                 - model -> num_topics * lgamma(model->alpha)
                 - (lgamma(var_gamma_sum));
     
-    // <BG> vectorized lgamma from mkl
+    // <BG> Tried to use the MKL vdLGamma function, but couldn't link to MKL on lab machines
+    // <BG> log_gamma_vec fails, as it makes alpha grow
+    // <BG> TODO: don't use the quick fix looped version
+
     // Compute the log likelihood dependent on the variational parameters
     // as per equation (15).
     
@@ -267,14 +270,14 @@ fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_ga
     fp_t alpha_m_1 = model->alpha - 1;
     __m256fp v_alpha_m_1 = _mm256_set1(alpha_m_1);
     __m256fp v_ones = _mm256_set1(1);
-    fp_t lgamma_result[STRIDE];
+    fp_t log_gamma_result[STRIDE];
     for (k = 0; k < kk; k += STRIDE)
     {
         // likelihood += (model->alpha - 1)*dig[k]
         //             + lgamma(var_gamma[k])
         //             - (var_gamma[k] - 1)*dig[k];
-        vdLGamma(STRIDE, var_gamma + k, lgamma_result);
-        __m256fp v_lgamma_result = _mm256_loadu(lgamma_result);
+        log_gamma_looped(var_gamma + k, log_gamma_result, STRIDE);
+        __m256fp v_lgamma = _mm256_loadu(log_gamma_result);
 
         __m256fp v_dig = _mm256_loadu(dig + k);
         __m256fp v_t0 = _mm256_mul(v_dig, v_alpha_m_1);
@@ -284,15 +287,15 @@ fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_ga
         v_dig = _mm256_mul(v_var_gamma, v_dig);
 
 
-        v_likelihood_2 = _mm256_add(v_likelihood_2, v_lgamma_result);
+        v_likelihood_2 = _mm256_add(v_likelihood_2, v_lgamma);
         v_likelihood_2 = _mm256_sub(v_likelihood_2, v_dig);
 
         v_likelihood_2 = _mm256_add(v_likelihood_2, v_t0);
                   
     }
     if (LEFTOVER(model->num_topics, 0)) {
-        vdLGamma(LEFTOVER(model->num_topics, 0), var_gamma + k, lgamma_result);
-        __m256fp v_lgamma_result = _mm256_maskload(lgamma_result, leftover_mask);
+        log_gamma_looped(var_gamma + k, log_gamma_result, LEFTOVER(model->num_topics, 0));
+        __m256fp v_lgamma = _mm256_maskload(log_gamma_result, leftover_mask);
 
         __m256fp v_dig = _mm256_maskload(dig + k, leftover_mask);
         __m256fp v_t0 = _mm256_mul(v_dig, v_alpha_m_1);
@@ -302,7 +305,7 @@ fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_ga
         v_dig = _mm256_mul(v_var_gamma, v_dig);
 
 
-        v_likelihood_2 = _mm256_add(v_likelihood_2, v_lgamma_result);
+        v_likelihood_2 = _mm256_add(v_likelihood_2, v_lgamma);
         v_likelihood_2 = _mm256_sub(v_likelihood_2, v_dig);
 
         v_likelihood_2 = _mm256_add(v_likelihood_2, v_t0);

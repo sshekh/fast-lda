@@ -245,6 +245,14 @@ __m256fp digamma_vec_mask(__m256fp x, __m256i mask) {
     return _mm256_and(dig, _mm256_castsi256(mask));
 }
 
+INLINE 
+void log_gamma_looped(fp_t* input, fp_t* output, int stride){
+    for(int i=0;i<stride;i++)
+    {
+        output[i] = lgamma(input[i]);
+    }
+}
+
 INLINE
 __m256fp log_gamma_vec(__m256fp x)
 {

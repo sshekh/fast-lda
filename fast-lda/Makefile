@@ -22,15 +22,7 @@ PARTIAL=-c
 OBJ=-o
 OUTNAME=-olda
 
-ifeq ($(machine),lab)
-	export MKLROOT=/opt/intel/composer_xe_2013_sp1.1.106/mkl
-	LDFLAGS= -L${MKLROOT}/lib/intel64 -lmkl_scalapack_ilp64 -lmkl_cdft_core -lmkl_intel_ilp64 -lmkl_sequential -lmkl_core -lmkl_blacs_intelmpi_ilp64 -lpthread -lm -ldl
-else
-	ifeq ($(machine),ben)
-	export MKLROOT=/opt/intel/compilers_and_libraries/mac/mkl
-	LDFLAGS= ${MKLROOT}/lib/libmkl_scalapack_ilp64.a ${MKLROOT}/lib/libmkl_cdft_core.a ${MKLROOT}/lib/libmkl_intel_ilp64.a ${MKLROOT}/lib/libmkl_sequential.a ${MKLROOT}/lib/libmkl_core.a ${MKLROOT}/lib/libmkl_blacs_mpich_ilp64.a -lpthread -lm -ldl
-	endif
-endif
+LDFLAGS= -lm
 
 # CC should be either gcc (default), icc (intel linux) or icl (intel windows)
 #_CRT_SECURE_NO_WARNINGS: silence warnings about scanf, fopen and other stuff.

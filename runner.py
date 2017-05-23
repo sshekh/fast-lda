@@ -265,7 +265,7 @@ def xflags_from_list(defines):
     with_d = ['-D' + x for x in defines]
     return ' '.join(with_d)
 
-def construct_make_command(which, defines, use_icc, machine='lab'):
+def construct_make_command(which, defines, use_icc):
     # Clean part
     clean_command = 'cd %s-lda && make clean && ' % which
     compile_command = ''
@@ -283,8 +283,6 @@ def construct_make_command(which, defines, use_icc, machine='lab'):
 
     # Construct the actual make command
     compile_command += ' make'
-    # Pass the specific machine to the makefile for linking MKL correctly
-    compile_command += ' machine=' + machine 
     xflags = xflags_from_list(defines)
     if xflags != '':
         compile_command += (' XCFLAGS="%s"' % xflags)
@@ -311,10 +309,8 @@ if __name__ == '__main__':
         ["num-topics=",
         "num-docs=",
         "n=",
-        "k=",
-        "machine="])
+        "k="])
 
-    machine = "lab"     #lab is our default machine
     do_fast = False
     do_slow = False
     do_make = True
@@ -331,8 +327,6 @@ if __name__ == '__main__':
             ks = list_from_range(a)
         elif o in {'--num-docs', '--n'}:
             ns = list_from_range(a)
-        elif o == '--machine':
-            machine = str(a)
         elif o == '-f':
             do_fast = True
         elif o == '-s':
@@ -350,24 +344,6 @@ if __name__ == '__main__':
 
     RUN_NAME = time.strftime('%Y-%m-%d_%H-%M-%S')
 
-    # Set environment variables to use Intel MKL. Do this by passing an option to the makefile
-    # mkl_path = ""
-    # if machine == 'lab':
-    #     mkl_path = "/opt/intel/composer_xe_2013_sp1.1.106/mkl"
-    # elif machine == 'ben':
-    #     mkl_path = "/opt/intel/compilers_and_libraries/mac/mkl"
-    # else:
-    #     print("Add your Intel MKL location to this if statement if needed")
-    #     sys.exit()
-
-    # if os.name == 'posix':
-    #     os.environ["MKLROOT"] = mkl_path    # visible in this process + all children
-    #     # subprocess.check_call(['sqsub', '-np', sys.argv[1], '${MKLROOT}/bin/mklvars.sh'],
-    #     #               env=dict(os.environ, SQSUB_VAR="visible in this subprocess"))
-    # else:
-    #     print("Insert Windows shit to execute the Intel MKL loading script")
-    #     sys.exit()
-
     if do_make:
 
         # Check which defines we need to add
@@ -382,10 +358,10 @@ if __name__ == '__main__':
         # Actually make the programs
         print('Preparing the fast...')
         # Use specified compiler for the fast (gcc or icc)
-        run_cmd(construct_make_command('fast', defines_fast, use_icc, machine=machine))
+        run_cmd(construct_make_command('fast', defines_fast, use_icc))
 
         print('Preparing the slow...')
-        run_cmd(construct_make_command('slow', defines_slow, use_icc, machine=machine))
+        run_cmd(construct_make_command('slow', defines_slow, use_icc))
 
     # Use different names for the reference files depending on whether we're
     # using floats or doubles.
