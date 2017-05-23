@@ -217,4 +217,3 @@ void run_em(char* start, char* directory, corpus* corpus)
 
     // <BG>: output the word assignments (for visualization) were removed
 }
-
