@@ -18,6 +18,7 @@
 // USA
 
 #include "lda-data.h"
+#include <string.h>
 
 corpus* read_data(char* data_filename, int doc_limit)
 {
@@ -56,8 +57,19 @@ corpus* read_data(char* data_filename, int doc_limit)
     fclose(fileptr);
     c->num_docs = nd;
 
-    // A little bird told us that this is the proper value
-    c->num_terms = 10473;
+    // Hack / convention
+    int ln = strlen(data_filename);
+    data_filename[ln - 3] = 'v';
+    data_filename[ln - 2] = 'c';
+    data_filename[ln - 1] = 'b';
+
+    fileptr = fopen(data_filename, "r");
+    char unused[300];
+    while (fgets(unused, sizeof(unused), fileptr) != NULL) {
+        c->num_terms++;
+    }
+
+    fclose(fileptr);
 
     printf("number of docs    : %d\n", nd);
     printf("number of terms   : %d\n", c->num_terms);

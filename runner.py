@@ -1,17 +1,17 @@
-import sys
-import os
 import getopt
-import subprocess
-import time
+import os
 import platform
+import subprocess
+import sys
+import time
 
-from colorama import init, Fore, Style
+from colorama import Fore, Style, init
 from git import Repo
 
 import beta_comp
 
 REFERENCE_FOLDER = 'reference'
-REFERENCE_DATA = REFERENCE_FOLDER + '/ref-%d-%d-%s.beta'
+REFERENCE_DATA = REFERENCE_FOLDER + '/ref-%d-%d-%s-%s.beta'
 LDA_EXE_LOG = './%s-lda/logfiles'
 LDA_OUT_BETA = LDA_EXE_LOG + '/final.beta'
 LDA_RESULTS = './results'
@@ -34,6 +34,8 @@ ICL_VARS = 'C:\\tools\\icc\\compilers_and_libraries_2017\\windows\\bin\\iclvars.
 
 # Command-line option: always generate missing refs and reuse existing ones.
 NO_PROMPT = False
+
+CORPUS = './%s-lda/ap/ap.dat'
 
 def run_cmd(cmd, quit_on_fail=True):
     print(Fore.LIGHTBLUE_EX)
@@ -62,7 +64,7 @@ def make_lda_params(which, k, n):
             '1',                                # Initial estimate for alpha
             str(k),                             # Number of topics
             'master-settings.txt',              # Settings location
-            './%s-lda/ap/ap.dat' % which,       # Documents location
+            CORPUS % which,       # Documents location
             'random',                           # Initialization method (only random)
             LDA_EXE_LOG % which]                # Output directory
 
@@ -85,11 +87,11 @@ def prompt_yna(always_flag):
             return inp[0] != 'n'
 
 
-def generate(k, n, dbl, overwrite=False):
+def generate(k, n, dbl, corp, overwrite=False):
     # Run the slow LDA, collect the final beta file and move it in the reference.
     print('Generating k=%d n=%d' % (k, n))
 
-    dst = REFERENCE_DATA % (k, n, dbl)
+    dst = REFERENCE_DATA % (k, n, dbl, corp)
 
     if exists(dst):
         if overwrite:
@@ -102,12 +104,12 @@ def generate(k, n, dbl, overwrite=False):
     os.renames(LDA_OUT_BETA % 'slow', dst)
 
 
-def test(k, n, dbl=""):
+def test(k, n, dbl, corp):
     global ALWAYS_GENERATE_REF
     global ALWAYS_USE_REF
     # Run the fast LDA and compare the resulting final beta against the reference.
     print('Testing fast against reference k=%d n=%d' % (k, n))
-    which = REFERENCE_DATA % (k, n, dbl)
+    which = REFERENCE_DATA % (k, n, dbl, corp)
 
     if not exists(which):
         print('Reference file %s not found... ' % which)
@@ -248,6 +250,7 @@ def usage_and_quit():
     print('\t-a: No-prompt mode (always generate missing refs / reuse existing).')
     print('\t-r: Reduce precision to floats instead of doubles in the fast.')
     print('\t-g: Compile with gcc instead of icc.')
+    print('\t-l: Use long documents (europarl finnish corpus)')
 
     sys.exit()
 
@@ -306,7 +309,7 @@ if __name__ == '__main__':
         if mode == 'bench':
             raise ValueError('When benchmarking, please include a comment.')
 
-    opts, args = getopt.gnu_getopt(options, "fsmrsga",
+    opts, args = getopt.gnu_getopt(options, "fsmrsgla",
         ["num-topics=",
         "num-docs=",
         "n=",
@@ -318,10 +321,12 @@ if __name__ == '__main__':
     use_doubles = True
     silence_output = mode == 'bench'
     use_icc = True
-
+    use_long = False
 
     ks = [50]
     ns = [2246] # Maximal amount of documents
+
+    ref_corp_name = 'ap'
 
     for o, a in opts:
         if o in {'--num-topics', '--k'}:
@@ -342,6 +347,10 @@ if __name__ == '__main__':
             NO_PROMPT = True
         elif o == '-g':
             use_icc = False
+        elif o == '-l':
+            use_long = True
+            CORPUS = './%s-lda/europarl_fi/europarl_fi.dat'
+            ref_corp_name = 'euro'
 
     RUN_NAME = time.strftime('%Y-%m-%d_%H-%M-%S')
 
@@ -383,9 +392,9 @@ if __name__ == '__main__':
 
 
     if mode == 'gen':
-        fn = lambda x, y: generate(x, y, ref_type_name)
+        fn = lambda x, y: generate(x, y, ref_type_name, ref_corp_name)
     elif mode == 'test':
-        fn = lambda x, y: test(x, y, 'dbl')
+        fn = lambda x, y: test(x, y, 'dbl', ref_corp_name)
     elif mode == 'bench':
         if not do_fast and not do_slow:
             raise ValueError('When benchmarking, specify at least one of -s (slow), -f (fast)')
@@ -399,7 +408,8 @@ if __name__ == '__main__':
 
         params = {
             'use_doubles': use_doubles,
-            'use_icc': use_icc
+            'use_icc': use_icc,
+            'use_long': use_long
         }
 
         record_vitals(comment, params, options)
@@ -409,4 +419,3 @@ if __name__ == '__main__':
     for k in ks:
         for n in ns:
             fn(k, n)
-

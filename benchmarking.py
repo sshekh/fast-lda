@@ -4,13 +4,13 @@ import sys
 import matplotlib.pyplot as plt
 from os import listdir
 from os.path import join
+from os.path import dirname
 import re
 
 EPS = 1e-12     # Average count is float and integer count is a text in case of 0 calls
 
-D = 135
-# A little bird told us that this is the proper value
-V = 10473
+D = None
+V = None
 
 def memoize(f):
     cache = {}
@@ -53,13 +53,13 @@ class Cost:
                         self.divs * other, \
                         self.logs * other, \
                         self.exps * other)
-        else:                    
+        else:
             return NotImplemented     # multiplication not defined
 
-    def __rmul__(self, other): 
+    def __rmul__(self, other):
         return self.__mul__(other)
 
-    def __radd__(self, other): 
+    def __radd__(self, other):
         return self.__add__(other)
 
     def full(self):
@@ -67,13 +67,13 @@ class Cost:
                 self.muls + \
                 self.divs + \
                 self.logs + \
-                self.exps 
+                self.exps
 
-iters = {"EM_CONVERGE" : 1, "INFERENCE_CONVERGE" : 1., "ALPHA_CONVERGE" : 1.}  # conv counts for var iterations 
+iters = {"EM_CONVERGE" : 1, "INFERENCE_CONVERGE" : 1., "ALPHA_CONVERGE" : 1.}  # conv counts for var iterations
 
 @memoize
 def digamma(N, K):
-    return Cost(18, 5, 8, 1, 0) 
+    return Cost(18, 5, 8, 1, 0)
 
 @memoize
 def log_sum(N, K):
@@ -81,11 +81,11 @@ def log_sum(N, K):
 
 @memoize
 def log_gamma(N, K):
-    return Cost(20, 5, 2, 7, 0)  
+    return Cost(20, 5, 2, 7, 0)
 
 @memoize
 def trigamma(N, K):
-    return Cost(7, 7, 2, 0, 0) + 6 * Cost(2, 1, 1, 0, 0) 
+    return Cost(7, 7, 2, 0, 0) + 6 * Cost(2, 1, 1, 0, 0)
 
 @memoize
 def random_initialize_ss(N, K):
@@ -126,14 +126,39 @@ flops = { "RUN_EM" : run_em, "LDA_INFERENCE" : lda_inference, "DIGAMMA" : digamm
         "LOG_GAMMA" : log_gamma, "TRIGAMMA" : trigamma, "DOC_E_STEP" : doc_e_step, "LIKELIHOOD" : likelihood, "MLE" : mle, "OPT_ALPHA" : opt_alpha}
 
 colors = { "RUN_EM" : "green", "LDA_INFERENCE" : "blue", "DIGAMMA" : "black", "LOG_SUM" : "purple",
-        "LOG_GAMMA" : "purple", "TRIGAMMA" : "cyan", "DOC_E_STEP" : "orange", "LIKELIHOOD" : "red", "MLE" : "cyan", "OPT_ALPHA" : "cyan"}       
+        "LOG_GAMMA" : "purple", "TRIGAMMA" : "cyan", "DOC_E_STEP" : "orange", "LIKELIHOOD" : "red", "MLE" : "cyan", "OPT_ALPHA" : "cyan"}
 
 label_offsets = { "RUN_EM" : 0.008, "LDA_INFERENCE" : 0.008, "DIGAMMA" : 0.02, "LOG_SUM" : -0.015,
-        "LOG_GAMMA" : 0.008, "TRIGAMMA" : 0.01, "DOC_E_STEP" : -0.01, "LIKELIHOOD" : -0.015, "MLE" : 0.01, "OPT_ALPHA" : 0.01 }                 
+        "LOG_GAMMA" : 0.008, "TRIGAMMA" : 0.01, "DOC_E_STEP" : -0.01, "LIKELIHOOD" : -0.015, "MLE" : 0.01, "OPT_ALPHA" : 0.01 }
 
+def set_corpus_stats(location):
+    global D
+    global V
+    with open(location + '/info.txt') as f:
+        found = False
+        ln = 'This is the line'
+        while ln != '':
+            ln = f.readline()
+            if ln.startswith('use_long'):
+                found = True
+                # A little bird told us that these were the proper values
+                if ln.endswith('True\n'): # Long corpus
+                    D = 11002
+                    V = 48613
+                else: # Regular corpus
+                    D = 135
+                    V = 10473
+                break
 
+        if not found:
+            print('Warning: use_long setting not found, assuming ap corpus...')
+            D = 135
+            V = 10473
 
 def read_one_output(f, N, K, dic):
+    if D is None:
+        set_corpus_stats(dirname(f.name) or '.')
+
     header = f.readline().split(',')
     header = [h.strip() for h in header]
     assert header[0] == 'Accumulator' \
@@ -202,7 +227,7 @@ def benchmark(dirpath):
 
     _, axes = plt.subplots()
 
-    
+
     regex = re.compile(r'\d+')
     for filename in listdir(dirpath):
         if filename.startswith("fast") or filename.startswith("slow"):
@@ -212,7 +237,7 @@ def benchmark(dirpath):
                 read_one_output(f, N, K, data_1)
             else:
                 read_one_output(f, N, K, data_2)
-        
+
     set_up_perf_plot(axes)
 
     plot_line(plt, data_1)
@@ -221,5 +246,5 @@ def benchmark(dirpath):
 
 if __name__ == '__main__':
     benchmark(sys.argv[1])
-    
+
 

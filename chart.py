@@ -2,13 +2,12 @@
 import numpy as np
 import sys
 import matplotlib.pyplot as plt
-
+import os.path
 
 PURIFY = False
 
-D = 135
-# A little bird told us that this is the proper value
-V = 10473
+D = None
+V = None
 
 iters = {"EM_CONVERGE" : 0, "INFERENCE_CONVERGE" : 0, "ALPHA_CONVERGE" : 0}  # conv counts for var iterations
 
@@ -68,8 +67,38 @@ pur_flops = {"RUN_EM" : 0., "LDA_INFERENCE" : 0., "DIGAMMA" : 0., "LOG_SUM" : 0.
 avg_flops = {"RUN_EM" : 0., "LDA_INFERENCE" : 0., "DIGAMMA" : 0., "LOG_SUM" : 0., "DOC_E_STEP" : 0., "LIKELIHOOD" : 0., "MLE" : 0., \
         "OPT_ALPHA" : 0., "TRIGAMMA" : 0., "LOG_GAMMA" : 0.}
 
+def set_corpus_stats(location):
+    global D
+    global V
+
+    with open(location + '/info.txt') as f:
+        found = False
+        ln = 'This is the line'
+        while ln != '':
+            ln = f.readline()
+            if ln.startswith('use_long'):
+                found = True
+                # A little bird told us that these were the proper values
+                if ln.endswith('True\n'): # Long corpus
+                    D = 11002
+                    V = 48613
+                else: # Regular corpus
+                    D = 135
+                    V = 10473
+                break
+
+        if not found:
+            print('Warning: use_long setting not found, assuming ap corpus...')
+            D = 135
+            V = 10473
+
+
+
 @memoize
 def read_one_output(fname, K, N):
+    if D is None:
+        set_corpus_stats(os.path.dirname(f.name) or '.')
+
     f = open(fname, "r")
     header = f.readline().split(',')
     header = [h.strip() for h in header]
