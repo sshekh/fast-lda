@@ -18,6 +18,7 @@
 // USA
 
 #include "lda-inference.h"
+#include <string.h>
 
 fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
 {
@@ -35,42 +36,26 @@ fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
 
     // Initialize the phi for all topics and all words in the doc
     // and compute digamma of the sum of variational gammas over all the topics.
-    double var_gamma_init_value = model->alpha + (doc->total/((fp_t) model->num_topics));
+    fp_t init_vga = model->alpha + (doc->total/((fp_t) model->num_topics));
+    fp_t init_dgg = digamma(init_vga);
+    fp_t init_phi = 1 / (fp_t) model->num_topics;
 
-    __m256fp vg = _mm256_set1(var_gamma_init_value);
-
-    for (k = 0; k < kk; k += STRIDE)
-    {
-        __m256fp dg = digamma_vec(vg);
-
-        _mm256_storeu(var_gamma + k, vg);
-        _mm256_storeu(digamma_gam + k, dg);
-    }    
-
-    if (LEFTOVER(model->num_topics, 0))
-    {
-        __m256fp dg = digamma_vec(vg);
-
-        _mm256_maskstore(var_gamma + k, rem, vg);
-        _mm256_maskstore(digamma_gam + k, rem, dg);
+    for(k = 0 ; k < model->num_topics ; k++) {
+        var_gamma[k] = init_vga;
+        digamma_gam[k] = init_dgg;
     }
 
-    __m256fp ph_init_value = _mm256_set1(1.0/model->num_topics);
-
-    for (n = 0; n < doc->length; n++)
-    {
-        for (k = 0; k < kk; k += STRIDE)
-        {
-            _mm256_storeu(phi + (n * model->num_topics + k), ph_init_value);
-        }
-        if (LEFTOVER(model->num_topics, 0))
-        {
-            _mm256_maskstore(phi + (n * model->num_topics + kk), rem, ph_init_value);
+    for (n = 0; n < doc->length; n++) {
+        for (k = 0; k < model->num_topics; k ++) {
+            phi[n * model->num_topics + k] = init_phi;
         }
     }
-
 
     var_iter = 0;
+
+    int kk1;
+    __m256i rem1;
+    STRIDE_SPLIT(model->num_topics, 1, &kk1, &rem1);
 
     while ((converged > VAR_CONVERGED) &&
      ((var_iter < VAR_MAX_ITER) || (VAR_MAX_ITER == -1)))
@@ -79,40 +64,29 @@ fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
        // Update equation (16) for variational phi for each topic and word.
        for (n = 0; n < doc->length; n++)
        {
-            // <BG, SS> Moved if else initialization of phisum outside of the loop
+            // <FL> First backup phi entirely
+            memcpy(oldphi, phi + n * model->num_topics, sizeof(fp_t) * model->num_topics);
 
-            oldphi[0] = phi[n * model->num_topics + 0];
+            // <BG, SS> Moved if else initialization of phisum outside of the loop
             phi[n * model->num_topics + 0] = digamma_gam[0] + model->log_prob_w[doc->words[n] * model->num_topics + 0];
             phisum = phi[n * model->num_topics + 0];
 
-            int kk1;
-            __m256i rem1;
-            STRIDE_SPLIT(model->num_topics, 1, &kk1, &rem1);
-
             for (k = 1; k < kk1; k += STRIDE)
             {
-                //oldphi[k] = phi[n * model->num_topics + k];
-                __m256fp ph = _mm256_loadu(phi + (n * model->num_topics + k));
-                _mm256_storeu(oldphi + k, ph);
-
                 //phi[n * model->num_topics + k] = digamma_gam[k] + model->log_prob_w_doc[n * model->num_topics + k];
                 __m256fp dg = _mm256_loadu(digamma_gam + k);
                 __m256fp lpwd = _mm256_loadu(model->log_prob_w_doc + (n * model->num_topics + k));
 
-                ph = _mm256_add(dg, lpwd);
+                __m256fp ph = _mm256_add(dg, lpwd);
                 _mm256_storeu(phi + (n * model->num_topics + k), ph);
-            }  
-
+            }
             if (LEFTOVER(model->num_topics, 1)) {
-                __m256fp ph = _mm256_maskload(phi + (n * model->num_topics + k), rem1);
-                _mm256_maskstore(oldphi + k, rem1, ph);
-
                 __m256fp dg = _mm256_maskload(digamma_gam + k, rem1);
                 __m256fp lpwd = _mm256_maskload(model->log_prob_w_doc + (n * model->num_topics + k), rem1);
 
-                ph = _mm256_add(dg, lpwd);
+                __m256fp ph = _mm256_add(dg, lpwd);
                 _mm256_maskstore(phi + (n * model->num_topics + k), rem1, ph);
-            } 
+            }
 
             for (k = 1; k < model->num_topics; k++)
             {
