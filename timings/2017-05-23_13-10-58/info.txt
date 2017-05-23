@@ -1,0 +1,139 @@
+Bench run 2017-05-23_13-10-58
+Ran with the command-line `bench --k=50 --n=1900 -i -d -f`
+Comment: "Stage II timings"
+===============================
+
+OPTIONS
+use_icc=True
+use_doubles=True
+END OPTIONS
+
+Latest commit at time of writing:
+37074e8b (on branch stage2)
+
+Additionally, the repo contained the following untracked files:
+	timings/2017-05-18_18-24-18/fast_timings_20_200.csv
+	timings/2017-05-18_18-24-18/info.txt
+	timings/2017-05-18_18-27-06/fast_timings_20_200.csv
+	timings/2017-05-18_18-27-06/info.txt
+	timings/2017-05-18_18-31-17/fast_timings_20_200.csv
+	timings/2017-05-18_18-31-17/info.txt
+	timings/2017-05-18_23-44-41/fast_timings_50_100.csv
+	timings/2017-05-18_23-44-41/fast_timings_50_1100.csv
+	timings/2017-05-18_23-44-41/fast_timings_50_1300.csv
+	timings/2017-05-18_23-44-41/fast_timings_50_1500.csv
+	timings/2017-05-18_23-44-41/fast_timings_50_1700.csv
+	timings/2017-05-18_23-44-41/fast_timings_50_1900.csv
+	timings/2017-05-18_23-44-41/fast_timings_50_300.csv
+	timings/2017-05-18_23-44-41/fast_timings_50_500.csv
+	timings/2017-05-18_23-44-41/fast_timings_50_700.csv
+	timings/2017-05-18_23-44-41/fast_timings_50_900.csv
+	timings/2017-05-18_23-44-41/info.txt
+	timings/2017-05-18_23-44-41/perf_[fast,
+	timings/2017-05-18_23-44-41/slow_timings_50_100.csv
+	timings/2017-05-18_23-44-41/slow_timings_50_1100.csv
+	timings/2017-05-18_23-44-41/slow_timings_50_1300.csv
+	timings/2017-05-18_23-44-41/slow_timings_50_1500.csv
+	timings/2017-05-18_23-44-41/slow_timings_50_1700.csv
+	timings/2017-05-18_23-44-41/slow_timings_50_1900.csv
+	timings/2017-05-18_23-44-41/slow_timings_50_300.csv
+	timings/2017-05-18_23-44-41/slow_timings_50_500.csv
+	timings/2017-05-18_23-44-41/slow_timings_50_700.csv
+	timings/2017-05-18_23-44-41/slow_timings_50_900.csv
+	timings/2017-05-20_21-01-57/fast_timings_30_300.csv
+	timings/2017-05-20_21-01-57/info.txt
+	timings/2017-05-20_21-01-57/perf_[fast]_30_300.txt
+	timings/2017-05-20_21-04-50/fast_timings_30_300.csv
+	timings/2017-05-20_21-04-50/info.txt
+	timings/2017-05-20_21-04-50/perf_[fast]_30_300.txt
+	timings/2017-05-20_21-14-41/fast_timings_30_300.csv
+	timings/2017-05-20_21-14-41/info.txt
+	timings/2017-05-20_21-14-41/perf_[fast]_30_300.txt
+	timings/2017-05-20_21-22-05/fast_timings_30_300.csv
+	timings/2017-05-20_21-22-05/info.txt
+	timings/2017-05-20_21-22-05/perf_[fast]_30_300.txt
+	timings/2017-05-20_21-37-31/fast_timings_30_300.csv
+	timings/2017-05-20_21-37-31/info.txt
+	timings/2017-05-20_21-37-31/perf_[fast]_30_300.txt
+	timings/2017-05-20_21-50-08/fast_timings_30_300.csv
+	timings/2017-05-20_21-50-08/info.txt
+	timings/2017-05-20_21-50-08/perf_[fast]_30_300.txt
+	timings/2017-05-20_21-56-07/fast_timings_30_300.csv
+	timings/2017-05-20_21-56-07/info.txt
+	timings/2017-05-20_21-56-07/perf_[fast]_30_300.txt
+	timings/2017-05-20_22-06-54/fast_timings_30_300.csv
+	timings/2017-05-20_22-06-54/info.txt
+	timings/2017-05-20_22-06-54/perf_[fast]_30_300.txt
+	timings/2017-05-20_22-29-02/fast_timings_30_300.csv
+	timings/2017-05-20_22-29-02/info.txt
+	timings/2017-05-20_22-29-02/perf_[fast]_30_300.txt
+	timings/2017-05-20_23-05-34/fast_timings_30_300.csv
+	timings/2017-05-20_23-05-34/info.txt
+	timings/2017-05-20_23-05-34/perf_[fast]_30_300.txt
+	timings/2017-05-22_21-03-17/fast_timings_30_500.csv
+	timings/2017-05-22_21-03-17/info.txt
+	timings/2017-05-22_21-03-17/perf_[fast]_30_500.txt
+	timings/2017-05-22_21-11-44/fast_timings_30_500.csv
+	timings/2017-05-22_21-11-44/info.txt
+	timings/2017-05-22_21-11-44/perf_[fast]_30_500.txt
+	timings/2017-05-22_21-18-48/fast_timings_30_500.csv
+	timings/2017-05-22_21-18-48/info.txt
+	timings/2017-05-22_21-18-48/perf_[fast]_30_500.txt
+	timings/2017-05-22_21-33-18/fast_timings_30_500.csv
+	timings/2017-05-22_21-33-18/info.txt
+	timings/2017-05-22_21-33-18/perf_[fast]_30_500.txt
+	timings/2017-05-22_22-39-42/fast_timings_30_500.csv
+	timings/2017-05-22_22-39-42/info.txt
+	timings/2017-05-22_22-39-42/perf_[fast]_30_500.txt
+	timings/2017-05-22_22-47-15/fast_timings_30_500.csv
+	timings/2017-05-22_22-47-15/info.txt
+	timings/2017-05-22_22-47-15/perf_[fast]_30_500.txt
+	timings/2017-05-22_22-55-53/fast_timings_30_500.csv
+	timings/2017-05-22_22-55-53/info.txt
+	timings/2017-05-22_22-55-53/perf_[fast]_30_500.txt
+	timings/2017-05-22_23-07-01/fast_timings_30_500.csv
+	timings/2017-05-22_23-07-01/info.txt
+	timings/2017-05-22_23-07-01/perf_[fast]_30_500.txt
+	timings/2017-05-22_23-23-22/fast_timings_30_300.csv
+	timings/2017-05-22_23-23-22/info.txt
+	timings/2017-05-22_23-23-22/perf_[fast]_30_300.txt
+	timings/2017-05-22_23-29-04/fast_timings_30_300.csv
+	timings/2017-05-22_23-29-04/info.txt
+	timings/2017-05-22_23-29-04/perf_[fast]_30_300.txt
+	timings/2017-05-23_13-10-58/info.txt
+	timings/vector-bench-double/fast_timings_50_100.csv
+	timings/vector-bench-double/fast_timings_50_1100.csv
+	timings/vector-bench-double/fast_timings_50_1300.csv
+	timings/vector-bench-double/fast_timings_50_1500.csv
+	timings/vector-bench-double/fast_timings_50_1700.csv
+	timings/vector-bench-double/fast_timings_50_1900.csv
+	timings/vector-bench-double/fast_timings_50_300.csv
+	timings/vector-bench-double/fast_timings_50_500.csv
+	timings/vector-bench-double/fast_timings_50_700.csv
+	timings/vector-bench-double/fast_timings_50_900.csv
+	timings/vector-bench-double/info.txt
+	timings/vector-bench-double/perf_[fast,
+	timings/vector-bench-double/slow_timings_50_100.csv
+	timings/vector-bench-double/slow_timings_50_1100.csv
+	timings/vector-bench-double/slow_timings_50_1300.csv
+	timings/vector-bench-double/slow_timings_50_1500.csv
+	timings/vector-bench-double/slow_timings_50_1700.csv
+	timings/vector-bench-double/slow_timings_50_1900.csv
+	timings/vector-bench-double/slow_timings_50_300.csv
+	timings/vector-bench-double/slow_timings_50_500.csv
+	timings/vector-bench-double/slow_timings_50_700.csv
+	timings/vector-bench-double/slow_timings_50_900.csv
+
+The diff, if any, follows:
+
+
+
+===============================
+
+Settings file:
+var max iter 20
+var convergence 1e-6
+em max iter 100
+em convergence 1e-4
+alpha estimate
+
