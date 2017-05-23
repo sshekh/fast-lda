@@ -158,8 +158,10 @@ def bench(k, n, which):
         if platform.system() == 'Linux':
             run_cmd(perf_part + ' ' + lda_part + ' 2> ' + target)
         else:
-            with open(target,'a') as tar:
-                tar.write("\n'perf stat' could not be executed as this command is only available on Linux!\n")
+            print(Fore.YELLOW)
+            print('Warning: perf tool not available. No memory transfer data will be recorded')
+            print(Style.RESET_ALL)
+            run_cmd(make_lda_params(lda, k, n))
 
         timing_out = (TIMING_FOLDER % RUN_NAME) + (TIMING_FILENAME % (lda, k, n))
         os.rename(LDA_OUT_TIMING, timing_out)
@@ -346,7 +348,7 @@ if __name__ == '__main__':
     if do_make:
 
         # Check which defines we need to add
-        defines_fast = [] 
+        defines_fast = []
         defines_slow = [] # ALWAYS compile with doubles in the slow.
         if not use_doubles:
             defines_fast.append('FLOAT')
