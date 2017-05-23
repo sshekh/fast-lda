@@ -21,6 +21,7 @@
  * Implementation of the LDA parameter estimation functionality.
  */
 
+#include "fp.h"
 #include "lda-estimate.h"
 #include "lda-estimate-helper.h"
 #include "rdtsc-helper.h"
@@ -48,23 +49,77 @@ fp_t doc_e_step(document* doc, fp_t* gamma, fp_t* phi,
     scatterDocWords(model->log_prob_w, model->log_prob_w_doc, doc,
                     model->num_topics);
 
+    int KK;
+    __m256i KMASK;
+    STRIDE_SPLIT(model->num_topics, 0, &KK, &KMASK);
+
     // Update sufficient statistics.
-    fp_t gamma_sum = 0;
-    for (k = 0; k < model->num_topics; k++)
+    __m256fp gamma_accs = _mm256_setzero();
+    __m256fp alpha_accs = _mm256_setzero();
+    for (k = 0; k < KK; k += STRIDE)
     {
-        gamma_sum += gamma[k];
-        ss->alpha_suffstats += digamma(gamma[k]);
+        __m256fp gams = _mm256_loadu(gamma + k);
+        //gamma_sum += gamma[k];
+        gamma_accs = _mm256_add(gamma_accs, gams);
+
+        //ss->alpha_suffstats += digamma(gamma[k]);
+        __m256fp digams = digamma_vec(gams);
+        alpha_accs = _mm256_add(alpha_accs, digams);
     }
+    if (LEFTOVER(model->num_topics, 0)) {
+        __m256fp gams = _mm256_maskload(gamma + KK, KMASK);
+
+        __m256fp dig_unmasked = digamma_vec(gams);
+        __m256fp digams = _mm256_and(dig_unmasked, _mm256_castsi256(KMASK));
+
+        gamma_accs = _mm256_add(gamma_accs, gams);
+        alpha_accs = _mm256_add(alpha_accs, digams);
+    }
+    // Collect all the partial sums
+    __m256fp gamma_totals = hsum(gamma_accs);
+    __m256fp alpha_totals = hsum(alpha_accs);
+    fp_t gamma_sum = first(gamma_totals);
+
     //Update alpha.
+    ss->alpha_suffstats += first(alpha_totals);
     ss->alpha_suffstats -= model->num_topics * digamma(gamma_sum);
+
+
     //Update beta.
     for (n = 0; n < doc->length; n++)
     {
-        for (k = 0; k < model->num_topics; k++)
+        int di = doc->words[n] * model->num_topics;
+        int ni = n * model->num_topics;
+        __m256fp doc_counts = _mm256_set1(doc->counts[n]);
+        for (k = 0; k < KK; k += STRIDE)
         {
-            // <BG> non-sequential matrix access
-            ss->class_word[doc->words[n] * model->num_topics + k] += doc->counts[n]*phi[n * model->num_topics + k];
-            ss->class_total[k] += doc->counts[n]*phi[n * model->num_topics + k];
+            __m256fp cw = _mm256_loadu(ss->class_word + di + k);
+            __m256fp ct = _mm256_loadu(ss->class_total + k);
+            __m256fp ph = _mm256_loadu(phi + ni + k);
+
+            //ss->class_word[di + k] += doc->counts[n]*phi[ni + k];
+            cw = _mm256_fmadd(doc_counts, ph, cw);
+
+            //ss->class_total[k] += doc->counts[n]*phi[ni + k];
+            ct = _mm256_fmadd(doc_counts, ph, ct);
+
+            _mm256_storeu(ss->class_word + di + k, cw);
+            _mm256_storeu(ss->class_total + k, ct);
+        }
+
+        if (LEFTOVER(model->num_topics, 0)) {
+            __m256fp cw = _mm256_maskload(ss->class_word + di + KK, KMASK);
+            __m256fp ct = _mm256_maskload(ss->class_total + KK, KMASK);
+            __m256fp ph = _mm256_maskload(phi + ni + KK, KMASK);
+
+            //ss->class_word[di + k] += doc->counts[n]*phi[ni + k];
+            cw = _mm256_fmadd(doc_counts, ph, cw);
+
+            //ss->class_total[k] += doc->counts[n]*phi[ni + k];
+            ct = _mm256_fmadd(doc_counts, ph, ct);
+
+            _mm256_maskstore(ss->class_word + di + KK, KMASK, cw);
+            _mm256_maskstore(ss->class_total + KK, KMASK, ct);
         }
     }
 
@@ -85,13 +140,13 @@ void run_em(char* start, char* directory, corpus* corpus)
     fp_t **var_gamma, *phi;
 
     // Gamma variational parameter for each doc and for each topic.
-    var_gamma = malloc(sizeof(fp_t*)*(corpus->num_docs));
+    var_gamma = _mm_malloc(sizeof(fp_t*)*(corpus->num_docs), ALIGNMENT);
     for (d = 0; d < corpus->num_docs; d++)
-        var_gamma[d] = malloc(sizeof(fp_t) * NTOPICS);
+        var_gamma[d] = _mm_malloc(sizeof(fp_t) * NTOPICS, ALIGNMENT);
 
     // Phi variational parameter for each term in the vocabulary and for each topic.
     int max_length = max_corpus_length(corpus);
-    phi = malloc(sizeof(fp_t) * max_length * NTOPICS);
+    phi = _mm_malloc(sizeof(fp_t) * max_length * NTOPICS, ALIGNMENT);
 
     // initialize model
     char filename[1000];
@@ -101,10 +156,6 @@ void run_em(char* start, char* directory, corpus* corpus)
     {
         printf("Init model\n");
         model = new_lda_model(corpus->num_terms, NTOPICS, max_length);
-        ss = new_lda_suffstats(model);
-        random_initialize_ss(ss, model);
-        lda_mle(model, ss, 0);
-        model->alpha = INITIAL_ALPHA;
     }
     else
     {
@@ -119,10 +170,12 @@ void run_em(char* start, char* directory, corpus* corpus)
     // run expectation maximization
     int var_iter = 0;
     fp_t likelihood, likelihood_old = 0, converged = 1;
-    sprintf(filename, "%s/likelihood.dat", directory);
-    FILE* likelihood_file = fopen(filename, "w");
 
     timer rdtsc = start_timer(RUN_EM);
+    ss = new_lda_suffstats(model);
+    random_initialize_ss(ss, model);
+    lda_mle(model, ss, 0);
+    model->alpha = INITIAL_ALPHA;
 
     while (((converged < 0) || (converged > EM_CONVERGED) || (var_iter <= 2)) && (var_iter <= EM_MAX_ITER))
     {
@@ -154,8 +207,7 @@ void run_em(char* start, char* directory, corpus* corpus)
 
     stop_timer(rdtsc);
 
-    timing_infrastructure[EM_CONVERGE].sum += var_iter;
-    timing_infrastructure[EM_CONVERGE].counter++;
+    timer_manual_increment(EM_CONVERGE, var_iter);
 
     // output the final model
     sprintf(filename,"%s/final",directory);
@@ -163,17 +215,5 @@ void run_em(char* start, char* directory, corpus* corpus)
     sprintf(filename,"%s/final.gamma",directory);
     save_gamma(filename, var_gamma, corpus->num_docs, model->num_topics);
 
-    // output the word assignments (for visualization)
-    sprintf(filename, "%s/word-assignments.dat", directory);
-    FILE* w_asgn_file = fopen(filename, "w");
-    for (d = 0; d < corpus->num_docs; d++)
-    {
-        if ((d % 100) == 0) printf("final e step document %d\n",d);
-        likelihood += lda_inference(&(corpus->docs[d]), model, var_gamma[d], phi);
-        // printf("likelihood calculated\n");
-        write_word_assignment(w_asgn_file, &(corpus->docs[d]), phi, model);
-    }
-    fclose(w_asgn_file);
-    fclose(likelihood_file);
+    // <BG>: output the word assignments (for visualization) were removed
 }
-

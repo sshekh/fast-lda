@@ -147,10 +147,6 @@ void run_em(char* start, char* directory, corpus* corpus)
     else if (strcmp(start, "random")==0)
     {
         model = new_lda_model(corpus->num_terms, NTOPICS);
-        ss = new_lda_suffstats(model);
-        random_initialize_ss(ss, model);
-        lda_mle(model, ss, 0);
-        model->alpha = INITIAL_ALPHA;
     }
     else
     {
@@ -164,11 +160,13 @@ void run_em(char* start, char* directory, corpus* corpus)
     // run expectation maximization
 
     timer rdtsc = start_timer(RUN_EM);
+    ss = new_lda_suffstats(model);
+    random_initialize_ss(ss, model);
+    lda_mle(model, ss, 0);
+    model->alpha = INITIAL_ALPHA;
 
     int i = 0;
     fp_t likelihood, likelihood_old = 0, converged = 1;
-    sprintf(filename, "%s/likelihood.dat", directory);
-    FILE* likelihood_file = fopen(filename, "w");
 
     while (((converged < 0) || (converged > EM_CONVERGED) || (i <= 2)) && (i <= EM_MAX_ITER))
     {
@@ -201,8 +199,7 @@ void run_em(char* start, char* directory, corpus* corpus)
 
     stop_timer(rdtsc);
 
-    timing_infrastructure[EM_CONVERGE].sum += i;
-    timing_infrastructure[EM_CONVERGE].counter++;
+    timer_manual_increment(EM_CONVERGE, i);
 
     // output the final model
 
@@ -211,18 +208,7 @@ void run_em(char* start, char* directory, corpus* corpus)
     sprintf(filename,"%s/final.gamma",directory);
     save_gamma(filename, var_gamma, corpus->num_docs, model->num_topics);
 
-    // output the word assignments (for visualization)
-
-    sprintf(filename, "%s/word-assignments.dat", directory);
-    FILE* w_asgn_file = fopen(filename, "w");
-    for (d = 0; d < corpus->num_docs; d++)
-    {
-        if ((d % 100) == 0) printf("final e step document %d\n",d);
-        likelihood += lda_inference(&(corpus->docs[d]), model, var_gamma[d], phi);
-        write_word_assignment(w_asgn_file, &(corpus->docs[d]), phi, model);
-    }
-    fclose(w_asgn_file);
-    fclose(likelihood_file);
+    // <SS>: output the word assignments (for visualization) were removed
 }
 
 
@@ -323,7 +309,6 @@ int main(int argc, char* argv[])
             NTOPICS = atoi(argv[4]);
             read_settings(argv[5]);
             corpus = read_data(argv[6], doc_limit);
-            make_directory(argv[8]);
             run_em(argv[7], argv[8], corpus);
         }
         if (strcmp(argv[1], "inf")==0)
@@ -343,7 +328,6 @@ int main(int argc, char* argv[])
     if (argc == 10 && strcmp(argv[9], "-out") == 0) {
         f = stdout;
     } else {
-        system("mkdir results");
         f = fopen("results/timings.csv","w");
     }
 

@@ -1,0 +1,110 @@
+Suppose you have a piece of code like this:
+
+    for(i = 0 ; i < n ; i++) {
+        use a[i]
+    }
+
+Where "use" here represents any operation that occurs in the body. We want to
+vectorize this loop. I wrote some defines that take into account whether we are
+in double or float mode, so that we (hopefully) don't have to check that in the
+code itself. This guide explains how to use the defines, and we'll see how to
+vectorize the above loop.
+
+--- Declaring vector variables ---
+
+The type `__m256fp` corresponds to a vector of floating point values. Therefore,
+the following declaration:
+
+    __m256fp a;
+
+... will declare a vector of doubles in double mode, and a vector of floats in
+float mode.
+
+Integer types such as __m256i are not redefined, so they stay as before.
+
+--- Using intrinsics ---
+
+Floating-point intrinsics lose their `_pd` or `_ps` suffix, since we don't
+differentiate between floats and doubles. Therefore, you do things like:
+
+    __m256fp ab = _mm256_add(a, b)
+    __m256fp ab_sq = _mm256_mul(ab, ab)
+
+Once again, the correct version is selected by the FLOAT define. Note that not
+all intrinsics are defined in this way. Specifically, I did not define the ones
+that have markedly different behavior between floats and doubles (e.g. unpacks).
+If you need to use such an intrinsic, talk to me.
+
+--- Vectorizing loops ---
+
+Let's go back to our example.
+
+    for(i = 0 ; i < n ; i++) {
+        use a[i]
+    }
+
+We need to change our stride by the amount of elements in each vector. There is
+a simple define, STRIDE, that has that value.
+
+    for(i = 0 ; i < n ; i += STRIDE) {
+        use a[i]
+    }
+
+We also need to change the boundary. Why? Suppose we have 14 elements. There
+are two elements left over if we're using doubles (we go 4 by 4, so the two
+elements after 12) or six if we're using floats (the ones after 8). We have to
+use a masked load for those, so our loop can't run until n (unless, of course,
+n is divisible by whatever stride we currently use). Therefore, there is a macro
+that will do two things
+
+    1) Calculate the new loop bound based on the current stride.
+    2) Compute a mask for loading the leftover elements.
+
+The macro is called STRIDE_SPLIT(n, q, m), where n is the original bound, q is a
+pointer to the new bound and m a pointer to a mask (of type __m256i). Let's add
+it to our example:
+
+    int new_n;
+    __m256i leftover_mask;
+    STRIDE_SPLIT(n, &new_n, &leftover_mask)
+
+    for(i = 0 ; i < new_n ; i += STRIDE) {
+        use a[i]
+    }
+
+We can then actually modify the body of the loop to use vectorized instructions.
+This is problem-specific, but it will usually involve a load and a store :^)
+
+    int new_n;
+    __m256i leftover_mask;
+    STRIDE_SPLIT(n, &new_n, &leftover_mask)
+
+    for(i = 0 ; i < new_n ; i += STRIDE) {
+        __m256fp v = _mm256_load(a + i);
+        use v
+        _mm256_store(a + i, v); // or wherever we need to store it.
+    }
+
+Finally we have to take care of those remaining few elements that we didn't loop
+over. This involves a masked load/store. Remember that n could actually be a
+multiple of 4 or 8, meaning that there are no leftover elements. There is
+therefore a LEFTOVER macro, which will tell you the number of leftover elements.
+If there are any, we can use the mask we created earlier:
+
+    int new_n;
+    __m256i leftover_mask;
+    STRIDE_SPLIT(n, &new_n, &leftover_mask)
+
+    for(i = 0 ; i < new_n ; i += STRIDE) {
+        __m256fp v = _mm256_load(a + i);
+        use v
+        _mm256_store(a + i, v); // or wherever we need to store it.
+    }
+
+    if (LEFTOVER(n)) {
+        __m256fp v = _mm256_maskload(a + i, leftover_mask);
+        use v
+        _mm256_maskstore(a + i, leftover_mask, v); // or wherever we need.
+    }
+
+That's it. Happy vectorization!

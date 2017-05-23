@@ -3,6 +3,7 @@
  */
 
 #include "lda-estimate-helper.h"
+#include "utils.h"
 
 void save_gamma(char* filename, fp_t** gamma, int num_docs, int num_topics)
 {
@@ -57,7 +58,7 @@ void gatherDocWords(fp_t* entire_matrix, fp_t* reduced_matrix, document* doc, si
 void scatterDocWords(fp_t* entire_matrix, fp_t* reduced_matrix, document* doc, size_t row_size) {
     for (int n = 0; n < doc->length; n++)
     {
-        for (int k = 0; k < row_size; k++)
+        for (unsigned int k = 0; k < row_size; k++)
             entire_matrix[doc->words[n] * row_size + k] = reduced_matrix[n * row_size + k];
     }
 }

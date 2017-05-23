@@ -18,7 +18,11 @@ obj/*
 # Compile output
 **/*.o
 **/lda
-**/lda.exe
+
+# Windows
+**/*.exe
+**/*.ilk
+**/*.pdb
 
 # Output files from running
 **/*.gamma

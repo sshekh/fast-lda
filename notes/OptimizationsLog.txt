@@ -44,6 +44,7 @@ Optimizations
     convergence for smaller parts (rowwise of the matrix). This would include
     also adapting the compute_likelihood method somehow so it will process
     chunks instead of the whole matrix.
+    --> Change of Algorithm
 
 4. MAYBE DO: In one inference loop, go in chunks of columns. This way some
     values of vectors size k can be replaced by a scalar

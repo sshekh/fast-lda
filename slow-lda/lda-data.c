@@ -26,7 +26,7 @@ corpus* read_data(char* data_filename, int doc_limit)
     corpus* c;
 
     printf("reading data from %s\n", data_filename);
-    c = malloc(sizeof(corpus));
+    c = _mm_malloc(sizeof(corpus), ALIGNMENT);
     c->docs = 0;
     c->num_terms = 0;
     c->num_docs = 0;
@@ -39,8 +39,8 @@ corpus* read_data(char* data_filename, int doc_limit)
         c->docs = (document*) realloc(c->docs, sizeof(document)*(nd+1));
         c->docs[nd].length = length;
         c->docs[nd].total = 0;
-        c->docs[nd].words = malloc(sizeof(int)*length);
-        c->docs[nd].counts = malloc(sizeof(int)*length);
+        c->docs[nd].words = _mm_malloc(sizeof(int)*length, ALIGNMENT);
+        c->docs[nd].counts = _mm_malloc(sizeof(int)*length, ALIGNMENT);
         for (n = 0; n < length; n++)
         {
             fscanf(fileptr, "%10d:%10d", &word, &count);

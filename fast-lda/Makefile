@@ -17,17 +17,38 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
 # USA
 
-.SUFFIXES: .c .u
-CC= gcc
-CFLAGS= -O3 -Wall -g -std=c99 $(XCFLAGS)
-LDFLAGS= -lm
+CC=icc
+PARTIAL=-c
+OBJ=-o
+OUTNAME=-olda
 
-LOBJECTS= rdtsc-helper.o lda-estimate-helper.o lda-run.o lda-estimate.o lda-model.o lda-inference.o utils.o cokus.o lda-alpha.o
+# CC should be either gcc (default), icc (intel linux) or icl (intel windows)
+#_CRT_SECURE_NO_WARNINGS: silence warnings about scanf, fopen and other stuff.
+ifeq ($(CC),gcc)
+	CFLAGS= -O3 -Wall -g -std=c99 -D_CRT_SECURE_NO_WARNINGS -march=core-avx2
+	LDFLAGS= -lm
+else
+	ifeq ($(CC),icl)
+		CFLAGS= /O3 /Wall /Z7 /std=c99 /DWIN32 /D_CRT_SECURE_NO_WARNINGS /arch:CORE-AVX2 /nologo
+		LDFLAGS=
+		PARTIAL=/c
+		OBJ=/Fo
+		OUTNAME=/Fe:lda.exe
+	else
+		CFLAGS= -O3 -Wall -g -std=c99
+		LDFLAGS= -lm
+	endif
+endif
 
-LSOURCE= rdtsc-helper.c lda-estimate-helper.c  lda-run.c lda-estimate.c lda-model.c lda-inference.c utils.c cokus.c lda-alpha.c
+
+
+LOBJECTS= rdtsc-helper.o lda-estimate-helper.o lda-run.o lda-estimate.o lda-model.o lda-inference.o utils.o cokus.o lda-alpha.o fp.o
+
+%.o : %.c
+	$(CC) $(CFLAGS) $(XCFLAGS) $(PARTIAL) $< $(OBJ)$@
 
 lda:	$(LOBJECTS)
-	$(CC) $(CFLAGS) $(LOBJECTS) -o lda $(LDFLAGS)
+	$(CC) $(CFLAGS) $(LOBJECTS) $(LDFLAGS) $(OUTNAME)
 
 clean:
-	-rm -f *.o
+	-rm -f *.o *.ilk *.pdb lda.exe lda

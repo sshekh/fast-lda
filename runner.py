@@ -3,6 +3,7 @@ import os
 import getopt
 import subprocess
 import time
+import platform
 
 from colorama import init, Fore, Style
 from git import Repo
@@ -13,7 +14,8 @@ REFERENCE_FOLDER = 'reference'
 REFERENCE_DATA = REFERENCE_FOLDER + '/ref-%d-%d-%s.beta'
 LDA_EXE_LOG = './%s-lda/logfiles'
 LDA_OUT_BETA = LDA_EXE_LOG + '/final.beta'
-LDA_OUT_TIMING = './results/timings.csv'
+LDA_RESULTS = './results'
+LDA_OUT_TIMING = LDA_RESULTS + '/timings.csv'
 
 ALWAYS_GENERATE_REF = False
 ALWAYS_USE_REF = False
@@ -23,18 +25,38 @@ TIMING_FILENAME = '%s_timings_%d_%d.csv'
 
 RUN_NAME = None
 
-def print_cmd(cmd):
+# Location of bat files that must be run to set up the env for icl (win only)
+# Normally this should be an environment variable or something, but only one
+# team member uses windows.
+VC_VARS = 'C:\\tools\\vs_comm\\VC\\vcvarsall.bat'
+ICL_VARS = 'C:\\tools\\icc\\compilers_and_libraries_2017\\windows\\bin\\iclvars.bat intel64'
+
+
+# Command-line option: always generate missing refs and reuse existing ones.
+NO_PROMPT = False
+
+def run_cmd(cmd, quit_on_fail=True):
     print(Fore.LIGHTBLUE_EX)
     print(cmd)
     print(Style.RESET_ALL)
 
-def quit_on_fail(i, cmd=None):
-    if i != 0:
-        print(Style.RESET_ALL)
-        sys.exit()
+    print(Fore.LIGHTGREEN_EX)
+    print(' ========== ')
 
-def run_lda(which, k, n):
-    params = ['./%s-lda/lda' % which,           # Executable location
+    if type(cmd) is type([]): # List of arguments: use subprocess
+        ret = subprocess.call(cmd)
+    elif type(cmd) is type(''): # Use 'system'
+        ret = os.system(cmd)
+
+    print(' ========== ')
+    print(Style.RESET_ALL)
+
+    if quit_on_fail and ret != 0:
+        sys.exit(ret)
+
+
+def make_lda_params(which, k, n):
+    return ['./%s-lda/lda' % which,           # Executable location
             'est',                              # Execution mode (always est)
             str(n),                             # Number of documents
             '1',                                # Initial estimate for alpha
@@ -44,14 +66,6 @@ def run_lda(which, k, n):
             'random',                           # Initialization method (only random)
             LDA_EXE_LOG % which]                # Output directory
 
-    print_cmd(params)
-    print(Fore.LIGHTGREEN_EX)
-    print(' ========== ')
-    quit_on_fail(subprocess.call(params))
-    print(' ========== ')
-    print(Style.RESET_ALL)
-
-
 def exists(path):
     try:
         os.stat(path)
@@ -60,6 +74,10 @@ def exists(path):
         return False
 
 def prompt_yna(always_flag):
+    if NO_PROMPT:
+        print('y (automatic no-prompt mode)')
+        return True
+
     while True:
         inp = input('(y)es, (n)o, yes to (a)ll\n')
         if inp[0] in {'y', 'n', 'a'}:
@@ -80,11 +98,11 @@ def generate(k, n, dbl, overwrite=False):
             print('Already exists. Skipping...')
             return
 
-    run_lda('slow', k, n)
+    run_cmd(make_lda_params('slow', k, n))
     os.renames(LDA_OUT_BETA % 'slow', dst)
 
 
-def test(k, n, dbl="", epsilon=0):
+def test(k, n, dbl=""):
     global ALWAYS_GENERATE_REF
     global ALWAYS_USE_REF
     # Run the fast LDA and compare the resulting final beta against the reference.
@@ -108,13 +126,13 @@ def test(k, n, dbl="", epsilon=0):
                 generate(k, n, dbl, overwrite=True)
 
 
-    run_lda('fast', k, n)
+    run_cmd(make_lda_params('fast', k, n))
 
     reference = open(which, 'r')
     created = open(LDA_OUT_BETA % 'fast', 'r')
 
     print('Comparing against the reference...')
-    good = beta_comp.compare(reference, created, epsilon=epsilon)
+    good = beta_comp.compare(reference, created)
 
     reference.close()
     created.close()
@@ -129,24 +147,46 @@ def bench(k, n, which):
 
     print('Benchmarking %s k=%d n=%d' % (str(which), k, n))
     for lda in which:
-        run_lda(lda, k, n)
+        lda_part = ' '.join(make_lda_params(lda, k, n))
+        perf_part = ('perf stat -e instructions,cycles,cache-references,' +
+                    'cache-misses,LLC-loads,LLC-load-misses,LLC-stores,' +
+                    'LLC-store-misses,dTLB-loads,dTLB-load-misses,dTLB-stores,' +
+                    'dTLB-store-misses')
+
+        target = TIMING_FOLDER % RUN_NAME + ('/perf_%s_%d_%d.txt' % (lda, k, n))
+
+        if platform.system() == 'Linux':
+            run_cmd(perf_part + ' ' + lda_part + ' 2> ' + target)
+        else:
+            with open(target,'a') as tar:
+                tar.write("\n'perf stat' could not be executed as this command is only available on Linux!\n")
+
         timing_out = (TIMING_FOLDER % RUN_NAME) + (TIMING_FILENAME % (lda, k, n))
         os.rename(LDA_OUT_TIMING, timing_out)
 
-def record_vitals(comment):
+def record_vitals(comment, options, cmdline):
     os.makedirs(TIMING_FOLDER % RUN_NAME)
 
     with open((TIMING_FOLDER % RUN_NAME) + '/info.txt', 'w') as minilog:
 
         # Header
         minilog.write('Bench run %s\n' % RUN_NAME)
-        minilog.write('"' + comment + '"\n')
+        minilog.write('Ran with the command-line `' + ' '.join(cmdline) + '`\n')
+        minilog.write('Comment: "' + comment + '"\n')
         minilog.write('===============================\n\n')
 
+        minilog.write('OPTIONS\n')
+        for k, v in options.items():
+            minilog.write(str(k) + '=' + str(v) + '\n')
+        minilog.write('END OPTIONS\n\n')
 
         # git information
         repo = Repo('.')
-        branch = repo.active_branch.name
+        try:
+            branch = repo.active_branch.name
+        except:
+            branch = "[Detached HEAD]"
+
         commit = repo.commit().hexsha[:8] # commit by itself returns the last commit
 
         minilog.write('Latest commit at time of writing:\n')
@@ -173,7 +213,7 @@ def record_vitals(comment):
 def usage_and_quit():
     print('Fast runner')
     print('')
-    print('usage: %s [ gen | test | bench ] options... [-- comment]' % sys.argv[0])
+    print('usage: %s [ gen | test | bench ] options...' % sys.argv[0])
     print('')
     print('Options: ')
     print('The following two options recieve as argument either one number,\n' +
@@ -191,9 +231,10 @@ def usage_and_quit():
     print('')
     print('If a double-dash appears, it signals the end of the options and\n' +
         'the beginning of a comment. This comment is mandatory in benchnamrk\n' +
-         'mode and appears in the log files.')
+        'mode and appears in the log files.')
     print('')
-    print('Output from the LDA executable and make is colored in green.')
+    print('The commands run by this script (make, lda, ...) appear in light\n' +
+        'blue. The outputs of those commands appear in light green.')
     print('')
     print('Generated reference data is available in the folder `%s`' % REFERENCE_FOLDER)
     print('Benchmark timings are available in the folder `%s`' % TIMING_FOLDER)
@@ -201,9 +242,10 @@ def usage_and_quit():
     print('Other options:')
     print('')
     print('\t-m: Do not run make before running a task. Ignored in bench mode.')
-    print('\t-v: When benchmarking, also validate before.')
-    print('\t-d: Use doubles instead of floats.')
-    print('\t-s: Silence output (always enabled in bench mode).')
+    print('\t-s: Silence lda output (always enabled in bench mode).')
+    print('\t-a: No-prompt mode (always generate missing refs / reuse existing).')
+    print('\t-r: Reduce precision to floats instead of doubles in the fast.')
+    print('\t-g: Compile with gcc instead of icc.')
 
     sys.exit()
 
@@ -222,6 +264,31 @@ def xflags_from_list(defines):
     with_d = ['-D' + x for x in defines]
     return ' '.join(with_d)
 
+def construct_make_command(which, defines, use_icc):
+    # Clean part
+    clean_command = 'cd %s-lda && make clean && ' % which
+    compile_command = ''
+
+    # Select the compiler to use for the fast
+    if use_icc:
+        if os.name == 'nt': # ICL on windows
+            compiler = ' CC=icl'
+            # Run some stuff to set up the environment
+            compile_command = VC_VARS + ' && ' + ICL_VARS + ' && '
+        elif os.name == 'posix': # ICC on unixy systems
+            compiler = ' CC=icc'
+    else:
+        compiler = ' CC=gcc' #gcc by default but better be explicit
+
+    # Construct the actual make command
+    compile_command += ' make'
+    xflags = xflags_from_list(defines)
+    if xflags != '':
+        compile_command += (' XCFLAGS="%s"' % xflags)
+
+    return clean_command + compile_command + compiler
+
+
 if __name__ == '__main__':
     if len(sys.argv) < 2 or sys.argv[1] not in {'gen', 'test', 'bench'}:
         usage_and_quit()
@@ -237,7 +304,7 @@ if __name__ == '__main__':
         if mode == 'bench':
             raise ValueError('When benchmarking, please include a comment.')
 
-    opts, args = getopt.gnu_getopt(options, "fsmvds",
+    opts, args = getopt.gnu_getopt(options, "fsmrsga",
         ["num-topics=",
         "num-docs=",
         "n=",
@@ -246,9 +313,10 @@ if __name__ == '__main__':
     do_fast = False
     do_slow = False
     do_make = True
-    validate_when_benching = False
-    use_doubles = False
+    use_doubles = True
     silence_output = mode == 'bench'
+    use_icc = True
+
 
     ks = [50]
     ns = [2246] # Maximal amount of documents
@@ -264,81 +332,77 @@ if __name__ == '__main__':
             do_slow = True
         elif o == '-m' and mode != 'bench': # ALWAYS make in bench mode
             do_make = False
-        elif o == '-v':
-            validate_when_benching = True
-        elif o == '-d':
-            use_doubles = True
+        elif o == '-r':
+            use_doubles = False
         elif o == '-s':
             silence_output = True
+        elif o == '-a':
+            NO_PROMPT = True
+        elif o == '-g':
+            use_icc = False
 
+    RUN_NAME = time.strftime('%Y-%m-%d_%H-%M-%S')
 
     if do_make:
 
         # Check which defines we need to add
-        defines = []
-        if use_doubles:
-            defines.append('DOUBLE')
+        defines_fast = [] 
+        defines_slow = [] # ALWAYS compile with doubles in the slow.
+        if not use_doubles:
+            defines_fast.append('FLOAT')
         if silence_output:
-            defines.append('IGNORE_PRINTF')
-
-        # Construct the make command
-        xflags = xflags_from_list(defines)
-        final_command = 'make'
-        if xflags != '':
-            final_command += (' XCFLAGS="%s"' % xflags)
+            defines_fast.append('IGNORE_PRINTF')
+            defines_slow.append('IGNORE_PRINTF')
 
         # Actually make the programs
-        print_cmd('cd fast-lda && make clean && ' + final_command)
-        print('Perparing the fast...')
-        print(Fore.LIGHTGREEN_EX)
-        quit_on_fail(os.system('cd fast-lda && make clean && ' + final_command))
-        print(Style.RESET_ALL)
+        print('Preparing the fast...')
+        # Use specified compiler for the fast (gcc or icc)
+        run_cmd(construct_make_command('fast', defines_fast, use_icc))
 
-        print_cmd('cd slow-lda && make clean && ' + final_command)
-        print('Perparing the slow...')
-        print(Fore.LIGHTGREEN_EX)
-        quit_on_fail(os.system('cd slow-lda && make clean && ' + final_command))
-        print(Style.RESET_ALL)
+        print('Preparing the slow...')
+        run_cmd(construct_make_command('slow', defines_slow, use_icc))
 
     # Use different names for the reference files depending on whether we're
     # using floats or doubles.
-    # Use different validation thresholds.
-    # REPORT TO THE GROUP if thresholds are changed
     if use_doubles:
         ref_type_name = 'dbl'
-        validation_threshold = 1e-6
     else:
         ref_type_name = 'flt'
-        validation_threshold = 1e-1
+
+    # Create folders as required
+    if not exists(REFERENCE_FOLDER):
+        os.mkdir(REFERENCE_FOLDER)
+    if not exists(LDA_EXE_LOG % 'fast'):
+        os.mkdir(LDA_EXE_LOG % 'fast')
+    if not exists(LDA_EXE_LOG % 'slow'):
+        os.mkdir(LDA_EXE_LOG % 'slow')
+    if not exists(LDA_RESULTS):
+        os.mkdir(LDA_RESULTS)
+
 
     if mode == 'gen':
         fn = lambda x, y: generate(x, y, ref_type_name)
     elif mode == 'test':
-        fn = lambda x, y: test(x, y, ref_type_name, validation_threshold)
+        fn = lambda x, y: test(x, y, 'dbl')
     elif mode == 'bench':
+        if not do_fast and not do_slow:
+            raise ValueError('When benchmarking, specify at least one of -s (slow), -f (fast)')
 
+        # Which versions of lda to run (in bench or perf mode)
         which = []
-
         if do_fast:
             which.append('fast')
         if do_slow:
             which.append('slow')
 
+        params = {
+            'use_doubles': use_doubles,
+            'use_icc': use_icc
+        }
+
+        record_vitals(comment, params, options)
+
         fn = lambda x, y: bench(x, y, which)
-
-        if validate_when_benching:
-            print('First validating on a small input...')
-            test(10, 100, dbl=ref_type_name, epsilon=validation_threshold)
-
-        if not do_fast and not do_slow:
-            raise ValueError('When benchmarking, specify at least one of -s (slow), -f (fast)')
-
-        RUN_NAME = time.strftime('%Y-%m-%d_%H-%M-%S')
-
-        record_vitals(comment)
-
-    if not exists(REFERENCE_FOLDER):
-        os.mkdir(REFERENCE_FOLDER)
 
     for k in ks:
         for n in ns:

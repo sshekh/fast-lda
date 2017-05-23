@@ -106,34 +106,21 @@ def mle(N, K):
 def likelihood(N, K):
     return K * digamma(N, K) + Cost(adds=K) + digamma(N, K) + Cost(adds=2, muls=2) + 3 * log_gamma(N, K) + \
             K * Cost(adds=7, muls=2) + K * D * 6 * Cost(adds=4, muls=2, logs=1)
-    #return Cost((K + 1) * digamma(N, K).simple + 3 * log_gamma(N, K).simple + 6*K*D + 10*K + 4, \
-    #        (K + 1) * digamma(N, K).heavy + 3 * log_gamma(N, K).heavy)
 
 @memoize
 def lda_inference(N, K):
     return K * Cost(adds=1, divs=1) + K * digamma(N, K) + K * D * Cost(divs=1) + \
         iters["INFERENCE_CONVERGE"] * (D * K * (digamma(N, K) + Cost(adds=4, muls=1, exps=1) + log_sum(N, K)) + \
-            likelihood(N, K) + Cost(adds=2))
-    #return Cost(K * digamma(N, K).simple + K + iters["INFERENCE_CONVERGE"] * (D * K * (digamma(N, K).simple + log_sum(N, K).simple + 5)) \
-    #                + likelihood(N, K).simple + 2,  \
-    #        K + K * digamma(N, K).heavy + K*D + iters["INFERENCE_CONVERGE"] * (D * K * (digamma(N, K).heavy + log_sum(N, K).heavy + 1)))
+            likelihood(N, K) + Cost(adds=1, divs=1))
 
 @memoize
 def doc_e_step(N, K):
     return lda_inference(N, K) + K * Cost(adds=2) + Cost(adds=1, muls=1) + digamma(N, K) + K * N * Cost(adds=2, muls=2)
-    #return Cost(lda_inference(N, K).simple + digamma(N, K).simple + 4*K*N + 2*K + 3, \
-    #        lda_inference(N, K).heavy + digamma(N, K).heavy)
 
 @memoize
 def run_em(N, K):
     return random_initialize_ss(N, K) + mle(N, K) + iters["EM_CONVERGE"] * (N * doc_e_step(N, K) + Cost(adds=N) + \
-            mle(N, K) + Cost(adds=1, muls=1, divs=1) + N * lda_inference(N, K))
-    #return Cost(random_initialize_ss(N, K).simple + mle(N, K).simple +  \
-    #    + iters["EM_CONVERGE"] * (N * doc_e_step(N, K).simple + N + mle(N, K).simple + 2 + \
-    #                                 N * lda_inference(N, K).simple), \
-    #            random_initialize_ss(N, K).heavy + mle(N, K).heavy +  \
-    #    + iters["EM_CONVERGE"] * (N * doc_e_step(N, K).heavy + mle(N, K).heavy + 1 + \
-    #                                 N * lda_inference(N, K).heavy))
+            mle(N, K) + Cost(adds=1, muls=1, divs=1))
 
 flops = { "RUN_EM" : run_em, "LDA_INFERENCE" : lda_inference, "DIGAMMA" : digamma, "LOG_SUM" : log_sum,
         "LOG_GAMMA" : log_gamma, "TRIGAMMA" : trigamma, "DOC_E_STEP" : doc_e_step, "LIKELIHOOD" : likelihood, "MLE" : mle, "OPT_ALPHA" : opt_alpha}

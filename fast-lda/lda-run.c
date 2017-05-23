@@ -20,8 +20,6 @@ int main(int argc, char* argv[])
     // seedMT(t1);
     seedMT(4357U);
 
-    char cmd_mkdir[500];
-
     if (argc > 8)
     {
         if (strcmp(argv[1], "est")==0)
@@ -31,8 +29,6 @@ int main(int argc, char* argv[])
             NTOPICS = atoi(argv[4]);
             read_settings(argv[5]);
             corpus = read_data(argv[6], doc_limit);
-            sprintf(cmd_mkdir, "mkdir %s", argv[8]);
-            system(cmd_mkdir);
 
             init_timing_infrastructure();
             run_em(argv[7], argv[8], corpus);
@@ -41,7 +37,6 @@ int main(int argc, char* argv[])
             if (argc == 10 && strcmp(argv[9], "-out") == 0) {
                 f = stdout;
             } else {
-                system("mkdir results");
                 f = fopen("results/timings.csv","w");
             }
 
@@ -85,7 +80,7 @@ corpus* read_data(char* data_filename, int doc_limit)
     corpus* c;
 
     printf("reading data from %s\n", data_filename);
-    c = malloc(sizeof(corpus));
+    c = _mm_malloc(sizeof(corpus), ALIGNMENT);
     c->docs = 0;
     c->num_terms = 0;
     c->num_docs = 0;
@@ -98,8 +93,8 @@ corpus* read_data(char* data_filename, int doc_limit)
         c->docs = (document*) realloc(c->docs, sizeof(document)*(nd+1));
         c->docs[nd].length = length;
         c->docs[nd].total = 0;
-        c->docs[nd].words = malloc(sizeof(int)*length);
-        c->docs[nd].counts = malloc(sizeof(int)*length);
+        c->docs[nd].words = _mm_malloc(sizeof(int)*length, ALIGNMENT);
+        c->docs[nd].counts = _mm_malloc(sizeof(int)*length, ALIGNMENT);
         for (n = 0; n < length; n++)
         {
             fscanf(fileptr, "%10d:%10d", &word, &count);

@@ -3,8 +3,6 @@
  * Time Stamp Counter. The Intel manuals contain more information.
  */
 
-#undef WIN32
-
 #ifndef RDTSC_H_INCLUDED
 #define RDTSC_H_INCLUDED
 
@@ -64,12 +62,14 @@ typedef union
 	{       myInt64 int64;
 			struct {INT32 lo, hi;} int32;
 	} tsc_counter;
-
+	/*
 	#define RDTSC(cpu_c)   \
 	{       __asm rdtsc    \
 			__asm mov (cpu_c).int32.lo,eax  \
 			__asm mov (cpu_c).int32.hi,edx  \
-	}
+	}*/
+
+	#define RDTSC(cpu_c)	(cpu_c).int64 = __rdtsc()
 
 	#define CPUID() \
 	{ \

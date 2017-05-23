@@ -1,0 +1,18 @@
+
+ Performance counter stats for './slow-lda/lda est 600 1 50 master-settings.txt ./slow-lda/ap/ap.dat random ./slow-lda/logfiles':
+
+ 1,119,639,713,547      instructions              #    1.50  insn per cycle           (41.67%)
+   746,826,580,447      cycles                                                        (50.00%)
+     7,962,880,711      cache-references                                              (50.00%)
+        62,967,279      cache-misses              #    0.791 % of all cache refs      (50.00%)
+     1,772,006,088      LLC-loads                                                     (50.00%)
+        18,367,169      LLC-load-misses           #    1.04% of all LL-cache hits     (50.00%)
+        19,663,264      LLC-stores                                                    (16.67%)
+         1,354,572      LLC-store-misses                                              (16.67%)
+   290,353,426,522      dTLB-loads                                                    (25.00%)
+        21,963,036      dTLB-load-misses          #    0.01% of all dTLB cache hits   (33.33%)
+   123,056,856,358      dTLB-stores                                                   (33.33%)
+         3,567,709      dTLB-store-misses                                             (33.33%)
+
+     193.233165007 seconds time elapsed
+

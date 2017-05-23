@@ -1,8 +1,9 @@
-2) Generate smaller reference outputs from the various parameter ranges decided upon
+7) All the other optimizations: ILP, scalar replacement, register level optimizations
 
-6) Script to run the timings for different input size and plot performance.
-7) Update project descriptions:
-		point 4 - decribe validation
-		point 7 - performance plot decription
-
-8) Script for Automatic flop, memeory transfers counters which uses the caller/callee DAG. 
+10) i. Finalize log_sum (lookup/expansion + vectorization) <- BG
+   ii. compute likelihood tiling <- BG
+  iii. optimize digamma (lookup/approx + vectorization) <- lookup <- CC, approx <- SS then vectorize
+   iv. Tiling inference <- FL
+    v. Bugfix pure computation chart <- SS
+   vi. Plots (roofline, performance, cycle distribution) for each stage <- FL
+  vii. Optimize lgamma (lookup/approx + vectorization) <- FL        //Low priority

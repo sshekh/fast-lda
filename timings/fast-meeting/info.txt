@@ -1,0 +1,33 @@
+Bench run 2017-05-22_15-42-53
+Ran with the command-line `bench -fa --n=100,2000,200 --k=50`
+Comment: "Latest"
+===============================
+
+OPTIONS
+use_icc=True
+use_doubles=True
+END OPTIONS
+
+Latest commit at time of writing:
+0e32603b (on branch master)
+
+Additionally, the repo contained the following untracked files:
+	timings/2017-05-22_15-42-27/fast_timings_100_100.csv
+	timings/2017-05-22_15-42-27/info.txt
+	timings/2017-05-22_15-42-27/perf_fast_100_100.txt
+	timings/2017-05-22_15-42-27/perf_fast_100_300.txt
+	timings/2017-05-22_15-42-53/info.txt
+
+The diff, if any, follows:
+
+
+
+===============================
+
+Settings file:
+var max iter 20
+var convergence 1e-6
+em max iter 100
+em convergence 1e-4
+alpha estimate
+

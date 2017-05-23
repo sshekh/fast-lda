@@ -20,7 +20,7 @@
 #ifndef LDA_H
 #define LDA_H
 
-#include "../fast-lda/rdtsc-helper.h"
+#include "../fast-lda/fp.h"
 
 typedef struct
 {

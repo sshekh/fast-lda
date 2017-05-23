@@ -1,8 +1,8 @@
 #include "rdtsc-helper.h"
 
 
-accumulator timing_infrastructure[N_ACCUMULATORS];
-char* accumulator_names[] = {
+static accumulator timing_infrastructure[N_ACCUMULATORS];
+static char* accumulator_names[] = {
     "RUN_EM",
     "LDA_INFERENCE",
     "DIGAMMA",
@@ -20,13 +20,19 @@ char* accumulator_names[] = {
 timer start_timer(int id){
     timer t;
     t.id = id;
-    // CPUID();
+
+    // This CPUID thing seems to do nothing, but is required so that the CPU
+    // doesn't schedule the RDTSC out-of-order.
+    CPUID();
     RDTSC(t.start);
     return t;
 }
 
 void stop_timer(timer t){
-    // CPUID();
+
+    // This CPUID thing seems to do nothing, but is required so that the CPU
+    // doesn't schedule the RDTSC out-of-order.
+    CPUID();
     RDTSC(t.end);
     t.cycles = (long long) ((COUNTER_DIFF(t.end, t.start)));
     timing_infrastructure[t.id].sum += t.cycles;
@@ -35,14 +41,19 @@ void stop_timer(timer t){
     // printf("Run EM - Performance [flops/cycle]: %f\n", t.flops/t.cycles);
 }
 
-void init_timing_infrastructure(){
+void timer_manual_increment(int id, long long amount) {
+    timing_infrastructure[id].sum += amount;
+    timing_infrastructure[id].counter++;
+}
+
+void init_timing_infrastructure() {
     for (int i=0;i<N_ACCUMULATORS;i++){
         timing_infrastructure[i].sum = 0;
         timing_infrastructure[i].counter = 0;
     }
 }
 
-void print_timings(FILE* f){
+void print_timings(FILE* f) {
     fprintf(f, "Accumulator, Total count, Average count\n");
     for (int i=0;i<N_ACCUMULATORS;i++){
         if (timing_infrastructure[i].counter == 0){

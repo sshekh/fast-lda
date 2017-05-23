@@ -1,0 +1,154 @@
+Bench run 2017-05-22_22-15-18
+Ran with the command-line `bench --num-topics=50 --num-docs=100,2000,100 -f`
+Comment: "Correct stage 1 Fast icc doubles."
+===============================
+
+OPTIONS
+use_doubles=False
+use_icc=False
+END OPTIONS
+
+Latest commit at time of writing:
+e3a1e7a4 (on branch stage1)
+
+Additionally, the repo contained the following untracked files:
+	cachegrind.out.5775
+	cachegrind.out.5917
+	profiling/fast_timings2000.csv
+	profiling/perf/perf_50_200.txt
+	timings/2017-05-15_20-09-00/info.txt
+	timings/2017-05-17_17-33-51/info.txt
+	timings/2017-05-17_17-33-51/perf_[fast]_10_100.txt
+	timings/2017-05-17_17-34-40/info.txt
+	timings/2017-05-17_17-34-40/perf_[fast]_50_100.txt
+	timings/2017-05-17_17-34-40/perf_[fast]_50_1000.txt
+	timings/2017-05-17_17-34-40/perf_[fast]_50_1100.txt
+	timings/2017-05-17_17-34-40/perf_[fast]_50_1200.txt
+	timings/2017-05-17_17-34-40/perf_[fast]_50_1300.txt
+	timings/2017-05-17_17-34-40/perf_[fast]_50_1400.txt
+	timings/2017-05-17_17-34-40/perf_[fast]_50_1500.txt
+	timings/2017-05-17_17-34-40/perf_[fast]_50_1600.txt
+	timings/2017-05-17_17-34-40/perf_[fast]_50_1700.txt
+	timings/2017-05-17_17-34-40/perf_[fast]_50_1800.txt
+	timings/2017-05-17_17-34-40/perf_[fast]_50_1900.txt
+	timings/2017-05-17_17-34-40/perf_[fast]_50_200.txt
+	timings/2017-05-17_17-34-40/perf_[fast]_50_2000.txt
+	timings/2017-05-17_17-34-40/perf_[fast]_50_300.txt
+	timings/2017-05-17_17-34-40/perf_[fast]_50_400.txt
+	timings/2017-05-17_17-34-40/perf_[fast]_50_500.txt
+	timings/2017-05-17_17-34-40/perf_[fast]_50_600.txt
+	timings/2017-05-17_17-34-40/perf_[fast]_50_700.txt
+	timings/2017-05-17_17-34-40/perf_[fast]_50_800.txt
+	timings/2017-05-17_17-34-40/perf_[fast]_50_900.txt
+	timings/2017-05-17_20-31-34/info.txt
+	timings/2017-05-17_20-31-34/perf_[fast]_10_100.txt
+	timings/2017-05-17_21-24-02/info.txt
+	timings/2017-05-17_21-24-02/perf_[fast]_10_100.txt
+	timings/2017-05-17_21-32-27/info.txt
+	timings/2017-05-17_21-32-27/perf_[fast]_10_100.txt
+	timings/2017-05-17_21-34-04/info.txt
+	timings/2017-05-17_21-34-04/perf_[fast]_10_100.txt
+	timings/2017-05-18_21-28-56/fast_timings_50_2000.csv
+	timings/2017-05-18_21-28-56/info.txt
+	timings/2017-05-18_21-44-43/fast_timings_50_2000.csv
+	timings/2017-05-18_21-44-43/info.txt
+	timings/2017-05-19_14-03-34/fast_timings_50_2000.csv
+	timings/2017-05-19_14-03-34/info.txt
+	timings/2017-05-19_14-03-34/perf_[fast]_50_2000.txt
+	timings/2017-05-19_14-29-32/fast_timings_50_2000.csv
+	timings/2017-05-19_14-29-32/info.txt
+	timings/2017-05-19_18-02-42/fast_timings_10_100.csv
+	timings/2017-05-19_18-02-42/info.txt
+	timings/2017-05-19_18-02-42/perf_[fast]_10_100.txt
+	timings/2017-05-19_19-01-49/info.txt
+	timings/2017-05-19_19-01-49/perf_[fast]_50_2000.txt
+	timings/2017-05-19_23-47-24/fast_timings_50_100.csv
+	timings/2017-05-19_23-47-24/fast_timings_50_1100.csv
+	timings/2017-05-19_23-47-24/fast_timings_50_1300.csv
+	timings/2017-05-19_23-47-24/fast_timings_50_1500.csv
+	timings/2017-05-19_23-47-24/fast_timings_50_1700.csv
+	timings/2017-05-19_23-47-24/fast_timings_50_1900.csv
+	timings/2017-05-19_23-47-24/fast_timings_50_300.csv
+	timings/2017-05-19_23-47-24/fast_timings_50_500.csv
+	timings/2017-05-19_23-47-24/fast_timings_50_700.csv
+	timings/2017-05-19_23-47-24/fast_timings_50_900.csv
+	timings/2017-05-19_23-47-24/info.txt
+	timings/2017-05-19_23-47-24/perf_fast_50_100.txt
+	timings/2017-05-19_23-47-24/perf_fast_50_1100.txt
+	timings/2017-05-19_23-47-24/perf_fast_50_1300.txt
+	timings/2017-05-19_23-47-24/perf_fast_50_1500.txt
+	timings/2017-05-19_23-47-24/perf_fast_50_1700.txt
+	timings/2017-05-19_23-47-24/perf_fast_50_1900.txt
+	timings/2017-05-19_23-47-24/perf_fast_50_300.txt
+	timings/2017-05-19_23-47-24/perf_fast_50_500.txt
+	timings/2017-05-19_23-47-24/perf_fast_50_700.txt
+	timings/2017-05-19_23-47-24/perf_fast_50_900.txt
+	timings/2017-05-20_18-00-04/fast_timings_50_100.csv
+	timings/2017-05-20_18-00-04/fast_timings_50_1000.csv
+	timings/2017-05-20_18-00-04/fast_timings_50_1100.csv
+	timings/2017-05-20_18-00-04/fast_timings_50_1200.csv
+	timings/2017-05-20_18-00-04/fast_timings_50_1300.csv
+	timings/2017-05-20_18-00-04/fast_timings_50_1400.csv
+	timings/2017-05-20_18-00-04/fast_timings_50_1500.csv
+	timings/2017-05-20_18-00-04/fast_timings_50_1600.csv
+	timings/2017-05-20_18-00-04/fast_timings_50_1700.csv
+	timings/2017-05-20_18-00-04/fast_timings_50_1800.csv
+	timings/2017-05-20_18-00-04/fast_timings_50_1900.csv
+	timings/2017-05-20_18-00-04/fast_timings_50_200.csv
+	timings/2017-05-20_18-00-04/fast_timings_50_2000.csv
+	timings/2017-05-20_18-00-04/fast_timings_50_300.csv
+	timings/2017-05-20_18-00-04/fast_timings_50_400.csv
+	timings/2017-05-20_18-00-04/fast_timings_50_500.csv
+	timings/2017-05-20_18-00-04/fast_timings_50_600.csv
+	timings/2017-05-20_18-00-04/fast_timings_50_700.csv
+	timings/2017-05-20_18-00-04/fast_timings_50_800.csv
+	timings/2017-05-20_18-00-04/fast_timings_50_900.csv
+	timings/2017-05-20_18-00-04/info.txt
+	timings/2017-05-20_18-00-04/perf_fast_50_100.txt
+	timings/2017-05-20_18-00-04/perf_fast_50_1000.txt
+	timings/2017-05-20_18-00-04/perf_fast_50_1100.txt
+	timings/2017-05-20_18-00-04/perf_fast_50_1200.txt
+	timings/2017-05-20_18-00-04/perf_fast_50_1300.txt
+	timings/2017-05-20_18-00-04/perf_fast_50_1400.txt
+	timings/2017-05-20_18-00-04/perf_fast_50_1500.txt
+	timings/2017-05-20_18-00-04/perf_fast_50_1600.txt
+	timings/2017-05-20_18-00-04/perf_fast_50_1700.txt
+	timings/2017-05-20_18-00-04/perf_fast_50_1800.txt
+	timings/2017-05-20_18-00-04/perf_fast_50_1900.txt
+	timings/2017-05-20_18-00-04/perf_fast_50_200.txt
+	timings/2017-05-20_18-00-04/perf_fast_50_2000.txt
+	timings/2017-05-20_18-00-04/perf_fast_50_300.txt
+	timings/2017-05-20_18-00-04/perf_fast_50_400.txt
+	timings/2017-05-20_18-00-04/perf_fast_50_500.txt
+	timings/2017-05-20_18-00-04/perf_fast_50_600.txt
+	timings/2017-05-20_18-00-04/perf_fast_50_700.txt
+	timings/2017-05-20_18-00-04/perf_fast_50_800.txt
+	timings/2017-05-20_18-00-04/perf_fast_50_900.txt
+	timings/2017-05-22_22-15-18/info.txt
+	validation_opt2
+
+The diff, if any, follows:
+
+diff --git a/fast-lda/lda-estimate.c b/fast-lda/lda-estimate.c
+index 488cd39..2388b17 100644
+--- a/fast-lda/lda-estimate.c
++++ b/fast-lda/lda-estimate.c
+@@ -90,7 +90,7 @@ void run_em(char* start, char* directory, corpus* corpus)
+     if (strcmp(start, "random")==0)
+     {
+         printf("Init model\n");
+-        model = new_lda_model(corpus->num_terms, NTOPICS, max_length);
++        model = new_lda_model(corpus->num_terms, NTOPICS);
+     }
+     else
+     {
+
+===============================
+
+Settings file:
+var max iter 20
+var convergence 1e-6
+em max iter 100
+em convergence 1e-4
+alpha estimate
+
