@@ -1,0 +1,18 @@
+
+ Performance counter stats for './fast-lda/lda est 2246 1 200 master-settings.txt ./fast-lda/ap/ap.dat random ./fast-lda/logfiles':
+
+15,980,035,422,787      instructions              #    0.68  insn per cycle           (41.67%)
+23,588,846,033,852      cycles                                                        (50.00%)
+    61,242,436,041      cache-references                                              (50.00%)
+     2,647,139,701      cache-misses              #    4.322 % of all cache refs      (50.00%)
+     5,093,010,538      LLC-loads                                                     (50.00%)
+       772,475,953      LLC-load-misses           #   15.17% of all LL-cache hits     (50.00%)
+     2,170,836,004      LLC-stores                                                    (16.67%)
+       165,792,571      LLC-store-misses                                              (16.67%)
+ 3,693,189,504,923      dTLB-loads                                                    (25.00%)
+           418,871      dTLB-load-misses          #    0.00% of all dTLB cache hits   (33.33%)
+ 1,670,072,547,476      dTLB-stores                                                   (33.33%)
+           130,650      dTLB-store-misses                                             (33.33%)
+
+    5992.081365447 seconds time elapsed
+
