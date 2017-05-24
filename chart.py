@@ -3,19 +3,18 @@ import numpy as np
 import sys
 import matplotlib.pyplot as plt
 import os.path
+import re
+import benchmarking
 
 PURIFY = False
 
 D = None
 V = None
+EPS = 1e-8
 
 iters = {"EM_CONVERGE" : 0, "INFERENCE_CONVERGE" : 0, "ALPHA_CONVERGE" : 0}  # conv counts for var iterations
 
 fns = ["RUN_EM", "LDA_INFERENCE", "DIGAMMA", "LOG_SUM", "DOC_E_STEP", "LIKELIHOOD", "MLE", "OPT_ALPHA", "TRIGAMMA", "LOG_GAMMA"]
-
-def memoize(f):
-    cache = {}
-    return lambda *args: cache[args] if args in cache else cache.update({args: f(*args)}) or cache[args]
 
 def digamma(N, K):
     return 0
@@ -34,37 +33,37 @@ def random_initialize_ss(N, K):
 
 def opt_alpha(N, K):
     return iters["ALPHA_CONVERGE"] * ( \
-            0 + 0 + 2 * avg_flops["LOG_GAMMA"] + \
-            0 + 2 * avg_flops["DIGAMMA"] + 0 + 2 * avg_flops["TRIGAMMA"]) + \
+            0 + 0 + 2 * avg_cycles["LOG_GAMMA"] + \
+            0 + 2 * avg_cycles["DIGAMMA"] + 0 + 2 * avg_cycles["TRIGAMMA"]) + \
             0 # poor lonely exp
 
 def mle(N, K):
-    return N * K * 0 + avg_flops["OPT_ALPHA"]
+    return N * K * 0 + avg_cycles["OPT_ALPHA"]
 
 def likelihood(N, K):
-    return K * avg_flops["DIGAMMA"] + 0 + avg_flops["DIGAMMA"] + 0 + 3 * avg_flops["LOG_GAMMA"] + \
+    return K * avg_cycles["DIGAMMA"] + 0 + avg_cycles["DIGAMMA"] + 0 + 3 * avg_cycles["LOG_GAMMA"] + \
             K * 0 + K * D * 6 * 0
 
 def lda_inference(N, K):
-    return K * 0 + K * avg_flops["DIGAMMA"] + K * D * 0 + \
-        iters["INFERENCE_CONVERGE"] * (D * K * (avg_flops["DIGAMMA"] + 0 + avg_flops["LOG_SUM"]) + \
-            avg_flops["LIKELIHOOD"] + 0)
+    return K * 0 + K * avg_cycles["DIGAMMA"] + K * D * 0 + \
+        iters["INFERENCE_CONVERGE"] * (D * K * (avg_cycles["DIGAMMA"] + 0 + avg_cycles["LOG_SUM"]) + \
+            avg_cycles["LIKELIHOOD"] + 0)
 
 def doc_e_step(N, K):
-    return avg_flops["LDA_INFERENCE"] + K * 0 + 0 + avg_flops["DIGAMMA"] + K * N * 0
+    return avg_cycles["LDA_INFERENCE"] + K * 0 + 0 + avg_cycles["DIGAMMA"] + K * N * 0
 
 def run_em(N, K):
-    return 0 + avg_flops["MLE"] + iters["EM_CONVERGE"] * (N * avg_flops["DOC_E_STEP"] + 0 + \
-            avg_flops["MLE"] + 0)
+    return 0 + avg_cycles["MLE"] + iters["EM_CONVERGE"] * (N * avg_cycles["DOC_E_STEP"] + 0 + \
+            avg_cycles["MLE"] + 0)
 
 impurity = { "RUN_EM" : run_em, "LDA_INFERENCE" : lda_inference, "DIGAMMA" : digamma, "LOG_SUM" : log_sum,
         "LOG_GAMMA" : log_gamma, "TRIGAMMA" : trigamma, "DOC_E_STEP" : doc_e_step, "LIKELIHOOD" : likelihood, "MLE" : mle, "OPT_ALPHA" : opt_alpha}
 
-tot_flops = {"RUN_EM" : 0., "LDA_INFERENCE" : 0., "DIGAMMA" : 0., "LOG_SUM" : 0., "DOC_E_STEP" : 0., "LIKELIHOOD" : 0., "MLE" : 0., \
+tot_cycles = {"RUN_EM" : 0., "LDA_INFERENCE" : 0., "DIGAMMA" : 0., "LOG_SUM" : 0., "DOC_E_STEP" : 0., "LIKELIHOOD" : 0., "MLE" : 0., \
         "OPT_ALPHA" : 0., "TRIGAMMA" : 0., "LOG_GAMMA" : 0.}
-pur_flops = {"RUN_EM" : 0., "LDA_INFERENCE" : 0., "DIGAMMA" : 0., "LOG_SUM" : 0., "DOC_E_STEP" : 0., "LIKELIHOOD" : 0., "MLE" : 0., \
+pur_cycles = {"RUN_EM" : 0., "LDA_INFERENCE" : 0., "DIGAMMA" : 0., "LOG_SUM" : 0., "DOC_E_STEP" : 0., "LIKELIHOOD" : 0., "MLE" : 0., \
         "OPT_ALPHA" : 0., "TRIGAMMA" : 0., "LOG_GAMMA" : 0.}
-avg_flops = {"RUN_EM" : 0., "LDA_INFERENCE" : 0., "DIGAMMA" : 0., "LOG_SUM" : 0., "DOC_E_STEP" : 0., "LIKELIHOOD" : 0., "MLE" : 0., \
+avg_cycles = {"RUN_EM" : 0., "LDA_INFERENCE" : 0., "DIGAMMA" : 0., "LOG_SUM" : 0., "DOC_E_STEP" : 0., "LIKELIHOOD" : 0., "MLE" : 0., \
         "OPT_ALPHA" : 0., "TRIGAMMA" : 0., "LOG_GAMMA" : 0.}
 
 def set_corpus_stats(location):
@@ -93,11 +92,10 @@ def set_corpus_stats(location):
             V = 10473
 
 
-
-@memoize
 def read_one_output(fname, K, N):
     if D is None:
-        set_corpus_stats(os.path.dirname(f.name) or '.')
+        set_corpus_stats(os.path.dirname(fname) or '.')
+        benchmarking.set_corpus_stats(os.path.dirname(fname) or '.')
 
     f = open(fname, "r")
     header = f.readline().split(',')
@@ -108,9 +106,9 @@ def read_one_output(fname, K, N):
     lines = f.readlines()
 
     for fn in fns:
-        tot_flops[fn] = 0.
-        pur_flops[fn] = 0.
-        avg_flops[fn] = 0.
+        tot_cycles[fn] = 0.
+        pur_cycles[fn] = 0.
+        avg_cycles[fn] = 0.
         pass
     for itr in iters: iters[itr] = 0.
 
@@ -121,8 +119,8 @@ def read_one_output(fname, K, N):
             if s[2].strip() is not '0':     # code inside function not called case
                 tot_cnt = float(s[1])
                 avg_cnt = float(s[2])
-                tot_flops[fn] = tot_cnt
-                avg_flops[fn] = avg_cnt
+                tot_cycles[fn] = tot_cnt
+                avg_cycles[fn] = avg_cnt
         else:
             iters[fn] = float(s[2])
         pass
@@ -131,12 +129,12 @@ def read_one_output(fname, K, N):
     if PURIFY:
         # purifying
         for i, fn in enumerate(fns):
-            pur_flops[fn] = tot_flops[fn] - impurity[fn](N, K)
-            print("flops ", fn, tot_flops[fn], pur_flops[fn])
-            ret_flop_list[i] = pur_flops[fn]
+            pur_cycles[fn] = tot_cycles[fn] - impurity[fn](N, K)
+            print("cycles ", fn, tot_cycles[fn], pur_cycles[fn])
+            ret_flop_list[i] = pur_cycles[fn]
     else:
         for i, fn in enumerate(fns):
-            ret_flop_list[i] = tot_flops[fn]
+            ret_flop_list[i] = tot_cycles[fn]
 
     return ret_flop_list
 
@@ -144,13 +142,13 @@ colors = { "RUN_EM" : "green", "LDA_INFERENCE" : "blue", "DIGAMMA" : "black", "L
         "LOG_GAMMA" : "purple", "TRIGAMMA" : "cyan", "DOC_E_STEP" : "orange", "LIKELIHOOD" : "red", "MLE" : "cyan", "OPT_ALPHA" : "cyan"}
 
 def stacked_bar_plot(filenames, KNs, xticklabels=None):
-    flops = []
+    cycles = []
     for i, f in enumerate(filenames):
-        flps = read_one_output(f, KNs[i][0], KNs[i][1])
-        flops.append(flps)
+        cls = read_one_output(f, KNs[i][0], KNs[i][1])
+        cycles.append(cls)
         pass
-    flops = np.array(flops)
-    flops = np.transpose(flops)
+    cycles = np.array(cycles)
+    cycles = np.transpose(cycles)
 
     width = 1
     ind = np.arange(len(filenames))
@@ -158,8 +156,8 @@ def stacked_bar_plot(filenames, KNs, xticklabels=None):
     fig, ax = plt.subplots()
     p = [None] * len(fns)
     for i in range(len(fns)):
-        p[i] = ax.bar(ind, flops[i], width, bottom=bottom, color=colors[fns[i]])
-        bottom = np.sum([bottom, flops[i]], axis=0)
+        p[i] = ax.bar(ind, cycles[i], width, bottom=bottom, color=colors[fns[i]])
+        bottom = np.sum([bottom, cycles[i]], axis=0)
 
     plt.legend(p, fns)
     if xticklabels is not None:
@@ -178,8 +176,8 @@ def bar_plot(filenames, KNs, legends=None):
     fig, ax = plt.subplots()
     p = [None] * len(filenames)
     for i in range(len(filenames)):
-        flops = read_one_output(filenames[i], KNs[i][0], KNs[i][1])
-        p[i] = ax.bar(ind + i * width, flops, width, color = colors2[i])
+        cycles = read_one_output(filenames[i], KNs[i][0], KNs[i][1])
+        p[i] = ax.bar(ind + i * width, cycles, width, color = colors2[i])
 
     ax.set_ylabel('flop count')
     ax.set_title('Flop counts for different runs per group')
@@ -191,23 +189,46 @@ def bar_plot(filenames, KNs, legends=None):
     ax.grid(linestyle='--', linewidth=2, axis='y')
     plt.show()
 
+def perf_plot(filenames, KNs, legends=None):
+    width = 1 / (len(filenames) + 1.)   # width of bars
+    ind = np.arange(len(fns))
+    fig, ax = plt.subplots()
+    p = [None] * len(filenames)
+    for i, filename in enumerate(filenames):
+        read_one_output(filename, KNs[i][0], KNs[i][1])
+        benchmarking.iters = iters
+        perf = [0] * len(fns)
+        for j,fn in enumerate(fns):
+            if abs(avg_cycles[fn]) > EPS:
+                #print(fn, "Full flops", benchmarking.flops[fn](KNs[i][1], KNs[i][0]))
+                perf[j] = benchmarking.flops[fn](KNs[i][1], KNs[i][0]).full() / avg_cycles[fn]
+        p[i] = ax.bar(ind + i * width, perf, width, color = colors2[i])
+    ax.set_ylabel('performance')
+    ax.set_title('performance for different runs per group')
+    ax.set_xticks(ind)
+    ax.set_xticklabels(fns)
+    if legends is not None:
+        plt.legend(p, legends)
+    ax.grid(linestyle='--', linewidth=2, axis='y')
+    plt.show()
+
 
 if __name__ == "__main__":
-    if len(sys.argv) <= 1 or ((len(sys.argv) - 1) % 4 is not 0):
-        print("python chart.py -f|s folder1 k1 n1 <-f|s folder2 k2 n2>...")
+    if len(sys.argv) == 1: 
+        print("python chart.py <filenames list...>")
         sys.exit(1)
-    filenames = []
+    filenames = sys.argv[1:]
     KNs = []
     legends = []
-    for i in range(1, len(sys.argv), 4):
-        mode = "fast"
-        if sys.argv[i] == '-s': mode = 'slow'
-        filename = sys.argv[i + 1] + "/" + mode + "_timings_" + sys.argv[i + 2] + "_" + sys.argv[i + 3] + ".csv"
-        filenames.append(filename)
-        KNs.append((int(sys.argv[i + 2]), int(sys.argv[i + 3])))
-        legend = mode + "_" + sys.argv[i + 2] + "_" + sys.argv[i + 3]
-        legends.append(legend)
-        pass
+    
+    regex = re.compile(r'\d+')
+    for filename in filenames:
+        K, N = map(int, re.findall(regex, filename))
+        KNs.append((K, N))
+        pname = filename[:-1]
+        something = pname.split('.')[0].split('_')
+        legends.append(something[0] + " " + something[2] + " " + something[3])
 
     bar_plot(filenames, KNs, legends)
+    perf_plot(filenames, KNs, legends)
     stacked_bar_plot(filenames, KNs, legends)
