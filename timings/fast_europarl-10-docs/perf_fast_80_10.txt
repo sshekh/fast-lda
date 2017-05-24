@@ -1,0 +1,18 @@
+
+ Performance counter stats for './fast-lda/lda est 10 1 80 master-settings.txt ./fast-lda/europarl_fi/europarl_fi.dat random ./fast-lda/logfiles':
+
+   175,399,642,783      instructions              #    0.99  insn per cycle           (41.68%)
+   177,761,336,637      cycles                                                        (50.01%)
+     1,347,083,630      cache-references                                              (50.01%)
+       602,577,481      cache-misses              #   44.732 % of all cache refs      (50.00%)
+       159,585,863      LLC-loads                                                     (49.99%)
+        69,361,243      LLC-load-misses           #   43.46% of all LL-cache hits     (49.99%)
+        80,477,779      LLC-stores                                                    (16.67%)
+        32,614,765      LLC-store-misses                                              (16.67%)
+    50,622,335,853      dTLB-loads                                                    (25.00%)
+            77,455      dTLB-load-misses          #    0.00% of all dTLB cache hits   (33.34%)
+    16,088,094,845      dTLB-stores                                                   (33.34%)
+            37,492      dTLB-store-misses                                             (33.34%)
+
+      47.264772068 seconds time elapsed
+
