@@ -29,6 +29,19 @@
 // This is not really a performance-critical function.
 int argmax(fp_t* x, int n);
 
+#if defined(NO_MKL) || !defined(__INTEL_COMPILER)
+    INLINE
+    void vdLGamma(int stride, const fp_t* input, fp_t* output){
+        for(int i=0;i<stride;i++)
+        {
+            output[i] = lgamma(input[i]);
+        }
+    }
+#else
+    #include "mkl.h"
+#endif //defined(NO_MKL) || !defined(__INTEL_COMPILER)
+
+
 #ifndef __INTEL_COMPILER
     /* These are some replacements for the icc-specific intrinsics. The
     performance is of course gonna be much worse, but they're here so that we
@@ -55,16 +68,6 @@ int argmax(fp_t* x, int n);
 
         return x;
     }
-
-    INLINE 
-    void vdLGamma(int stride, const fp_t* input, fp_t* output){
-        for(int i=0;i<stride;i++)
-        {
-            output[i] = lgamma(input[i]);
-        }
-    }
-#else
-  #include "mkl.h"
 #endif // __INTEL_COMPILER
 
 

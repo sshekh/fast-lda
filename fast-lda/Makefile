@@ -32,7 +32,7 @@ ifeq ($(CC),gcc)
 else
 	ifeq ($(CC),icl)
 		CFLAGS= /O3 /Wall /Z7 /std=c99 /DWIN32 /D_CRT_SECURE_NO_WARNINGS /arch:CORE-AVX2 /nologo
-		LDFLAGS= -mkl
+		LDFLAGS= /Qmkl
 		PARTIAL=/c
 		OBJ=/Fo
 		OUTNAME=/Fe:lda.exe

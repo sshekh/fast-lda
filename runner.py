@@ -323,7 +323,7 @@ if __name__ == '__main__':
         if mode == 'bench':
             raise ValueError('When benchmarking, please include a comment.')
 
-    opts, args = getopt.gnu_getopt(options, "fsmrsga",
+    opts, args = getopt.gnu_getopt(options, "fsmrsgax",
         ["num-topics=",
         "num-docs=",
         "n=",
@@ -335,7 +335,7 @@ if __name__ == '__main__':
     use_doubles = True
     silence_output = mode == 'bench'
     use_icc = True
-
+    use_mkl = True
 
     ks = [50]
     ns = [2246] # Maximal amount of documents
@@ -359,19 +359,27 @@ if __name__ == '__main__':
             NO_PROMPT = True
         elif o == '-g':
             use_icc = False
+        elif o == '-x':
+            use_mkl = False
 
     RUN_NAME = time.strftime('%Y-%m-%d_%H-%M-%S')
 
     if do_make:
 
         # Check which defines we need to add
-        defines_fast = [] 
+        defines_fast = []
         defines_slow = [] # ALWAYS compile with doubles in the slow.
         if not use_doubles:
             defines_fast.append('FLOAT')
         if silence_output:
             defines_fast.append('IGNORE_PRINTF')
             defines_slow.append('IGNORE_PRINTF')
+        if not use_mkl:
+            defines_fast.append('NO_MKL')
+            defines_slow.append('NO_MKL')
+        else:
+            defines_fast.append('NO_MKL')
+            defines_slow.append('NO_MKL')
 
         # Actually make the programs
         print('Preparing the fast...')
