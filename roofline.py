@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from benchmarking import run_em
 from benchmarking import read_one_output
+import benchmarking
 import sys
 import re
 import os
@@ -92,6 +93,9 @@ def plot_perf_roof(pi, beta, name, axes):
 
 def plot_run(run, col):
 
+    #print(run.opints)
+    #print(run.perfs)
+
     #Plot our op intensity
     plt.plot(
         run.opints,
@@ -125,6 +129,8 @@ def plot_run(run, col):
     plt.text(xlab, ylab, run.label, color=col, ha='center', size='x-small')
 
 def parse_perf_files(dir_path):
+    benchmarking.set_corpus_stats(dir_path)
+
     operational_intensity = []
     memory_reads = []
     memory_writes = []
@@ -143,7 +149,7 @@ def parse_perf_files(dir_path):
     for filename in os.listdir(dir_path):
         if "perf" in filename:
             K, N = map(int, re.findall(regex, filename))
-            num_docs.append(N)
+            num_docs.append((K, N))
             for line in open(dir_path + "/" + filename):
                 if "LLC-load-misses" in line:
                     tokens = line.split()
@@ -171,20 +177,22 @@ def parse_perf_files(dir_path):
             f = open(join(dir_path, filename), "r")
             # Extract K and N from the filename
             K, N = map(int, re.findall(regex, filename))
-            if N in num_docs:
+            if (K, N) in num_docs:
                 read_one_output(f, N, K, data)
-                flop_count[ num_docs.index(N) ] = run_em(N, K).full()
+                flop_count[ num_docs.index((K, N)) ] = run_em(N, K).full()
+                #print(flop_count)
                 pass
             pass
         pass
 
-    operational_intensity = [x / y for x, y in zip(flop_count, bytes_transfers)]
+    print('')
 
+    operational_intensity = [x / y for x, y in zip(flop_count, bytes_transfers)]
 
     plt_op = []
     plt_perf = []
     for i in range(len(num_docs)):
-        n = num_docs[i]
+        n = num_docs[i][1]
         if n in data['RUN_EM']['x']:
             assert flop_count[i] is not 0
             plt_op.append(operational_intensity[i])

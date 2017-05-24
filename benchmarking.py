@@ -12,9 +12,9 @@ EPS = 1e-12     # Average count is float and integer count is a text in case of 
 D = None
 V = None
 
-def memoize(f):
-    cache = {}
-    return lambda *args: cache[args] if args in cache else cache.update({args: f(*args)}) or cache[args]
+#def memoize(f):
+#    cache = {}
+#    return lambda *args: cache[args] if args in cache else cache.update({args: f(*args)}) or cache[args]
 
 class Cost:
     def __init__(self, adds=0, muls=0, divs=0, logs=0, exps=0):
@@ -71,53 +71,53 @@ class Cost:
 
 iters = {"EM_CONVERGE" : 1, "INFERENCE_CONVERGE" : 1., "ALPHA_CONVERGE" : 1.}  # conv counts for var iterations
 
-@memoize
+#@memoize
 def digamma(N, K):
     return Cost(18, 5, 8, 1, 0)
 
-@memoize
+#@memoize
 def log_sum(N, K):
     return Cost(4, 0, 0, 1, 1)
 
-@memoize
+#@memoize
 def log_gamma(N, K):
     return Cost(20, 5, 2, 7, 0)
 
-@memoize
+#@memoize
 def trigamma(N, K):
     return Cost(7, 7, 2, 0, 0) + 6 * Cost(2, 1, 1, 0, 0)
 
-@memoize
+#@memoize
 def random_initialize_ss(N, K):
     return K * N * Cost(adds=3, divs=1)
 
-@memoize
+#@memoize
 def opt_alpha(N, K):
     return iters["ALPHA_CONVERGE"] * ( \
             Cost(adds=2, muls=1, divs=1, exps=1) + Cost(adds=3, muls=4) + 2 * log_gamma(N, K) + \
             Cost(adds=2, muls=4) + 2 * digamma(N, K) + Cost(adds=1, muls=5) + 2 * trigamma(N, K)) + \
             Cost(exps=1) # poor lonely exp
 
-@memoize
+#@memoize
 def mle(N, K):
     return N * K * Cost(adds=2, logs=2) + opt_alpha(N, K)
 
-@memoize
+#@memoize
 def likelihood(N, K):
     return K * digamma(N, K) + Cost(adds=K) + digamma(N, K) + Cost(adds=2, muls=2) + 3 * log_gamma(N, K) + \
             K * Cost(adds=7, muls=2) + K * D * 6 * Cost(adds=4, muls=2, logs=1)
 
-@memoize
+#@memoize
 def lda_inference(N, K):
     return K * Cost(adds=1, divs=1) + K * digamma(N, K) + K * D * Cost(divs=1) + \
         iters["INFERENCE_CONVERGE"] * (D * K * (digamma(N, K) + Cost(adds=4, muls=1, exps=1) + log_sum(N, K)) + \
             likelihood(N, K) + Cost(adds=1, divs=1))
 
-@memoize
+#@memoize
 def doc_e_step(N, K):
     return lda_inference(N, K) + K * Cost(adds=2) + Cost(adds=1, muls=1) + digamma(N, K) + K * N * Cost(adds=2, muls=2)
 
-@memoize
+#@memoize
 def run_em(N, K):
     return random_initialize_ss(N, K) + mle(N, K) + iters["EM_CONVERGE"] * (N * doc_e_step(N, K) + Cost(adds=N) + \
             mle(N, K) + Cost(adds=1, muls=1, divs=1))
@@ -156,9 +156,6 @@ def set_corpus_stats(location):
             V = 10473
 
 def read_one_output(f, N, K, dic):
-    if D is None:
-        set_corpus_stats(dirname(f.name) or '.')
-
     header = f.readline().split(',')
     header = [h.strip() for h in header]
     assert header[0] == 'Accumulator' \
@@ -186,6 +183,8 @@ def read_one_output(f, N, K, dic):
             pass
         pass
     pass
+
+    print(iters)
 
 def plot_line(plt, data, color=None, label_offset=None):
     for fn, vals in data.items():
