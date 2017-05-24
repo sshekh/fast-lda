@@ -62,6 +62,7 @@ single and double precision. */
     #define _mm256_round        _mm256_round_ps
     #define _mm256_set1         _mm256_set1_ps
     #define _mm256_setzero      _mm256_setzero_ps
+    #define _mm256_set          _mm256_set_ps
     #define _mm256_sqrt         _mm256_sqrt_ps
     #define _mm256_store        _mm256_store_ps
     #define _mm256_storeu       _mm256_storeu_ps
@@ -130,6 +131,7 @@ single and double precision. */
     #define _mm256_round        _mm256_round_pd
     #define _mm256_set1         _mm256_set1_pd
     #define _mm256_setzero      _mm256_setzero_pd
+    #define _mm256_set          _mm256_set_pd
     #define _mm256_sqrt         _mm256_sqrt_pd
     #define _mm256_store        _mm256_store_pd
     #define _mm256_storeu       _mm256_storeu_pd

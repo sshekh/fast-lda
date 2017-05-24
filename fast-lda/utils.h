@@ -168,6 +168,37 @@ fp_t log_gamma(fp_t x)
 // ======== Vector-argument math functions ========
 // ================================================
 
+/* given log(a) and log(b), return log(a + b) */
+INLINE
+__m256fp log_sum_vec(__m256fp log_a, __m256fp log_b)
+{
+   // v = log_b+log(1 + exp(log_a-log_b));
+  timer rdtsc = start_timer(LOG_SUM);
+
+  __m256fp ones = _mm256_set1(1);
+  __m256fp res = _mm256_sub(log_a, log_b);
+  res = _mm256_exp(res);
+  res = _mm256_add(ones, res);
+  res = _mm256_log(res);
+  res = _mm256_add(log_b, res);
+
+  stop_timer(rdtsc);
+  return res;
+}
+
+INLINE 
+__m256fp log_sum_vec_masked(__m256fp log_a, __m256fp log_b, __m256i mask)
+{
+    __m256fp v_log_sum = log_sum_vec(log_a, log_b);
+    __m256fp v_mask = _mm256_castsi256(mask);
+    // We need to chose if we had a log to add or the entry was masked and then 
+    // we just take the log_a which was computed already, because we cannot do
+    // log(x + 0).
+    __m256fp res = _mm256_blendv(log_a, v_log_sum, v_mask);
+
+    return res;
+}
+
 INLINE
 __m256fp digamma_vec(__m256fp x)
 {   // 190 cycles :(
