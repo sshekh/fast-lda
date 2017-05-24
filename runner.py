@@ -119,13 +119,13 @@ def test(k, n, dbl, corp):
                 print('Aborting')
                 sys.exit(0)
 
-        generate(k, n, dbl)
+        generate(k, n, dbl, corp)
     else:
         print('Reference file %s is available... ' % which)
         if not ALWAYS_USE_REF:
             print('Do you want to use the available reference file?')
             if not prompt_yna(ALWAYS_USE_REF):
-                generate(k, n, dbl, overwrite=True)
+                generate(k, n, dbl, corp, overwrite=True)
 
 
     run_cmd(make_lda_params('fast', k, n))
