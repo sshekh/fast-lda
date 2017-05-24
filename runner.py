@@ -45,7 +45,7 @@ def run_cmd(cmd, quit_on_fail=True):
     print(' ========== ')
 
     if type(cmd) is type([]): # List of arguments: use subprocess
-        ret = subprocess.call(cmd)
+        ret = subprocess.call(cmd, env=dict(os.environ))
     elif type(cmd) is type(''): # Use 'system'
         ret = os.system(cmd)
 
@@ -55,8 +55,26 @@ def run_cmd(cmd, quit_on_fail=True):
     if quit_on_fail and ret != 0:
         sys.exit(ret)
 
+def relevant(var):
+  if ('mkl' in var) or ('MKL' in var) or ('intel' in var):
+    return True
+  return False
+
+def set_mkl_env():
+  command = ['bash', '-c', 'source ./mklvars.sh intel64 && env']
+  proc = subprocess.Popen(command, stdout = subprocess.PIPE)
+  lines = proc.stdout.readlines()
+  for line in lines:
+    #print('setting', line.decode('utf8').partition('='))
+    (key, _, value) = line.decode('utf8').partition('=')
+    if relevant(key) or relevant(value):
+      #print(key, " <- ", value)
+      os.environ[key] = value.strip()
+  proc.communicate()
 
 def make_lda_params(which, k, n):
+    if which == 'fast':
+      set_mkl_env()
     return ['./%s-lda/lda' % which,           # Executable location
             'est',                              # Execution mode (always est)
             str(n),                             # Number of documents

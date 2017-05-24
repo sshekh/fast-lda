@@ -190,20 +190,12 @@ fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
     return likelihood;
 }
 
-// FILE* f = NULL;
-
 fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_gamma)
 {
     fp_t likelihood = 0, digsum = 0, var_gamma_sum = 0;
     fp_t dig[model->num_topics];
     __m256fp v_likelihood = _mm256_set1(0), 
-    v_var_gamma_sum = _mm256_set1(0);
-    // if(f == NULL)
-    // {
-    //     f = fopen("phi_domain", "w");
-    // }
-
-    
+             v_var_gamma_sum = _mm256_set1(0);
     int k, n;
 
     int kk;
@@ -259,10 +251,7 @@ fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_ga
                 - model -> num_topics * lgamma(model->alpha)
                 - (lgamma(var_gamma_sum));
     
-    // <BG> Tried to use the MKL vdLGamma function, but couldn't link to MKL on lab machines
-    // <BG> log_gamma_vec fails, as it makes alpha grow
-    // <BG> TODO: don't use the quick fix looped version
-
+    // <SS>: TODO vectorized lgamma can be given entire array 
     // Compute the log likelihood dependent on the variational parameters
     // as per equation (15).
     
@@ -276,7 +265,7 @@ fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_ga
         // likelihood += (model->alpha - 1)*dig[k]
         //             + lgamma(var_gamma[k])
         //             - (var_gamma[k] - 1)*dig[k];
-        log_gamma_looped(var_gamma + k, log_gamma_result, STRIDE);
+        vdLGamma(STRIDE, var_gamma + k, log_gamma_result);
         __m256fp v_lgamma = _mm256_loadu(log_gamma_result);
 
         __m256fp v_dig = _mm256_loadu(dig + k);
@@ -294,7 +283,7 @@ fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_ga
                   
     }
     if (LEFTOVER(model->num_topics, 0)) {
-        log_gamma_looped(var_gamma + k, log_gamma_result, LEFTOVER(model->num_topics, 0));
+        vdLGamma(LEFTOVER(model->num_topics, 0), var_gamma + k, log_gamma_result);
         __m256fp v_lgamma = _mm256_maskload(log_gamma_result, leftover_mask);
 
         __m256fp v_dig = _mm256_maskload(dig + k, leftover_mask);

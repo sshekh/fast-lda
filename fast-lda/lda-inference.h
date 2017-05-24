@@ -4,7 +4,6 @@
 #include <math.h>
 #include <float.h>
 #include <assert.h>
-// #include <mkl_vml_functions.h>
 #include "lda.h"
 #include "utils.h"
 #include "rdtsc-helper.h"

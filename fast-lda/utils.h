@@ -11,6 +11,9 @@
 #include "fp.h"
 #include "rdtsc-helper.h"
 
+#ifdef __INTEL_COMPILER
+  #include "mkl.h"
+#endif
 
 
 #ifdef FORCE_INLINE
@@ -57,6 +60,14 @@ int argmax(fp_t* x, int n);
             vals[i] = (fp_t) exp(vals[i]);
 
         return x;
+    }
+
+    INLINE 
+    void vdLGamma(int stride, const fp_t* input, const fp_t* output){
+        for(int i=0;i<stride;i++)
+        {
+            output[i] = lgamma(input[i]);
+        }
     }
 
 #endif // __INTEL_COMPILER
@@ -243,14 +254,6 @@ INLINE
 __m256fp digamma_vec_mask(__m256fp x, __m256i mask) {
     __m256fp dig = digamma_vec(x);
     return _mm256_and(dig, _mm256_castsi256(mask));
-}
-
-INLINE 
-void log_gamma_looped(fp_t* input, fp_t* output, int stride){
-    for(int i=0;i<stride;i++)
-    {
-        output[i] = lgamma(input[i]);
-    }
 }
 
 INLINE
