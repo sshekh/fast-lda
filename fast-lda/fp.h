@@ -8,14 +8,13 @@ single and double precision. */
 #include <immintrin.h>
 
 #ifdef FLOAT
-
     #define fp_t float
     #define ALIGNMENT             32
 
     #define exp expf
     #define log logf
     #define fabs fabsf
-    
+
     #define STRIDE 8
 
     #define STRIDE_SPLIT(n, s, q, m) {\
@@ -148,7 +147,7 @@ single and double precision. */
 
     // reciprocal * constant
     #define _rcp_const(c, a)    _mm256_div_pd(c, a)
-    
+
 
 #endif
 
