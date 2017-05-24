@@ -89,10 +89,10 @@ fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
             phi[(n + 2) * model->num_topics + 0] = digamma_gam[0] + model->log_prob_w_doc[(n + 2) * model->num_topics + 0];
             phi[(n + 3) * model->num_topics + 0] = digamma_gam[0] + model->log_prob_w_doc[(n + 3) * model->num_topics + 0];
 
-            phisum0 = phi[(n + 0) * model->num_topics + 0];
-            phisum1 = phi[(n + 1) * model->num_topics + 0];
-            phisum2 = phi[(n + 2) * model->num_topics + 0];
-            phisum3 = phi[(n + 3) * model->num_topics + 0];
+            // phisum0 = phi[(n + 0) * model->num_topics + 0];
+            // phisum1 = phi[(n + 1) * model->num_topics + 0];
+            // phisum2 = phi[(n + 2) * model->num_topics + 0];
+            // phisum3 = phi[(n + 3) * model->num_topics + 0];
 
             for (k = 1; k < kk1; k += STRIDE)
             {
@@ -132,13 +132,62 @@ fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
                 _mm256_maskstore(phi + ((n + 3) * model->num_topics + k), rem1, ph3);
             }
 
-            for (k = 1; k < model->num_topics; k++)
+            
+            int kkSTRIDE;
+            __m256i remSTRIDE;
+            STRIDE_SPLIT(model->num_topics, STRIDE, &kkSTRIDE, &remSTRIDE);
+
+            __m256fp v_phsum0 = _mm256_loadu(phi + (n * model->num_topics));
+            __m256fp v_phsum1 = _mm256_loadu(phi + ((n + 1) * model->num_topics));
+            __m256fp v_phsum2 = _mm256_loadu(phi + ((n + 2) * model->num_topics));
+            __m256fp v_phsum3 = _mm256_loadu(phi + ((n + 3) * model->num_topics));
+
+
+            for (k = STRIDE; k < kkSTRIDE; k += STRIDE)
             {
-                phisum0 = log_sum(phisum0, phi[(n + 0) * model->num_topics + k]);
-                phisum1 = log_sum(phisum1, phi[(n + 1) * model->num_topics + k]);
-                phisum2 = log_sum(phisum2, phi[(n + 2) * model->num_topics + k]);
-                phisum3 = log_sum(phisum3, phi[(n + 3) * model->num_topics + k]);
+                __m256fp ph0 = _mm256_loadu(phi + (n * model->num_topics + k));
+                __m256fp ph1 = _mm256_loadu(phi + ((n + 1) * model->num_topics + k));
+                __m256fp ph2 = _mm256_loadu(phi + ((n + 2) * model->num_topics + k));
+                __m256fp ph3 = _mm256_loadu(phi + ((n + 3) * model->num_topics + k));
+
+                v_phsum0 = log_sum_vec(v_phsum0, ph0);
+                v_phsum1 = log_sum_vec(v_phsum1, ph1);
+                v_phsum2 = log_sum_vec(v_phsum2, ph2);
+                v_phsum3 = log_sum_vec(v_phsum3, ph3);
+
             }
+            if (LEFTOVER(model->num_topics, STRIDE))
+            {
+                __m256fp ph0 = _mm256_maskload(phi + (n * model->num_topics + k), remSTRIDE);
+                __m256fp ph1 = _mm256_maskload(phi + ((n + 1) * model->num_topics + k), remSTRIDE);
+                __m256fp ph2 = _mm256_maskload(phi + ((n + 2) * model->num_topics + k), remSTRIDE);
+                __m256fp ph3 = _mm256_maskload(phi + ((n + 3) * model->num_topics + k), remSTRIDE);
+
+                v_phsum0 = log_sum_vec_masked(v_phsum0, ph0, remSTRIDE);
+                v_phsum1 = log_sum_vec_masked(v_phsum1, ph1, remSTRIDE);
+                v_phsum2 = log_sum_vec_masked(v_phsum2, ph2, remSTRIDE);
+                v_phsum3 = log_sum_vec_masked(v_phsum3, ph3, remSTRIDE);
+            }
+            
+             // <CC> Finilized the phi_sum
+
+            double ph_fisrt_half_sum0 = log_sum(((fp_t *)(&v_phsum0))[0], ((fp_t *)(&v_phsum0))[1]);
+            double ph_second_half_sum0 = log_sum(((fp_t *)(&v_phsum0))[2], ((fp_t *)(&v_phsum0))[3]);
+            phisum0 = log_sum(ph_fisrt_half_sum0, ph_second_half_sum0); 
+
+
+            double ph_fisrt_half_sum1 = log_sum(((fp_t *)(&v_phsum1))[0], ((fp_t *)(&v_phsum1))[1]);
+            double ph_second_half_sum1 = log_sum(((fp_t *)(&v_phsum1))[2], ((fp_t *)(&v_phsum1))[3]);
+            phisum1 = log_sum(ph_fisrt_half_sum1, ph_second_half_sum1);    
+
+            double ph_fisrt_half_sum2 = log_sum(((fp_t *)(&v_phsum2))[0], ((fp_t *)(&v_phsum2))[1]);
+            double ph_second_half_sum2 = log_sum(((fp_t *)(&v_phsum2))[2], ((fp_t *)(&v_phsum2))[3]);
+            phisum2 = log_sum(ph_fisrt_half_sum2, ph_second_half_sum2);    
+
+            double ph_fisrt_half_sum3 = log_sum(((fp_t *)(&v_phsum3))[0], ((fp_t *)(&v_phsum3))[1]);
+            double ph_second_half_sum3 = log_sum(((fp_t *)(&v_phsum3))[2], ((fp_t *)(&v_phsum3))[3]);
+            phisum3 = log_sum(ph_fisrt_half_sum3, ph_second_half_sum3);    
+   
 
             __m256fp doc_counts0 = _mm256_set1(doc->counts[(n + 0)]);
             __m256fp doc_counts1 = _mm256_set1(doc->counts[(n + 1)]);
@@ -281,10 +330,29 @@ fp_t lda_inference(document* doc, lda_model* model, fp_t* var_gamma, fp_t* phi)
                 _mm256_maskstore(phi + (n * model->num_topics + k), rem1, ph);
             }
 
-            for (k = 1; k < model->num_topics; k++)
+
+            int kkSTRIDE;
+            __m256i remSTRIDE;
+            STRIDE_SPLIT(model->num_topics, STRIDE, &kkSTRIDE, &remSTRIDE);
+
+            __m256fp v_phsum = _mm256_loadu(phi + (n * model->num_topics));
+
+            for (k = STRIDE; k < kkSTRIDE; k += STRIDE)
             {
-                phisum0 = log_sum(phisum0, phi[n * model->num_topics + k]);
+                __m256fp ph = _mm256_loadu(phi + (n * model->num_topics + k));
+                v_phsum = log_sum_vec(v_phsum, ph);
             }
+            if (LEFTOVER(model->num_topics, STRIDE))
+            {
+                __m256fp ph = _mm256_maskload(phi + (n * model->num_topics + k), remSTRIDE);
+                v_phsum = log_sum_vec_masked(v_phsum, ph, remSTRIDE);
+            }
+            // <CC> Finilized the phi_sum
+
+            double some_sum0 = log_sum(((fp_t *)(&v_phsum))[0], ((fp_t *)(&v_phsum))[1]);
+            double some_sum1 = log_sum(((fp_t *)(&v_phsum))[2], ((fp_t *)(&v_phsum))[3]);
+
+            phisum0 = log_sum(some_sum0, some_sum1);
 
             __m256fp doc_counts = _mm256_set1(doc->counts[n]);
             __m256fp ph_sum = _mm256_set1(phisum0);
