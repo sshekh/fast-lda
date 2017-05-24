@@ -189,11 +189,14 @@ __m256fp log_sum_vec(__m256fp log_a, __m256fp log_b)
 INLINE 
 __m256fp log_sum_vec_masked(__m256fp log_a, __m256fp log_b, __m256i mask)
 {
-    __m256fp something = log_sum_vec(log_a, log_b);
-    __m256fp fmask = _mm256_castsi256(mask);
-    __m256fp betterwork = _mm256_blendv(log_a, something, fmask);
+    __m256fp v_log_sum = log_sum_vec(log_a, log_b);
+    __m256fp v_mask = _mm256_castsi256(mask);
+    // We need to chose if we had a log to add or the entry was masked and then 
+    // we just take the log_a which was computed already, because we cannot do
+    // log(x + 0).
+    __m256fp res = _mm256_blendv(log_a, v_log_sum, v_mask);
 
-    return betterwork;
+    return res;
 }
 
 INLINE
