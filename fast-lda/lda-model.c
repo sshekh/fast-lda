@@ -173,7 +173,7 @@ lda_model* new_lda_model(int num_terms, int num_topics, int max_doc_length)
     }
 
     // <CC> Create matrix for log_prob_w for one doc for optimization no 2.
-    model->log_prob_w_doc = _mm_malloc(sizeof(fp_t*)* max_doc_length * num_topics, ALIGNMENT);
+    model->log_prob_w_doc = _mm_malloc(sizeof(fp_t) * max_doc_length * num_topics, ALIGNMENT);
     for (i = 0; i < max_doc_length; i++)
     {
         for (j = 0; j < num_topics; j++)
