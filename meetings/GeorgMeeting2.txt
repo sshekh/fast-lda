@@ -1,0 +1,27 @@
+Most important TODOs:
+- Show ICC vs GCC comparison
+- Mention that working with floats and doing approximations were tried, but didn't lead to positive results
+- Show the transposing and gathering of the N x K matrices and REASON ABOUT IT. Was it worth doing that?
+- Nice and clear plots
+
+
+Some other points:
+- Prefer performance plots over runtime plots
+- Show one perf. plot with all optimization stages in it
+- validation: as long as it passes for the entire corpus, it is fine
+- Show the tradeoff between precision and speed
+- ICC vs GCC:
+	1) only swap compilers
+	2) also use some intrinsics specific to ICC (exp, log etc.)
+- Extend the dataset so the working set doesn't fit in cache any more (increase #topics or vocabulary size)
+- Roofline: Insert plots for multiple optimization stages
+
+- Explain why the vectorization speedup is small. Explain why for some function no more than the obtained speedup was expected
+
+- Calculate a lower bound on the operational intensity:
+	if compute bound , that's good
+	otherwise show that it's compute bound in a realistic settting
+
+- Compare to exisiting implementations
+
+- extra points: parallelize some bigger loops with openMP, e.g. per document in doc_e_step
