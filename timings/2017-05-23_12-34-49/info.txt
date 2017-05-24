@@ -1,0 +1,48 @@
+Bench run 2017-05-23_12-34-49
+Ran with the command-line `bench --n=100 --k=10 -s -f`
+Comment: "compute likelihood vectorized"
+===============================
+
+OPTIONS
+use_doubles=True
+use_icc=True
+END OPTIONS
+
+Latest commit at time of writing:
+e333bdc4 (on branch vectorizelikelihood)
+
+Additionally, the repo contained the following untracked files:
+	timings/2017-05-19_15-12-30/fast_timings_10_100.csv
+	timings/2017-05-19_15-12-30/info.txt
+	timings/2017-05-19_15-12-30/perf_[fast]_10_100.txt
+	timings/2017-05-20_16-26-29/info.txt
+	timings/2017-05-20_16-28-37/fast_timings_50_100.csv
+	timings/2017-05-20_16-28-37/info.txt
+	timings/2017-05-20_16-28-37/perf_fast_50_100.txt
+	timings/2017-05-20_16-28-37/perf_slow_50_100.txt
+	timings/2017-05-20_16-28-37/slow_timings_50_100.csv
+	timings/2017-05-20_16-38-59/fast_timings_50_100.csv
+	timings/2017-05-20_16-38-59/info.txt
+	timings/2017-05-20_16-38-59/perf_fast_50_100.txt
+	timings/2017-05-20_16-38-59/perf_slow_50_100.txt
+	timings/2017-05-20_16-38-59/slow_timings_50_100.csv
+	timings/2017-05-20_17-06-11/fast_timings_10_100.csv
+	timings/2017-05-20_17-06-11/info.txt
+	timings/2017-05-20_17-06-11/perf_fast_10_100.txt
+	timings/2017-05-20_17-06-11/perf_slow_10_100.txt
+	timings/2017-05-20_17-06-11/slow_timings_10_100.csv
+	timings/2017-05-23_12-34-49/info.txt
+
+The diff, if any, follows:
+
+
+
+===============================
+
+Settings file:
+var max iter 20
+var convergence 1e-6
+em max iter 100
+em convergence 1e-4
+alpha estimate
+

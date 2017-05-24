@@ -11,8 +11,6 @@
 #include "fp.h"
 #include "rdtsc-helper.h"
 
-
-
 #ifdef FORCE_INLINE
     // Tell the compiler to inline this at all costs.
     #ifndef __INTEL_COMPILER
@@ -30,6 +28,18 @@
 
 // This is not really a performance-critical function.
 int argmax(fp_t* x, int n);
+
+#if defined(NO_MKL) || !defined(__INTEL_COMPILER)
+    INLINE
+    void vdLGamma(int stride, const fp_t* input, fp_t* output){
+        for(int i=0;i<stride;i++)
+        {
+            output[i] = lgamma(input[i]);
+        }
+    }
+#else
+    #include "mkl.h"
+#endif //defined(NO_MKL) || !defined(__INTEL_COMPILER)
 
 
 #ifndef __INTEL_COMPILER
@@ -58,7 +68,6 @@ int argmax(fp_t* x, int n);
 
         return x;
     }
-
 #endif // __INTEL_COMPILER
 
 

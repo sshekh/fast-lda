@@ -46,7 +46,7 @@ def run_cmd(cmd, quit_on_fail=True):
     print(' ========== ')
 
     if type(cmd) is type([]): # List of arguments: use subprocess
-        ret = subprocess.call(cmd)
+        ret = subprocess.call(cmd, env=dict(os.environ))
     elif type(cmd) is type(''): # Use 'system'
         ret = os.system(cmd)
 
@@ -56,8 +56,26 @@ def run_cmd(cmd, quit_on_fail=True):
     if quit_on_fail and ret != 0:
         sys.exit(ret)
 
+def relevant(var):
+  if ('mkl' in var) or ('MKL' in var) or ('intel' in var):
+    return True
+  return False
+
+def set_mkl_env():
+  command = ['bash', '-c', 'source ./mklvars.sh intel64 && env']
+  proc = subprocess.Popen(command, stdout = subprocess.PIPE)
+  lines = proc.stdout.readlines()
+  for line in lines:
+    #print('setting', line.decode('utf8').partition('='))
+    (key, _, value) = line.decode('utf8').partition('=')
+    if relevant(key) or relevant(value):
+      #print(key, " <- ", value)
+      os.environ[key] = value.strip()
+  proc.communicate()
 
 def make_lda_params(which, k, n):
+    if which == 'fast':
+      set_mkl_env()
     return ['./%s-lda/lda' % which,           # Executable location
             'est',                              # Execution mode (always est)
             str(n),                             # Number of documents
@@ -310,6 +328,7 @@ if __name__ == '__main__':
             raise ValueError('When benchmarking, please include a comment.')
 
     opts, args = getopt.gnu_getopt(options, "fsmrsgla",
+    opts, args = getopt.gnu_getopt(options, "fsmrsglax",
         ["num-topics=",
         "num-docs=",
         "n=",
@@ -322,6 +341,7 @@ if __name__ == '__main__':
     silence_output = mode == 'bench'
     use_icc = True
     use_long = False
+    use_mkl = True
 
     ks = [50]
     ns = [2246] # Maximal amount of documents
@@ -351,6 +371,8 @@ if __name__ == '__main__':
             use_long = True
             CORPUS = './%s-lda/europarl_fi/europarl_fi.dat'
             ref_corp_name = 'euro'
+        elif o == '-x':
+            use_mkl = False
 
     RUN_NAME = time.strftime('%Y-%m-%d_%H-%M-%S')
 
@@ -364,6 +386,12 @@ if __name__ == '__main__':
         if silence_output:
             defines_fast.append('IGNORE_PRINTF')
             defines_slow.append('IGNORE_PRINTF')
+        if not use_mkl:
+            defines_fast.append('NO_MKL')
+            defines_slow.append('NO_MKL')
+        else:
+            defines_fast.append('NO_MKL')
+            defines_slow.append('NO_MKL')
 
         # Actually make the programs
         print('Preparing the fast...')
