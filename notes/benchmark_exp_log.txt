@@ -1,0 +1,41 @@
+math.h, gcc
+
+exp:
+lat: 20
+gap: 35
+
+log:
+lat: 70
+gap: 70
+
+
+math.h, icc
+
+exp:
+lat: 12
+gap: 31
+
+log:
+lat: 56
+gap: 58
+
+
+intel intrinsics, icc:
+should be at least equal to the non-vectorized
+
+exp:
+lat: ??
+gap: ??
+
+log:
+lat: ??
+gap: ??
+
+
+Functions to vectorize:
+- digamma
+- log_gamma
+
+not vectorizable:
+- trigamma (iterative calls. But two trigammas could be done in parallel, refer to d2_alhood)
+- log_sum (iterative calls with the sum of )
