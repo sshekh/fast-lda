@@ -11,11 +11,6 @@
 #include "fp.h"
 #include "rdtsc-helper.h"
 
-#ifdef __INTEL_COMPILER
-  #include "mkl.h"
-#endif
-
-
 #ifdef FORCE_INLINE
     // Tell the compiler to inline this at all costs.
     #ifndef __INTEL_COMPILER
@@ -33,7 +28,6 @@
 
 // This is not really a performance-critical function.
 int argmax(fp_t* x, int n);
-
 
 #ifndef __INTEL_COMPILER
     /* These are some replacements for the icc-specific intrinsics. The
@@ -63,13 +57,14 @@ int argmax(fp_t* x, int n);
     }
 
     INLINE 
-    void vdLGamma(int stride, const fp_t* input, const fp_t* output){
+    void vdLGamma(int stride, const fp_t* input, fp_t* output){
         for(int i=0;i<stride;i++)
         {
             output[i] = lgamma(input[i]);
         }
     }
-
+#else
+  #include "mkl.h"
 #endif // __INTEL_COMPILER
 
 
