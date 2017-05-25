@@ -153,9 +153,7 @@ void run_em(char* start, char* directory, corpus* corpus)
         model = load_lda_model(start);
         ss = new_lda_suffstats(model);
     }
-
-    sprintf(filename,"%s/000",directory);
-    save_lda_model(model, filename);
+    
 
     // run expectation maximization
 
