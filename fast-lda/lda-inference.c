@@ -211,25 +211,23 @@ fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_ga
     timer rdtsc = start_timer(LIKELIHOOD);
 
     STRIDE_SPLIT(model->num_topics, 0, &kk, &leftover_mask);
+    int tiling_factor = 4;
 
     for (k = 0; k < kk; k += STRIDE)
     {
-       //dig[k] = digamma(var_gamma[k]);
+        //dig[k] = digamma(var_gamma[k]);
+        //var_gamma_sum += var_gamma[k];
        __m256fp v_var_gamma = _mm256_loadu(var_gamma + k);
        __m256fp v_dig = digamma_vec(v_var_gamma);
        _mm256_storeu(dig + k, v_dig);
-
-       //var_gamma_sum += var_gamma[k];
        v_var_gamma_sum = _mm256_add(v_var_gamma_sum, v_var_gamma);
     }
 
     if (LEFTOVER(model->num_topics, 0)) {
-       //dig[k] = digamma(var_gamma[k]);
+       
        __m256fp v_var_gamma = _mm256_maskload(var_gamma + k, leftover_mask);
        __m256fp v_dig = digamma_vec(v_var_gamma);
        _mm256_maskstore(dig + k, leftover_mask, v_dig);
-
-       //var_gamma_sum += var_gamma[k];
        v_var_gamma_sum = _mm256_add(v_var_gamma_sum, v_var_gamma);
     }
 
@@ -265,36 +263,112 @@ fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_ga
     // Compute the log likelihood dependent on the variational parameters
     // as per equation (15).
     
-    __m256fp v_likelihood_k = _mm256_set1(0);
     fp_t alpha_m_1 = model->alpha - 1;
     __m256fp v_alpha_m_1 = _mm256_set1(alpha_m_1);
     __m256fp v_ones = _mm256_set1(1);
-    fp_t log_gamma_result[STRIDE];
-    for (k = 0; k < kk; k += STRIDE)
+    fp_t log_gamma_result0[STRIDE]; // array of length 4
+    fp_t log_gamma_result1[STRIDE];
+    fp_t log_gamma_result2[STRIDE];
+    fp_t log_gamma_result3[STRIDE];
+
+    __m256fp v_likelihood_k0 = _mm256_set1(0);
+    __m256fp v_likelihood_k1 = _mm256_set1(0);
+    __m256fp v_likelihood_k2 = _mm256_set1(0);
+    __m256fp v_likelihood_k3 = _mm256_set1(0);
+
+
+    for (k = 0; k + (STRIDE * tiling_factor) - 1 < kk; k += STRIDE * tiling_factor)
     {
         // likelihood += (model->alpha - 1)*dig[k]
         //             + lgamma(var_gamma[k])
         //             - (var_gamma[k] - 1)*dig[k];
-        log_gamma_looped(var_gamma + k, log_gamma_result, STRIDE);
-        __m256fp v_lgamma = _mm256_loadu(log_gamma_result);
+                    
+        // Tile 0            
+        log_gamma_looped(var_gamma + k + 0 * tiling_factor, log_gamma_result0, STRIDE);
+        __m256fp v_lgamma0 = _mm256_loadu(log_gamma_result0);
 
-        __m256fp v_dig = _mm256_loadu(dig + k);
-        __m256fp v_t0 = _mm256_mul(v_dig, v_alpha_m_1);
+        __m256fp v_dig0 = _mm256_loadu(dig + k + 0 * tiling_factor);
+        __m256fp v_t00 = _mm256_mul(v_dig0, v_alpha_m_1);
 
-        __m256fp v_var_gamma = _mm256_loadu(var_gamma + k);
-        v_var_gamma = _mm256_sub(v_var_gamma, v_ones);
-        v_dig = _mm256_mul(v_var_gamma, v_dig);
+        __m256fp v_var_gamma0 = _mm256_loadu(var_gamma + k + 0 * tiling_factor);
+        v_var_gamma0 = _mm256_sub(v_var_gamma0, v_ones);
+        v_dig0 = _mm256_mul(v_var_gamma0, v_dig0);
 
+        v_likelihood_k0 = _mm256_add(v_likelihood_k0, v_lgamma0);
+        v_likelihood_k0 = _mm256_sub(v_likelihood_k0, v_dig0);
+        v_likelihood_k0 = _mm256_add(v_likelihood_k0, v_t00);
 
-        v_likelihood_k = _mm256_add(v_likelihood_k, v_lgamma);
-        v_likelihood_k = _mm256_sub(v_likelihood_k, v_dig);
+        // Tile 1
+        log_gamma_looped(var_gamma + k + 1 * tiling_factor, log_gamma_result1, STRIDE);
+        __m256fp v_lgamma1 = _mm256_loadu(log_gamma_result1);
 
-        v_likelihood_k = _mm256_add(v_likelihood_k, v_t0);
+        __m256fp v_dig1 = _mm256_loadu(dig + k + 1 * tiling_factor);
+        __m256fp v_t01 = _mm256_mul(v_dig1, v_alpha_m_1);
+
+        __m256fp v_var_gamma1 = _mm256_loadu(var_gamma + k + 1 * tiling_factor);
+        v_var_gamma1 = _mm256_sub(v_var_gamma1, v_ones);
+        v_dig1 = _mm256_mul(v_var_gamma1, v_dig1);
+
+        v_likelihood_k1 = _mm256_add(v_likelihood_k1, v_lgamma1);
+        v_likelihood_k1 = _mm256_sub(v_likelihood_k1, v_dig1);
+        v_likelihood_k1 = _mm256_add(v_likelihood_k1, v_t01);
+
+        // Tile 2
+        log_gamma_looped(var_gamma + k + 2 * tiling_factor, log_gamma_result2, STRIDE);
+        __m256fp v_lgamma2 = _mm256_loadu(log_gamma_result2);
+
+        __m256fp v_dig2 = _mm256_loadu(dig + k + 2 * tiling_factor);
+        __m256fp v_t02 = _mm256_mul(v_dig2, v_alpha_m_1);
+
+        __m256fp v_var_gamma2 = _mm256_loadu(var_gamma + k + 2 * tiling_factor);
+        v_var_gamma2 = _mm256_sub(v_var_gamma2, v_ones);
+        v_dig2 = _mm256_mul(v_var_gamma2, v_dig2);
+
+        v_likelihood_k2 = _mm256_add(v_likelihood_k2, v_lgamma2);
+        v_likelihood_k2 = _mm256_sub(v_likelihood_k2, v_dig2);
+        v_likelihood_k2 = _mm256_add(v_likelihood_k2, v_t02);
+
+        // Tile 3
+        log_gamma_looped(var_gamma + k + 3 * tiling_factor, log_gamma_result3, STRIDE);
+        __m256fp v_lgamma3 = _mm256_loadu(log_gamma_result3);
+
+        __m256fp v_dig3 = _mm256_loadu(dig + k + 3 * tiling_factor);
+        __m256fp v_t03 = _mm256_mul(v_dig3, v_alpha_m_1);
+
+        __m256fp v_var_gamma3 = _mm256_loadu(var_gamma + k + 3 * tiling_factor);
+        v_var_gamma3 = _mm256_sub(v_var_gamma3, v_ones);
+        v_dig3 = _mm256_mul(v_var_gamma3, v_dig3);
+
+        v_likelihood_k3 = _mm256_add(v_likelihood_k3, v_lgamma3);
+        v_likelihood_k3 = _mm256_sub(v_likelihood_k3, v_dig3);
+        v_likelihood_k3 = _mm256_add(v_likelihood_k3, v_t03);
                   
     }
+    v_likelihood_k0 = _mm256_add(v_likelihood_k0, v_likelihood_k1);
+    v_likelihood_k0 = _mm256_add(v_likelihood_k0, v_likelihood_k2);
+    v_likelihood_k0 = _mm256_add(v_likelihood_k0, v_likelihood_k3);
+
+    for(;k < kk; k += STRIDE)
+    {
+        // still vectorized, but not tiled
+        log_gamma_looped(var_gamma + k, log_gamma_result0, STRIDE);
+        __m256fp v_lgamma0 = _mm256_loadu(log_gamma_result0);
+
+        __m256fp v_dig0 = _mm256_loadu(dig + k);
+        __m256fp v_t00 = _mm256_mul(v_dig0, v_alpha_m_1);
+
+        __m256fp v_var_gamma0 = _mm256_loadu(var_gamma + k);
+        v_var_gamma0 = _mm256_sub(v_var_gamma0, v_ones);
+        v_dig0 = _mm256_mul(v_var_gamma0, v_dig0);
+
+        v_likelihood_k0 = _mm256_add(v_likelihood_k0, v_lgamma0);
+        v_likelihood_k0 = _mm256_sub(v_likelihood_k0, v_dig0);
+        v_likelihood_k0 = _mm256_add(v_likelihood_k0, v_t00);
+        
+    }
     if (LEFTOVER(model->num_topics, 0)) {
-        log_gamma_looped(var_gamma + k, log_gamma_result, LEFTOVER(model->num_topics, 0));
-        __m256fp v_lgamma = _mm256_maskload(log_gamma_result, leftover_mask);
+        log_gamma_looped(var_gamma + k, log_gamma_result0, LEFTOVER(model->num_topics, 0));
+        __m256fp v_lgamma = _mm256_maskload(log_gamma_result0, leftover_mask);
 
         __m256fp v_dig = _mm256_maskload(dig + k, leftover_mask);
         __m256fp v_t0 = _mm256_mul(v_dig, v_alpha_m_1);
@@ -304,18 +378,19 @@ fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_ga
         v_dig = _mm256_mul(v_var_gamma, v_dig);
 
 
-        v_likelihood_k = _mm256_add(v_likelihood_k, v_lgamma);
-        v_likelihood_k = _mm256_sub(v_likelihood_k, v_dig);
-
-        v_likelihood_k = _mm256_add(v_likelihood_k, v_t0);
+        v_likelihood_k0 = _mm256_add(v_likelihood_k0, v_lgamma);
+        v_likelihood_k0 = _mm256_sub(v_likelihood_k0, v_dig);
+        v_likelihood_k0 = _mm256_add(v_likelihood_k0, v_t0);
     }
-    v_likelihood_k = hsum(v_likelihood_k);
+
+
+
+    v_likelihood_k0 = hsum(v_likelihood_k0);
 
     // <BG> += because there are multiple places where stuff gets added up to likelihood
-    likelihood += first(v_likelihood_k);
+    likelihood += first(v_likelihood_k0);
 
 
-    int tiling_factor = 4;
     __m256fp v_likelihood0 = _mm256_set1(0);
     __m256fp v_likelihood1 = _mm256_set1(0);
     __m256fp v_likelihood2 = _mm256_set1(0);
