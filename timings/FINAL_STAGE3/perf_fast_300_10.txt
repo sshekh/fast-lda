@@ -1,0 +1,2 @@
+mkdir: cannot create directory ‘./fast-lda/logfiles’: File exists
+mkdir: cannot create directory ‘results’: File exists
