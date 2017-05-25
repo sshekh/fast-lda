@@ -1,3 +1,2 @@
-10) ii. compute likelihood tiling <- BG
     vi. Plots (roofline, performance, cycle distribution) for each stage <- FL
    vii. Optimize lgamma (lookup/approx + vectorization) <- FL        //Low priority
