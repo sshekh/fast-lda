@@ -327,7 +327,6 @@ if __name__ == '__main__':
         if mode == 'bench':
             raise ValueError('When benchmarking, please include a comment.')
 
-    opts, args = getopt.gnu_getopt(options, "fsmrsgla",
     opts, args = getopt.gnu_getopt(options, "fsmrsglax",
         ["num-topics=",
         "num-docs=",
