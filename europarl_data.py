@@ -37,10 +37,10 @@ def doc_to_line(doc):
     return str(doc[0]) + ' ' + ' '.join(['%d:%d' % (w, c) for w, c in doc[1]]) + '\n'
 
 def write_all(vocab, docs):
-    with open('vocab.txt', 'w', encoding='ascii') as f:
+    with open('europarl_fi.vcb', 'w', encoding='ascii') as f:
         f.writelines([w + '\n' for w in vocab])
 
-    with open('europarl.dat', 'w', encoding='ascii') as f:
+    with open('europarl_fi.dat', 'w', encoding='ascii') as f:
         for doc in docs:
             f.write(doc_to_line(doc))
 
