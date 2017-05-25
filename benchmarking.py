@@ -1,190 +1,16 @@
-#! /usr/bin/python
 import numpy as np
-import sys
 import matplotlib.pyplot as plt
+import sys
 from os import listdir
 from os.path import join
 from os.path import dirname
-import re
-
-EPS = 1e-12     # Average count is float and integer count is a text in case of 0 calls
-
-D = None
-V = None
-
-#def memoize(f):
-#    cache = {}
-#    return lambda *args: cache[args] if args in cache else cache.update({args: f(*args)}) or cache[args]
-
-class Cost:
-    def __init__(self, adds=0, muls=0, divs=0, logs=0, exps=0):
-        if isinstance(adds, tuple):
-            self.adds = adds[0]
-            self.muls = adds[1]
-            self.divs = adds[2]
-            self.logs = adds[3]
-            self.exps = adds[4]
-        else:
-            self.adds = adds
-            self.muls = muls
-            self.divs = divs
-            self.logs = logs
-            self.exps = exps
-
-    def toTup(self):
-        return (self.adds, self.muls, self.divs, self.logs, self.exps)
-
-    def __str__(self):
-        return str(self.toTup())
-
-    def __add__(self, other):
-        if isinstance(other, tuple):
-            other = Cost(other)
-        return Cost(self.adds + other.adds, \
-                    self.muls + other.muls, \
-                    self.divs + other.divs, \
-                    self.logs + other.logs, \
-                    self.exps + other.exps)
-
-    def __mul__(self, other):
-        if isinstance(other, int) or isinstance(other, float):
-            return Cost(self.adds * other, \
-                        self.muls * other, \
-                        self.divs * other, \
-                        self.logs * other, \
-                        self.exps * other)
-        else:
-            return NotImplemented     # multiplication not defined
-
-    def __rmul__(self, other):
-        return self.__mul__(other)
-
-    def __radd__(self, other):
-        return self.__add__(other)
-
-    def full(self):
-        return  self.adds + \
-                self.muls + \
-                self.divs + \
-                self.logs + \
-                self.exps
-
-iters = {"EM_CONVERGE" : 1, "INFERENCE_CONVERGE" : 1., "ALPHA_CONVERGE" : 1.}  # conv counts for var iterations
-
-#@memoize
-def digamma(N, K):
-    return Cost(18, 5, 8, 1, 0)
-
-#@memoize
-def log_sum(N, K):
-    return Cost(4, 0, 0, 1, 1)
-
-#@memoize
-def log_gamma(N, K):
-    return Cost(20, 5, 2, 7, 0)
-
-#@memoize
-def trigamma(N, K):
-    return Cost(7, 7, 2, 0, 0) + 6 * Cost(2, 1, 1, 0, 0)
-
-#@memoize
-def random_initialize_ss(N, K):
-    return K * N * Cost(adds=3, divs=1)
-
-#@memoize
-def opt_alpha(N, K):
-    return iters["ALPHA_CONVERGE"] * ( \
-            Cost(adds=2, muls=1, divs=1, exps=1) + Cost(adds=3, muls=4) + 2 * log_gamma(N, K) + \
-            Cost(adds=2, muls=4) + 2 * digamma(N, K) + Cost(adds=1, muls=5) + 2 * trigamma(N, K)) + \
-            Cost(exps=1) # poor lonely exp
-
-#@memoize
-def mle(N, K):
-    return N * K * Cost(adds=2, logs=2) + opt_alpha(N, K)
-
-#@memoize
-def likelihood(N, K):
-    return K * digamma(N, K) + Cost(adds=K) + digamma(N, K) + Cost(adds=2, muls=2) + 3 * log_gamma(N, K) + \
-            K * Cost(adds=7, muls=2) + K * D * 6 * Cost(adds=4, muls=2, logs=1)
-
-#@memoize
-def lda_inference(N, K):
-    return K * Cost(adds=1, divs=1) + K * digamma(N, K) + K * D * Cost(divs=1) + \
-        iters["INFERENCE_CONVERGE"] * (D * K * (digamma(N, K) + Cost(adds=4, muls=1, exps=1) + log_sum(N, K)) + \
-            likelihood(N, K) + Cost(adds=1, divs=1))
-
-#@memoize
-def doc_e_step(N, K):
-    return lda_inference(N, K) + K * Cost(adds=2) + Cost(adds=1, muls=1) + digamma(N, K) + K * N * Cost(adds=2, muls=2)
-
-#@memoize
-def run_em(N, K):
-    return random_initialize_ss(N, K) + mle(N, K) + iters["EM_CONVERGE"] * (N * doc_e_step(N, K) + Cost(adds=N) + \
-            mle(N, K) + Cost(adds=1, muls=1, divs=1))
-
-flops = { "RUN_EM" : run_em, "LDA_INFERENCE" : lda_inference, "DIGAMMA" : digamma, "LOG_SUM" : log_sum,
-        "LOG_GAMMA" : log_gamma, "TRIGAMMA" : trigamma, "DOC_E_STEP" : doc_e_step, "LIKELIHOOD" : likelihood, "MLE" : mle, "OPT_ALPHA" : opt_alpha}
+import pltutils
 
 colors = { "RUN_EM" : "green", "LDA_INFERENCE" : "blue", "DIGAMMA" : "black", "LOG_SUM" : "purple",
-        "LOG_GAMMA" : "purple", "TRIGAMMA" : "cyan", "DOC_E_STEP" : "orange", "LIKELIHOOD" : "red", "MLE" : "cyan", "OPT_ALPHA" : "cyan"}
+        "LOG_GAMMA" : "purple", "TRIGAMMA" : "cyan", "DOC_E_STEP" : "orange", "LIKELIHOOD" : "red", "MLE" : "#5E6382", "OPT_ALPHA" : "#00bcd4"}
 
 label_offsets = { "RUN_EM" : 0.008, "LDA_INFERENCE" : 0.008, "DIGAMMA" : 0.02, "LOG_SUM" : -0.015,
         "LOG_GAMMA" : 0.008, "TRIGAMMA" : 0.01, "DOC_E_STEP" : -0.01, "LIKELIHOOD" : -0.015, "MLE" : 0.01, "OPT_ALPHA" : 0.01 }
-
-def set_corpus_stats(location):
-    global D
-    global V
-    with open(location + '/info.txt') as f:
-        found = False
-        ln = 'This is the line'
-        while ln != '':
-            ln = f.readline()
-            if ln.startswith('use_long'):
-                found = True
-                # A little bird told us that these were the proper values
-                if ln.endswith('True\n'): # Long corpus
-                    D = 11002
-                    V = 48613
-                else: # Regular corpus
-                    D = 135
-                    V = 10473
-                break
-
-        if not found:
-            print('Warning: use_long setting not found, assuming ap corpus...')
-            D = 135
-            V = 10473
-
-def read_one_output(f, N, K, dic):
-    header = f.readline().split(',')
-    header = [h.strip() for h in header]
-    assert header[0] == 'Accumulator' \
-        and header[1] == 'Total count' \
-       and header[2] == 'Average count', "Output file not in proper format"
-    lines = f.readlines()
-
-
-    # Naming convention: All convergence counters should include the tag 'CONVERGE'
-    for i in range(len(lines)):
-        s = lines[i].split(',')
-        fn = s[0].strip()
-        if 'CONVERGE' in fn:
-            iters[fn] = float(s[2])
-
-    for i in range(len(lines)):
-        s = lines[i].split(',')
-        fn = s[0].strip()
-        if 'CONVERGE' not in fn:
-            if not fn in dic: dic[fn] = { 'x' : [], 'y' : []}
-            avg_cnt = float(s[2])
-            if abs(avg_cnt) > EPS:
-                dic[fn]['x'].append(N)
-                dic[fn]['y'].append(flops[fn](N, K).full() / avg_cnt)
-            pass
-        pass
-    pass
-
-    print(iters)
 
 def plot_line(plt, data, color=None, label_offset=None):
     for fn, vals in data.items():
@@ -198,15 +24,15 @@ def plot_line(plt, data, color=None, label_offset=None):
                 use_label_offset = label_offsets[fn]
             else:
                 use_label_offset = label_offset
-            plt.plot(x, y, '^-', color=use_color, linewidth=1)
+            plt.plot(x, y, '^-', color=use_color, linewidth=2)
             plt.text(x[0], y[0] + use_label_offset , fn, color=use_color, size=9)
 
-def set_up_perf_plot(axes):
+def set_up_perf_plot(axes, xaxis = 'N'):
     #Per plot settings
     axes.set_title('Performance on Skylake',  y=1.08, loc = "center")
-    axes.set_xlabel('$n$ documents')
+    axes.set_xlabel('$k$ topics' if xaxis == 'K' else '$n$ documents')
     axes.set_ylabel('Performance [flops/cycles]',rotation="0")
-    axes.set_ylim(-0.0, 0.4)
+    #axes.set_ylim(-0.0, 0.4)
 
     axes.set_axisbelow(True)
     axes.yaxis.grid(color='white', linestyle='solid')
@@ -220,30 +46,42 @@ def set_up_perf_plot(axes):
     #plt.axhline(y=4, linestyle='--', color='black', label='Compute roof')
 
 
-def benchmark(dirpath):
+def benchmark(dirpath, vec=False, xaxis='N'):
+    pltutils.set_corpus_stats(dirpath)
     data_1 = {}       # "RUN_EM" : { x : [10, 15, 20], y : [3.2, 4.5, 6.7] }
     data_2 = {}       # "RUN_EM" : { x : [10, 15, 20], y : [3.2, 4.5, 6.7] }
 
     _, axes = plt.subplots()
 
-
-    regex = re.compile(r'\d+')
     for filename in listdir(dirpath):
         if filename.startswith("fast") or filename.startswith("slow"):
-            f = open(join(dirpath, filename), "r")
-            K, N = map(int, re.findall(regex, filename))
-            if filename[0] == 'f':
-                read_one_output(f, N, K, data_1)
-            else:
-                read_one_output(f, N, K, data_2)
+            K, N, _, _, perf = pltutils.read_one_output(join(dirpath, filename), vec=vec)
+            dic = data_1 if filename[0] == 'f' else data_2
+            for i, fn in enumerate(pltutils.fns):
+                if not fn in dic: dic[fn] = {'x' : [], 'y' : []}
+                dic[fn]['x'].append(K if xaxis == 'K' else N)  
+                dic[fn]['y'].append(perf[i])  
 
-    set_up_perf_plot(axes)
+    set_up_perf_plot(axes, xaxis)
 
     plot_line(plt, data_1)
     plot_line(plt, data_2)
     plt.show()
 
+def usage_and_quit():
+    print("\nPerformance of all timers for one batch of runs")
+    print("\npython benchmarking.py <dirname> x axis = <N|K> ?vec")
+    sys.exit(1)
+
 if __name__ == '__main__':
-    benchmark(sys.argv[1])
+    if str(sys.argv[1]) in {"-h", "--help"}:
+        usage_and_quit()
+    if len(sys.argv) < 3:
+        print('Wrong number of arguments')
+        usage_and_quit()
+    vec = False
+    if sys.argv[-1] == 'vec':
+        vec = True
+    benchmark(sys.argv[1], vec, sys.argv[2])
 
 

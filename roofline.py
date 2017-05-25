@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
-from benchmarking import run_em
-from benchmarking import read_one_output
-import benchmarking
+import pltutils
+from pltutils import fns
 import sys
 import re
 import os
@@ -45,10 +44,10 @@ def make_axes(axes):
     axes.set_axisbelow(True)
     axes.yaxis.grid(color='white', linestyle='solid')
     axes.set_facecolor((211.0/255,211.0/255,211.0/255))
-    axes.set_ylim(X_MIN_LIM, X_MAX_LIM)
-    axes.set_xlim(X_MIN_LIM, X_MAX_LIM)
+    #axes.set_ylim(X_MIN_LIM, X_MAX_LIM)
+    #axes.set_xlim(X_MIN_LIM, X_MAX_LIM)
 
-    plt.ylabel('Performance [GFlops/s]',rotation="0")
+    plt.ylabel('Performance [flops/cycle]',rotation="0")
     axes.yaxis.set_label_coords(0.09,1.02)
     axes.spines['left'].set_color('#dddddd')
     axes.spines['right'].set_color('#dddddd')
@@ -129,7 +128,7 @@ def plot_run(run, col):
     plt.text(xlab, ylab, run.label, color=col, ha='center', size='x-small')
 
 def parse_perf_files(dir_path):
-    benchmarking.set_corpus_stats(dir_path)
+    pltutils.set_corpus_stats(dir_path)
 
     operational_intensity = []
     memory_reads = []
@@ -171,21 +170,22 @@ def parse_perf_files(dir_path):
     num_docs, bytes_transfers = (zip(*sorted(zip(num_docs, bytes_transfers))))
 
     #Get the flop count and the performance from the timings
-    data = {}
+    data = {'x' : [], 'y' : []}
     for filename in os.listdir(dir_path):
         if("timings" in filename):
-            f = open(join(dir_path, filename), "r")
+            fullname = join(dir_path, filename)
             # Extract K and N from the filename
             K, N = map(int, re.findall(regex, filename))
             if (K, N) in num_docs:
-                read_one_output(f, N, K, data)
-                flop_count[ num_docs.index((K, N)) ] = run_em(N, K).full()
+                k1, n1, flops, _, perf = pltutils.read_one_output(fullname)
+                assert k1 == K and n1 == N, "Wrong file"
+                flop_count[ num_docs.index((K, N)) ] = flops[ fns.index("RUN_EM") ] 
+                data['x'].append(N)
+                data['y'].append(perf[ fns.index("RUN_EM") ])
                 #print(flop_count)
                 pass
             pass
         pass
-
-    print('')
 
     operational_intensity = [x / y for x, y in zip(flop_count, bytes_transfers)]
 
@@ -193,10 +193,11 @@ def parse_perf_files(dir_path):
     plt_perf = []
     for i in range(len(num_docs)):
         n = num_docs[i][1]
-        if n in data['RUN_EM']['x']:
+        if n in data['x']:
+            idx = data['x'].index(n)
             assert flop_count[i] is not 0
             plt_op.append(operational_intensity[i])
-            plt_perf.append(data['RUN_EM']['y'][ data['RUN_EM']['x'].index(n) ])
+            plt_perf.append(data['y'][idx])
 
     return Run(plt_op, plt_perf, num_docs, comment)
 
