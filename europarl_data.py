@@ -2,6 +2,7 @@ import os
 import nltk
 from unidecode import unidecode
 from collections import Counter
+import sys
 
 def filter_sentence(s):
     words = nltk.tokenize.word_tokenize(s)
@@ -53,3 +54,6 @@ def build(europath):
         docs.append(create_doc(europath + '/' + fname, word_to_id))
 
     write_all(id_to_word, docs)
+
+if __name__ == '__main__':
+    build(sys.argv[1])
