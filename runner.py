@@ -388,9 +388,6 @@ if __name__ == '__main__':
         if not use_mkl:
             defines_fast.append('NO_MKL')
             defines_slow.append('NO_MKL')
-        else:
-            defines_fast.append('NO_MKL')
-            defines_slow.append('NO_MKL')
 
         # Actually make the programs
         print('Preparing the fast...')
