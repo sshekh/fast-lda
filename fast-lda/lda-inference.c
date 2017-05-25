@@ -196,11 +196,6 @@ fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_ga
 {
     fp_t likelihood = 0, digsum = 0, var_gamma_sum = 0;
     fp_t dig[model->num_topics];
-    __m256fp v_var_gamma_sum = _mm256_set1(0);
-    // if(f == NULL)
-    // {
-    //     f = fopen("phi_domain", "w");
-    // }
 
     
     int k, n;
@@ -213,14 +208,51 @@ fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_ga
     STRIDE_SPLIT(model->num_topics, 0, &kk, &leftover_mask);
     int tiling_factor = 4;
 
-    for (k = 0; k < kk; k += STRIDE)
+    __m256fp v_var_gamma_sum0 = _mm256_set1(0);
+    __m256fp v_var_gamma_sum1 = _mm256_set1(0);
+    __m256fp v_var_gamma_sum2 = _mm256_set1(0);
+    __m256fp v_var_gamma_sum3 = _mm256_set1(0);
+
+    for (k = 0; k + (STRIDE * tiling_factor) - 1 < kk; k += STRIDE * tiling_factor)
     {
         //dig[k] = digamma(var_gamma[k]);
         //var_gamma_sum += var_gamma[k];
-       __m256fp v_var_gamma = _mm256_loadu(var_gamma + k);
-       __m256fp v_dig = digamma_vec(v_var_gamma);
-       _mm256_storeu(dig + k, v_dig);
-       v_var_gamma_sum = _mm256_add(v_var_gamma_sum, v_var_gamma);
+        
+        // Tile 0
+       __m256fp v_var_gamma0 = _mm256_loadu(var_gamma + k + 0 * tiling_factor);
+       __m256fp v_dig0 = digamma_vec(v_var_gamma0);
+       _mm256_storeu(dig + k + 0 * tiling_factor, v_dig0);
+       v_var_gamma_sum0 = _mm256_add(v_var_gamma_sum0, v_var_gamma0);
+
+       // Tile 1
+        __m256fp v_var_gamma1 = _mm256_loadu(var_gamma + k + 1 * tiling_factor);
+       __m256fp v_dig1 = digamma_vec(v_var_gamma1);
+       _mm256_storeu(dig + k + 1 * tiling_factor, v_dig1);
+       v_var_gamma_sum1 = _mm256_add(v_var_gamma_sum1, v_var_gamma1);
+
+       //Tile 2
+        __m256fp v_var_gamma2 = _mm256_loadu(var_gamma + k + 2 * tiling_factor);
+       __m256fp v_dig2 = digamma_vec(v_var_gamma2);
+       _mm256_storeu(dig + k + 2 * tiling_factor, v_dig2);
+       v_var_gamma_sum2 = _mm256_add(v_var_gamma_sum2, v_var_gamma2);
+
+       // Tile3
+        __m256fp v_var_gamma3 = _mm256_loadu(var_gamma + k + 3 * tiling_factor);
+       __m256fp v_dig3 = digamma_vec(v_var_gamma3);
+       _mm256_storeu(dig + k + 3 * tiling_factor, v_dig3);
+       v_var_gamma_sum3 = _mm256_add(v_var_gamma_sum3, v_var_gamma3);
+    }
+
+    v_var_gamma_sum0 = _mm256_add(v_var_gamma_sum0, v_var_gamma_sum1);
+    v_var_gamma_sum0 = _mm256_add(v_var_gamma_sum0, v_var_gamma_sum2);
+    v_var_gamma_sum0 = _mm256_add(v_var_gamma_sum0, v_var_gamma_sum3);
+
+    for(;k < kk;k += STRIDE)
+    {
+        __m256fp v_var_gamma0 = _mm256_loadu(var_gamma + k);
+        __m256fp v_dig0 = digamma_vec(v_var_gamma0);
+        _mm256_storeu(dig + k, v_dig0);
+        v_var_gamma_sum0 = _mm256_add(v_var_gamma_sum0, v_var_gamma0);
     }
 
     if (LEFTOVER(model->num_topics, 0)) {
@@ -228,13 +260,15 @@ fp_t compute_likelihood(document* doc, lda_model* model, fp_t* phi, fp_t* var_ga
        __m256fp v_var_gamma = _mm256_maskload(var_gamma + k, leftover_mask);
        __m256fp v_dig = digamma_vec(v_var_gamma);
        _mm256_maskstore(dig + k, leftover_mask, v_dig);
-       v_var_gamma_sum = _mm256_add(v_var_gamma_sum, v_var_gamma);
+       v_var_gamma_sum0 = _mm256_add(v_var_gamma_sum0, v_var_gamma);
     }
 
-    __m256fp var_gamma_totals = hsum(v_var_gamma_sum);
-    var_gamma_sum = first(var_gamma_totals);
+    v_var_gamma_sum0 = hsum(v_var_gamma_sum0);
+    var_gamma_sum = first(v_var_gamma_sum0);
     
     digsum = digamma(var_gamma_sum);
+
+
 
     __m256fp v_digsum = _mm256_set1(digsum);
     for (k = 0; k < kk; k += STRIDE) {
