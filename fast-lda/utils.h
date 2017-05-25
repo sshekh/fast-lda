@@ -68,6 +68,17 @@ int argmax(fp_t* x, int n);
 
         return x;
     }
+
+    INLINE
+    __m256fp _mm256_log1p(__m256fp x) {
+        fp_t* vals = (fp_t*) &x;
+
+        // This is pretty terrible but it's basically the only thing we can do.
+        for (int i = 0 ; i < STRIDE ; i++)
+            vals[i] = (fp_t) log1p(vals[i]);
+
+        return x;
+    }
 #endif // __INTEL_COMPILER
 
 
@@ -177,6 +188,85 @@ fp_t log_gamma(fp_t x)
 // ======== Vector-argument math functions ========
 // ================================================
 
+// INLINE
+// __m256fp approx_log1p(__m256fp x)
+// {
+//     __m256fp a1 = _mm256_set1(0.99949556);
+//     __m256fp a2 = _mm256_set1(-0.49190896);
+//     __m256fp a3 = _mm256_set1(0.28947478);
+//     __m256fp a4 = _mm256_set1(-0.13606275);
+//     __m256fp a5 = _mm256_set1(0.03215845);
+    
+//     __m256fp x_squared = _mm256_mul(x, x);
+//     __m256fp x_4 = _mm256_mul(x_squared, x_squared);
+
+//     __m256fp t1 = _mm256_mul(a1, x);
+//     __m256fp t2 = _mm256_mul(a2, x_squared);
+//     __m256fp t3 = _mm256_mul(a3, _mm256_mul(x_squared, x));
+//     __m256fp t4 = _mm256_mul(a4, x_4);
+//     __m256fp t5 = _mm256_mul(a5, _mm256_mul(x_4, x));
+            
+//     t1 = _mm256_add(t1, t2);
+//     t1 = _mm256_add(t1, t3);
+//     t1 = _mm256_add(t1, t4);
+//     t1 = _mm256_add(t1, t5);
+
+//     return t1;
+// }
+
+// INLINE
+// __m256fp approx_log1p(__m256fp x)
+// {
+//     // eight terms 
+//     __m256fp a1 = _mm256_set1(0.9999964239);
+//     __m256fp a2 = _mm256_set1(-0.4998741238);
+//     __m256fp a3 = _mm256_set1(0.3317990258);
+//     __m256fp a4 = _mm256_set1(-0.2407338084);
+//     __m256fp a5 = _mm256_set1(0.1676540711);
+//     __m256fp a6 = _mm256_set1(-0.0953293897);
+//     __m256fp a7 = _mm256_set1(0.0380684937);
+//     __m256fp a8 = _mm256_set1(-0.0064535442);
+    
+//     __m256fp x_squared = _mm256_mul(x, x);
+//     __m256fp x_4 = _mm256_mul(x_squared, x_squared);
+//     __m256fp x_6 = _mm256_mul(x_4, x_squared);
+
+
+//     __m256fp t1 = _mm256_mul(a1, x);
+//     __m256fp t2 = _mm256_mul(a2, x_squared);
+//     __m256fp t3 = _mm256_mul(a3, _mm256_mul(x_squared, x));
+//     __m256fp t4 = _mm256_mul(a4, x_4);
+//     __m256fp t5 = _mm256_mul(a5, _mm256_mul(x_4, x));
+//     __m256fp t6 = _mm256_mul(a6, x_6);
+//     __m256fp t7 = _mm256_mul(a7, _mm256_mul(x_6, x));
+//     __m256fp t8 = _mm256_mul(a8, _mm256_mul(x_4, x_4));
+            
+//     t1 = _mm256_add(t1, t2);
+//     t1 = _mm256_add(t1, t3);
+//     t1 = _mm256_add(t1, t4);
+//     t1 = _mm256_add(t1, t5);
+//     t1 = _mm256_add(t1, t6);
+//     t1 = _mm256_add(t1, t7);
+//     t1 = _mm256_add(t1, t8);
+
+//     return t1;
+// }
+
+// INLINE
+// __m256fp looped_log1p(__m256fp x)
+// {
+//     fp_t input[4];
+//     _mm256_storeu(input, x);
+//     for(int i=0;i<4;i++)
+//     {
+//         input[i] = log1p(input[i]);
+//     }
+
+//     __m256fp output = _mm256_loadu(input);
+//     return output;
+// }
+
+
 /* given log(a) and log(b), return log(a + b) */
 INLINE
 __m256fp log_sum_vec(__m256fp log_a, __m256fp log_b)
@@ -184,11 +274,12 @@ __m256fp log_sum_vec(__m256fp log_a, __m256fp log_b)
    // v = log_b+log(1 + exp(log_a-log_b));
   timer rdtsc = start_timer(LOG_SUM);
 
-  __m256fp ones = _mm256_set1(1);
+  // used for straightforward impl. __m256fp ones = _mm256_set1(1);
   __m256fp res = _mm256_sub(log_a, log_b);
   res = _mm256_exp(res);
-  res = _mm256_add(ones, res);
-  res = _mm256_log(res);
+  //  used for straightforward impl. res = _mm256_add(ones, res);
+  res = _mm256_log1p(res);
+  //  used for straightforward impl. res = _mm256_log(res);
   res = _mm256_add(log_b, res);
 
   stop_timer(rdtsc);
