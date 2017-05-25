@@ -325,10 +325,10 @@ int main(int argc, char* argv[])
     }
 
     FILE* f;
-    if (argc == 10 && strcmp(argv[9], "-out") == 0) {
+    if (strcmp(argv[9], "-out") == 0) {
         f = stdout;
     } else {
-        f = fopen("results/timings.csv","w");
+        f = fopen(argv[9],"w");
     }
 
     print_timings(f);

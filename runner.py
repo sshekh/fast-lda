@@ -15,7 +15,7 @@ REFERENCE_DATA = REFERENCE_FOLDER + '/ref-%d-%d-%s-%s.beta'
 LDA_EXE_LOG = './%s-lda/logfiles'
 LDA_OUT_BETA = LDA_EXE_LOG + '/final.beta'
 LDA_RESULTS = './results'
-LDA_OUT_TIMING = LDA_RESULTS + '/timings.csv'
+LDA_OUT_TIMING = LDA_RESULTS + '/timings_%s.csv'
 
 ALWAYS_GENERATE_REF = False
 ALWAYS_USE_REF = False
@@ -76,15 +76,16 @@ def set_mkl_env():
 def make_lda_params(which, k, n):
     if which == 'fast':
       set_mkl_env()
-    return ['./%s-lda/lda' % which,           # Executable location
-            'est',                              # Execution mode (always est)
-            str(n),                             # Number of documents
-            '1',                                # Initial estimate for alpha
-            str(k),                             # Number of topics
-            'master-settings.txt',              # Settings location
-            CORPUS % which,       # Documents location
-            'random',                           # Initialization method (only random)
-            LDA_EXE_LOG % which]                # Output directory
+    return ['./%s-lda/lda' % which,         # Executable location
+            'est',                          # Execution mode (always est)
+            str(n),                         # Number of documents
+            '1',                            # Initial estimate for alpha
+            str(k),                         # Number of topics
+            'master-settings.txt',          # Settings location
+            CORPUS % which,                 # Documents location
+            'random',                       # Initialization method (only random)
+            LDA_EXE_LOG % which,            # Output directory (lda)
+            LDA_OUT_TIMING % RUN_NAME]
 
 def exists(path):
     try:
