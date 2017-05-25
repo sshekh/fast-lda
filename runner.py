@@ -185,7 +185,7 @@ def bench(k, n, which):
             run_cmd(make_lda_params(lda, k, n))
 
         timing_out = (TIMING_FOLDER % RUN_NAME) + (TIMING_FILENAME % (lda, k, n))
-        os.rename(LDA_OUT_TIMING, timing_out)
+        os.rename(LDA_OUT_TIMING % RUN_NAME, timing_out)
 
 def record_vitals(comment, options, cmdline):
     os.makedirs(TIMING_FOLDER % RUN_NAME)
