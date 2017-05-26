@@ -1,5 +1,6 @@
 #! /usr/bin/python
 import re
+import os
 
 """
 Globals
@@ -279,7 +280,7 @@ Read one timings file and calculate shit ton of stuff
 """
 def read_one_output(fname, vec=False):
     regex = re.compile(r'\d+')
-    pname = fname.split('/')[-1]
+    pname = os.path.basename(fname)
     K, N = map(int, re.findall(regex, pname))
     f = open(fname, "r")
     header = f.readline().split(',')
@@ -322,7 +323,7 @@ def read_one_output(fname, vec=False):
             ret_flop_list[i] = pure_flops[fn](N, K).full()
         else:
             ret_tot_cycle_list[i] = tot_cycles[fn]
-            ret_flop_list[i] = flops[fn](N, K).full() 
+            ret_flop_list[i] = flops[fn](N, K).full()
         if isnz(tot_cycles[fn]):
             ret_avg_cycle_list[i] = (avg_cycles[fn] / tot_cycles[fn]) * ret_tot_cycle_list[i]
             if vec:
@@ -330,6 +331,6 @@ def read_one_output(fname, vec=False):
             else:
                 ret_perf_list[i] = ret_flop_list[i] / ret_avg_cycle_list[i]
 
-    return K, N, ret_flop_list, ret_tot_cycle_list, ret_perf_list 
+    return K, N, ret_flop_list, ret_tot_cycle_list, ret_perf_list
 
 
