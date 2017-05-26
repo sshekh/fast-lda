@@ -54,8 +54,8 @@ def set_corpus_stats(location):
                 found = True
                 # A little bird told us that these were the proper values
                 if ln.endswith('True\n'): # Long corpus
-                    D = 11002
-                    V = 48613
+                    D = 51103
+                    V = 196106
                 else: # Regular corpus
                     D = 135
                     V = 10473
