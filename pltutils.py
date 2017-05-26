@@ -122,11 +122,15 @@ class Cost:
         return self.__add__(other)
 
     def full(self):
+        # <BG> weighting according to file notes/benchmark_exp_log.txt
+        # we use the benchmarked values for math.h macros and suppose that they run in latency mode
+        # That leads us to lower bounds for FLOPS for both log and exp.
+        # Skylake Latencies: mul, add: 4, div:13
         return  self.adds + \
                 self.muls + \
                 self.divs + \
                 self.logs + \
-                self.exps
+                self.exps       # proposed reweighting: log: 3, exp: 14, (div: 3)
 
 """
 Calculating flops
@@ -140,6 +144,9 @@ def log_sum(N, K):
 
 #FIXME: Not the correct flops as the written function is not used, we use lgamma from math.h and vldGamma from mkl
 def log_gamma(N, K):
+    # This was calculated as a lower bound based on the measured latency, but it's apparently still way too low
+    # Throughput mode: would be 72 cycles --> approx 18 adds
+    # return Cost(7, 0, 0, 0, 0)
     return Cost(20, 5, 2, 7, 0)
 
 def trigamma(N, K):
