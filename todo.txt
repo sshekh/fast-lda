@@ -1,2 +1,3 @@
-    vi. Plots (roofline, performance, cycle distribution) for each stage <- FL
-   vii. Optimize lgamma (lookup/approx + vectorization) <- FL        //Low priority
+- Run Slow, Stage1, Stage2 again with the --non-vec option
+- Run ICC vs GCC comparison
+- Update weighting of different types of Flops
