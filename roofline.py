@@ -8,8 +8,9 @@ from os.path import join
 
 
 X_MAX_LIM = 2**(9)
-X_MIN_LIM = 2**(-8)
-Y_MIN_LIM = 2**(-8)
+X_MIN_LIM = 2**(-4)
+Y_MIN_LIM = 2**(-4)
+Y_MAX_LIM = 2**(6)
 
 class Run:
     def __init__(self, opints, perfs, nums_docs, label):
@@ -44,8 +45,8 @@ def make_axes(axes):
     axes.set_axisbelow(True)
     axes.yaxis.grid(color='white', linestyle='solid')
     axes.set_facecolor((211.0/255,211.0/255,211.0/255))
-    #axes.set_ylim(X_MIN_LIM, X_MAX_LIM)
-    #axes.set_xlim(X_MIN_LIM, X_MAX_LIM)
+    axes.set_ylim(X_MIN_LIM, Y_MAX_LIM)
+    axes.set_xlim(X_MIN_LIM, X_MAX_LIM)
 
     plt.ylabel('Performance [flops/cycle]',rotation="0")
     axes.yaxis.set_label_coords(0.09,1.02)
@@ -57,10 +58,10 @@ def make_axes(axes):
 def plot_roofs(axes, precision):
     # Pi_no_vec, pi_vec
     if (precision == 'd'):
-        pi = [2, 8]
+        pi = [2, 16]
         names = ['$π_{scalar}$', '$π_{vector}$']
     elif (precision == 'f'):
-        pi = [2, 16]
+        pi = [2, 32]
         names = ['$π_{scalar}$', '$π_{vector}$']
     else:
         print("I do not know what precision you are talking about.\n")
@@ -121,11 +122,11 @@ def plot_run(run, col):
         size='x-small',
         arrowprops=dict(arrowstyle = '-'))
 
-    xlab = run.opints[0]
-    ylab = max(run.perfs) + 0.5 * max(run.perfs)
-
-
-    plt.text(xlab, ylab, run.label, color=col, ha='center', size='x-small')
+    # Label is to the right of the first element, since in general we go
+    # left as we go further in the series
+    xlab = run.opints[0] + 2
+    ylab = run.perfs[0]
+    plt.text(xlab, ylab, run.label, color=col, ha='left', va='center', size='x-small')
 
 def parse_perf_files(dir_path):
     pltutils.set_corpus_stats(dir_path)
@@ -179,7 +180,7 @@ def parse_perf_files(dir_path):
             if (K, N) in num_docs:
                 k1, n1, flops, _, perf = pltutils.read_one_output(fullname)
                 assert k1 == K and n1 == N, "Wrong file"
-                flop_count[ num_docs.index((K, N)) ] = flops[ fns.index("RUN_EM") ] 
+                flop_count[ num_docs.index((K, N)) ] = flops[ fns.index("RUN_EM") ]
                 data['x'].append(N)
                 data['y'].append(perf[ fns.index("RUN_EM") ])
                 #print(flop_count)

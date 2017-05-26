@@ -6,6 +6,7 @@ from os.path import join
 from os.path import dirname
 import pltutils
 from pltutils import fns
+import os
 
 colors = { "RUN_EM" : "green", "LDA_INFERENCE" : "blue", "DIGAMMA" : "black", "LOG_SUM" : "purple",
         "LOG_GAMMA" : "purple", "TRIGAMMA" : "cyan", "DOC_E_STEP" : "orange", "LIKELIHOOD" : "red", "MLE" : "#5E6382", "OPT_ALPHA" : "#00bcd4"}
@@ -89,13 +90,14 @@ def usage_and_quit():
     sys.exit(1)
 
 if __name__ == "__main__":
-    if str(sys.argv[1]) in {"-h", "--help"} or len(sys.argv) == 1: 
+    if str(sys.argv[1]) in {"-h", "--help"} or len(sys.argv) == 1:
         usage_and_quit()
     filenames = sys.argv[1:]
     legends = []
-    
+
     for filename in filenames:
-        pname = filename.split('/')[-1]
+
+        pname = os.path.basename(filename)
         something = pname.split('.')[0].split('_')
         legends.append(something[0] + " " + something[2] + " " + something[3])
 
