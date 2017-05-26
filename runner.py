@@ -270,6 +270,7 @@ def usage_and_quit():
     print('\t-r: Reduce precision to floats instead of doubles in the fast.')
     print('\t-g: Compile with gcc instead of icc.')
     print('\t-l: Use long documents (europarl finnish corpus)')
+    print('\t--no-vec: No compiler vectorization')
 
     sys.exit()
 
@@ -288,25 +289,32 @@ def xflags_from_list(defines):
     with_d = ['-D' + x for x in defines]
     return ' '.join(with_d)
 
-def construct_make_command(which, defines, use_icc):
+def construct_make_command(which, defines, use_icc, use_compiler_vec):
     # Clean part
     clean_command = 'cd %s-lda && make clean && ' % which
     compile_command = ''
 
+    vecflags=''
     # Select the compiler to use for the fast
     if use_icc:
         if os.name == 'nt': # ICL on windows
             compiler = ' CC=icl'
+            if which=='fast' and not use_compiler_vec:
+                vecflags += '/Qvec-'
             # Run some stuff to set up the environment
             compile_command = VC_VARS + ' && ' + ICL_VARS + ' && '
         elif os.name == 'posix': # ICC on unixy systems
             compiler = ' CC=icc'
+            if which=='fast' and not use_compiler_vec:
+                vecflags = '-no-vec'
     else:
         compiler = ' CC=gcc' #gcc by default but better be explicit
+        if which=='fast' and not use_compiler_vec:
+            vecflags = '-fno-vectorize -fno-tree-vectorize -fno-slp-vectorize'
 
     # Construct the actual make command
     compile_command += ' make'
-    xflags = xflags_from_list(defines)
+    xflags = vecflags + ' ' + xflags_from_list(defines)
     if xflags != '':
         compile_command += (' XCFLAGS="%s"' % xflags)
 
@@ -332,7 +340,8 @@ if __name__ == '__main__':
         ["num-topics=",
         "num-docs=",
         "n=",
-        "k="])
+        "k=",
+        "no-vec"])
 
     do_fast = False
     do_slow = False
@@ -342,6 +351,7 @@ if __name__ == '__main__':
     use_icc = True
     use_long = False
     use_mkl = True
+    use_compiler_vec = True
 
     ks = [50]
     ns = [2246] # Maximal amount of documents
@@ -373,6 +383,8 @@ if __name__ == '__main__':
             ref_corp_name = 'euro'
         elif o == '-x':
             use_mkl = False
+        elif o == '--no-vec':
+            use_compiler_vec = False
 
     RUN_NAME = time.strftime('%Y-%m-%d_%H-%M-%S')
 
@@ -393,10 +405,10 @@ if __name__ == '__main__':
         # Actually make the programs
         print('Preparing the fast...')
         # Use specified compiler for the fast (gcc or icc)
-        run_cmd(construct_make_command('fast', defines_fast, use_icc))
+        run_cmd(construct_make_command('fast', defines_fast, use_icc, use_compiler_vec))
 
         print('Preparing the slow...')
-        run_cmd(construct_make_command('slow', defines_slow, use_icc))
+        run_cmd(construct_make_command('slow', defines_slow, use_icc, use_compiler_vec))
 
     # Use different names for the reference files depending on whether we're
     # using floats or doubles.

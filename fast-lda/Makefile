@@ -47,7 +47,7 @@ endif
 LOBJECTS= rdtsc-helper.o lda-estimate-helper.o lda-run.o lda-estimate.o lda-model.o lda-inference.o utils.o cokus.o lda-alpha.o fp.o
 
 %.o : %.c
-	$(CC) $(CFLAGS) $(LDFLAGS) $(XCFLAGS) $(PARTIAL) $< $(OBJ)$@
+	$(CC) $(CFLAGS) $(LDFLAGS) $(XCFLAGS) $(PARTIAL) $< $(OBJ) $@
 
 lda:	$(LOBJECTS)
 	$(CC) $(CFLAGS) $(LOBJECTS) $(LDFLAGS) $(OUTNAME)
