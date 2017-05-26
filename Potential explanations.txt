@@ -1,0 +1,19 @@
+Tiling:
+    Well we're not actually tiling, we're unrolling. Which is useless.
+    Why is it worse? According to Agner Fog:
+        "The difference in performance between loops that fit into the µop cache
+        and loops that do not can be quite significant". This is a pretty small
+        cache. By unrolling we blow out of it.
+
+    What would ACTUALLY benefit?
+        anything where we accumulate something into ONE value at the end.
+
+Vectorization doesn't give 4x:
+    Unaligned loads. If we don't unroll we can use aligned loads again.
+    Note that this is only a factor between processor and L1.
+        (http://www.agner.org/optimize/blog/read.php?i=415, search for "align")
+
+    Subnormals. There is a large penalty for subnormal numbers
+
+Performance stays constant
+    ???
