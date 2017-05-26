@@ -1,6 +1,7 @@
 Bench run 2017-05-25_21-16-37
 Ran with the command-line `bench --n=10 --k=100,400,100 -f -l`
-Comment: "stage 4 xl fast"
+Ran with the command-line `bench --n=10 --k=200,400,200 -f -l`
+Comment: "stage 4 xlarge"
 ===============================
 
 OPTIONS

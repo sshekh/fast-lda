@@ -1,6 +1,7 @@
 Bench run 2017-05-25_21-14-20
 Ran with the command-line `bench -fal --n=10 --k=100,400,100`
-Comment: "Stage3 xlarge fast"
+Ran with the command-line `bench -fal --n=10 --k=400`
+Comment: "Stage3 xlarge"
 ===============================
 
 OPTIONS

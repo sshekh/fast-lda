@@ -1,0 +1,54 @@
+Bench run 2017-05-25_18-43-31
+Ran with the command-line `bench --n=10 --k=100,400,100 -sal`
+Comment: "Slow master xlarge"
+===============================
+
+OPTIONS
+use_long=True
+use_icc=True
+use_doubles=True
+END OPTIONS
+
+Latest commit at time of writing:
+6763200f (on branch master)
+
+Additionally, the repo contained the following untracked files:
+	fast-lda/lda-run.c~
+	timings/2017-05-25_15-09-33/info.txt
+	timings/2017-05-25_15-09-33/perf_slow_100_10.txt
+	timings/2017-05-25_15-09-33/perf_slow_200_10.txt
+	timings/2017-05-25_15-09-33/perf_slow_300_10.txt
+	timings/2017-05-25_15-09-33/perf_slow_400_10.txt
+	timings/2017-05-25_15-09-33/slow_timings_100_10.csv
+	timings/2017-05-25_15-09-33/slow_timings_200_10.csv
+	timings/2017-05-25_15-09-33/slow_timings_300_10.csv
+	timings/2017-05-25_15-13-50/info.txt
+	timings/2017-05-25_15-13-50/perf_slow_100_10.txt
+	timings/2017-05-25_15-36-00/info.txt
+	timings/2017-05-25_15-36-00/perf_slow_100_10.txt
+	timings/2017-05-25_15-36-26/info.txt
+	timings/2017-05-25_15-36-26/perf_slow_100_10.txt
+	timings/2017-05-25_15-38-29/info.txt
+	timings/2017-05-25_15-38-29/perf_fast_100_10.txt
+	timings/2017-05-25_15-58-22/info.txt
+	timings/2017-05-25_15-58-22/perf_fast_10_100.txt
+	timings/2017-05-25_15-59-50/fast_timings_10_100.csv
+	timings/2017-05-25_15-59-50/info.txt
+	timings/2017-05-25_15-59-50/perf_fast_10_100.txt
+	timings/2017-05-25_16-01-03/info.txt
+	timings/2017-05-25_16-01-03/perf_slow_100_10.txt
+	timings/2017-05-25_18-43-31/info.txt
+
+The diff, if any, follows:
+
+
+
+===============================
+
+Settings file:
+var max iter 20
+var convergence 1e-6
+em max iter 100
+em convergence 1e-4
+alpha estimate
+
