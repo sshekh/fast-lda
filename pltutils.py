@@ -156,7 +156,7 @@ def opt_alpha(N, K):
             Cost(exps=1) # poor lonely exp
 
 def mle(N, K):
-    return N * K * Cost(adds=2, logs=2) + opt_alpha(N, K)
+    return V * K * Cost(adds=2, logs=2) + opt_alpha(N, K)
 
 def likelihood(N, K):
     return K * digamma(N, K) + Cost(adds=K) + digamma(N, K) + Cost(adds=2, muls=2) + 3 * log_gamma(N, K) + \
@@ -202,7 +202,7 @@ def popt_alpha(N, K):
             Cost(exps=1) # poor lonely exp
 
 def pmle(N, K):
-    return N * K * Cost(adds=2, logs=2) + 0
+    return V * K * Cost(adds=2, logs=2) + 0
 
 def plikelihood(N, K):
     return K * 0 + Cost(adds=K) + 0 + Cost(adds=2, muls=2) + 3 * 0 + \
@@ -248,7 +248,7 @@ def iopt_alpha(N, K):
             0 # poor lonely exp
 
 def imle(N, K):
-    return N * K * 0 + avg_cycles["OPT_ALPHA"]
+    return V * K * 0 + avg_cycles["OPT_ALPHA"]
 
 def ilikelihood(N, K):
     return K * avg_cycles["DIGAMMA"] + 0 + avg_cycles["DIGAMMA"] + 0 + 3 * avg_cycles["LOG_GAMMA"] + \
@@ -279,7 +279,9 @@ avg_cycles = {"RUN_EM" : 0., "LDA_INFERENCE" : 0., "DIGAMMA" : 0., "LOG_SUM" : 0
 """
 Read one timings file and calculate shit ton of stuff
 """
-def read_one_output(fname, vec=False):
+def read_one_output(fname, vec=False, debug=False):
+    if debug:
+        print('\n', fname, '\n')
     regex = re.compile(r'\d+')
     pname = os.path.basename(fname)
     K, N = map(int, re.findall(regex, pname))
@@ -332,6 +334,8 @@ def read_one_output(fname, vec=False):
             else:
                 ret_perf_list[i] = ret_flop_list[i] / ret_avg_cycle_list[i]
 
+    if debug:
+        print([str(flops[fn](N, K).full()) for fn in fns])
     return K, N, ret_flop_list, ret_tot_cycle_list, ret_avg_cycle_list, ret_perf_list
 
 
