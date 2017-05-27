@@ -1,7 +1,6 @@
 - Run ICC vs GCC comparison  <- Data on Fred's machine
 - Update weighting of different types of Flops <- BG has looked into it, difficult to obtain meaningful results
 
-- Vectorization affects convergence loops, find out why
-- Try running the big corpus on floats <- BG
-- Runtime plot: average per convergence loop <- SS
-- Plot convergence counters <- SS
+- Try running the big corpus on floats <- FL
+
+
