@@ -71,13 +71,6 @@ def set_corpus_stats(location):
 
 class Cost:
     def __init__(self, adds=0, muls=0, divs=0, logs=0, exps=0):
-        if isinstance(adds, tuple):
-            self.adds = adds[0]
-            self.muls = adds[1]
-            self.divs = adds[2]
-            self.logs = adds[3]
-            self.exps = adds[4]
-        else:
             self.adds = adds
             self.muls = muls
             self.divs = divs
@@ -91,8 +84,6 @@ class Cost:
         return str(self.toTup())
 
     def __add__(self, other):
-        if isinstance(other, tuple) or isinstance(other, int):
-            other = Cost(other)
         return Cost(self.adds + other.adds, \
                     self.muls + other.muls, \
                     self.divs + other.divs, \
@@ -125,6 +116,8 @@ class Cost:
                 self.divs + \
                 self.logs + \
                 self.exps       # proposed reweighting: log: 3, exp: 14, (div: 3)
+
+ZERO = Cost(0, 0, 0, 0, 0)
 
 """
 Calculating flops
@@ -197,28 +190,28 @@ def prandom_initialize_ss(N, K):
 
 def popt_alpha(N, K):
     return iters["ALPHA_CONVERGE"] * ( \
-            Cost(adds=2, muls=1, divs=1, exps=1) + Cost(adds=3, muls=4) + 2 * 0 + \
-            Cost(adds=2, muls=4) + 2 * 0 + Cost(adds=1, muls=5) + 2 * 0) + \
+            Cost(adds=2, muls=1, divs=1, exps=1) + Cost(adds=3, muls=4) + 2 * ZERO + \
+            Cost(adds=2, muls=4) + 2 * ZERO + Cost(adds=1, muls=5) + 2 * ZERO) + \
             Cost(exps=1) # poor lonely exp
 
 def pmle(N, K):
-    return V * K * Cost(adds=2, logs=2) + 0
+    return V * K * Cost(adds=2, logs=2) + ZERO
 
 def plikelihood(N, K):
-    return K * 0 + Cost(adds=K) + 0 + Cost(adds=2, muls=2) + 3 * 0 + \
+    return K * ZERO + Cost(adds=K) + ZERO + Cost(adds=2, muls=2) + 3 * ZERO + \
             K * Cost(adds=7, muls=2) + K * D * 6 * Cost(adds=4, muls=2, logs=1)
 
 def plda_inference(N, K):
-    return K * Cost(adds=1, divs=1) + K * 0 + K * D * Cost(divs=1) + \
-        iters["INFERENCE_CONVERGE"] * (D * K * (0 + Cost(adds=4, muls=1, exps=1) + 0) + \
-            0 + Cost(adds=1, divs=1))
+    return K * Cost(adds=1, divs=1) + K * ZERO + K * D * Cost(divs=1) + \
+        iters["INFERENCE_CONVERGE"] * (D * K * (ZERO + Cost(adds=4, muls=1, exps=1) + ZERO) + \
+            ZERO + Cost(adds=1, divs=1))
 
 def pdoc_e_step(N, K):
-    return 0 + K * Cost(adds=2) + Cost(adds=1, muls=1) + 0 + K * N * Cost(adds=2, muls=2)
+    return ZERO + K * Cost(adds=2) + Cost(adds=1, muls=1) + ZERO + K * N * Cost(adds=2, muls=2)
 
 def prun_em(N, K):
-    return random_initialize_ss(N, K) + 0 + iters["EM_CONVERGE"] * (N * 0 + Cost(adds=N) + \
-            0 + Cost(adds=1, muls=1, divs=1))
+    return random_initialize_ss(N, K) + ZERO + iters["EM_CONVERGE"] * (N * ZERO + Cost(adds=N) + \
+            ZERO + Cost(adds=1, muls=1, divs=1))
 
 pure_flops = { "RUN_EM" : prun_em, "LDA_INFERENCE" : plda_inference, "DIGAMMA" : pdigamma, "LOG_SUM" : plog_sum,
         "LOG_GAMMA" : plog_gamma, "TRIGAMMA" : ptrigamma, "DOC_E_STEP" : pdoc_e_step, "LIKELIHOOD" : plikelihood, "MLE" : pmle, "OPT_ALPHA" : popt_alpha}
@@ -337,5 +330,6 @@ def read_one_output(fname, vec=False, debug=False):
     if debug:
         print([str(flops[fn](N, K).full()) for fn in fns])
     return K, N, ret_flop_list, ret_tot_cycle_list, ret_avg_cycle_list, ret_perf_list
+
 
 

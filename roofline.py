@@ -45,8 +45,8 @@ def make_axes(axes):
     axes.set_axisbelow(True)
     axes.yaxis.grid(color='white', linestyle='solid')
     axes.set_facecolor((211.0/255,211.0/255,211.0/255))
-    axes.set_ylim(X_MIN_LIM, Y_MAX_LIM)
-    axes.set_xlim(X_MIN_LIM, X_MAX_LIM)
+    #axes.set_ylim(X_MIN_LIM, Y_MAX_LIM)
+    #axes.set_xlim(X_MIN_LIM, X_MAX_LIM)
 
     plt.ylabel('Performance [flops/cycle]',rotation="0")
     axes.yaxis.set_label_coords(0.09,1.02)
