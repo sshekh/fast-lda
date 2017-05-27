@@ -3,18 +3,18 @@ mkdir: cannot create directory ‘results’: File exists
 
  Performance counter stats for './fast-lda/lda est 10 1 100 master-settings.txt ./fast-lda/europarl_fi/europarl_fi.dat random ./fast-lda/logfiles':
 
- 1,252,282,728,965      instructions              #    1.47  insn per cycle           (41.67%)
-   854,396,775,942      cycles                                                        (50.00%)
-    11,097,750,994      cache-references                                              (50.00%)
-     7,551,261,905      cache-misses              #   68.043 % of all cache refs      (50.00%)
-     1,144,718,150      LLC-loads                                                     (50.00%)
-       542,911,536      LLC-load-misses           #   47.43% of all LL-cache hits     (50.00%)
-       549,793,893      LLC-stores                                                    (16.67%)
-       435,285,340      LLC-store-misses                                              (16.66%)
-   382,160,314,620      dTLB-loads                                                    (25.00%)
-           486,492      dTLB-load-misses          #    0.00% of all dTLB cache hits   (33.33%)
-   150,794,366,692      dTLB-stores                                                   (33.33%)
-           203,026      dTLB-store-misses                                             (33.34%)
+ 1,145,083,384,708      instructions              #    1.44  insn per cycle           (41.67%)
+   792,481,307,215      cycles                                                        (50.00%)
+    10,343,051,134      cache-references                                              (50.00%)
+     7,162,696,040      cache-misses              #   69.251 % of all cache refs      (50.00%)
+     1,204,431,376      LLC-loads                                                     (50.00%)
+       732,489,220      LLC-load-misses           #   60.82% of all LL-cache hits     (50.00%)
+       536,836,673      LLC-stores                                                    (16.67%)
+       429,454,771      LLC-store-misses                                              (16.67%)
+   356,400,609,166      dTLB-loads                                                    (25.00%)
+           377,143      dTLB-load-misses          #    0.00% of all dTLB cache hits   (33.33%)
+   132,901,523,111      dTLB-stores                                                   (33.33%)
+            86,502      dTLB-store-misses                                             (33.33%)
 
-     221.239679166 seconds time elapsed
+     200.695637365 seconds time elapsed
 

@@ -1,19 +1,21 @@
-Bench run 2017-05-26_15-55-15
-Ran with the command-line `bench -fal --n=10 --k=100,400,100`
-Comment: "Stage 3 with align"
+Bench run 2017-05-27_16-01-04
+Ran with the command-line `bench --n=10 --k=100,400,100 -fla`
+Comment: "stage 3.2 xl memory leak fixed"
 ===============================
 
 OPTIONS
+use_long=True
 use_doubles=True
 use_icc=True
-use_long=True
 END OPTIONS
 
 Latest commit at time of writing:
-a2fa0d9f (on branch Stage3.2-VecAlign)
+5c61b10f (on branch Stage3.2-VecAlign)
 
 Additionally, the repo contained the following untracked files:
-	timings/2017-05-26_15-55-15/info.txt
+	fast-lda/opt_report-stage3.txt
+	fast-lda/opt_report.txt
+	timings/2017-05-27_16-01-04/info.txt
 
 The diff, if any, follows:
 
