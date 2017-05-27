@@ -77,12 +77,6 @@ class Cost:
             self.divs = adds[2]
             self.logs = adds[3]
             self.exps = adds[4]
-        elif isinstance(adds, int):
-            self.adds = adds
-            self.muls = adds
-            self.divs = adds
-            self.logs = adds
-            self.exps = adds
         else:
             self.adds = adds
             self.muls = muls

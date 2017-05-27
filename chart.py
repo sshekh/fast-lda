@@ -125,7 +125,7 @@ def conv_plot(filenames, vecs, legends=None):
 
 def usage_and_quit():
     print("\ncompare any number of timing files for #cycles perf and #comp cycles")
-    print("\npython chart.py <filenames full path list...>")
+    print("\npython chart.py <filenames path ?vec list...>")
     print("\na good convention is to go from slow file to fast file")
     sys.exit(1)
 
