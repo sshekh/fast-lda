@@ -178,7 +178,7 @@ def parse_perf_files(dir_path):
             # Extract K and N from the filename
             K, N = map(int, re.findall(regex, filename))
             if (K, N) in num_docs:
-                k1, n1, flops, _, perf = pltutils.read_one_output(fullname)
+                k1, n1, flops, _, _, perf = pltutils.read_one_output(fullname)
                 assert k1 == K and n1 == N, "Wrong file"
                 flop_count[ num_docs.index((K, N)) ] = flops[ fns.index("RUN_EM") ]
                 data['x'].append(N)

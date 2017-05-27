@@ -338,6 +338,6 @@ def read_one_output(fname, vec=False):
             else:
                 ret_perf_list[i] = ret_flop_list[i] / ret_avg_cycle_list[i]
 
-    return K, N, ret_flop_list, ret_tot_cycle_list, ret_perf_list
+    return K, N, ret_flop_list, ret_tot_cycle_list, ret_avg_cycle_list, ret_perf_list
 
 

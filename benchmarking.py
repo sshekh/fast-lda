@@ -55,7 +55,7 @@ def benchmark(dirpath, vec=False, xaxis='N'):
 
     for filename in listdir(dirpath):
         if filename.startswith("fast") or filename.startswith("slow"):
-            K, N, _, _, perf = pltutils.read_one_output(join(dirpath, filename), vec=vec)
+            K, N, _, _, _, perf = pltutils.read_one_output(join(dirpath, filename), vec=vec)
             dic = data_1 if filename[0] == 'f' else data_2
             for i, fn in enumerate(pltutils.fns):
                 if not fn in dic: dic[fn] = {'x' : [], 'y' : []}

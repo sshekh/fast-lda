@@ -11,11 +11,11 @@ import os
 colors = { "RUN_EM" : "green", "LDA_INFERENCE" : "blue", "DIGAMMA" : "black", "LOG_SUM" : "purple",
         "LOG_GAMMA" : "purple", "TRIGAMMA" : "cyan", "DOC_E_STEP" : "orange", "LIKELIHOOD" : "red", "MLE" : "#5E6382", "OPT_ALPHA" : "#00bcd4"}
 
-def stacked_bar_plot(filenames, xticklabels=None):
+def stacked_bar_plot(filenames, vecs, xticklabels=None):
     cycles = []
     for i, filename in enumerate(filenames):
         pltutils.set_corpus_stats(dirname(filename))
-        _, _, _, cls, _ = pltutils.read_one_output(filename)
+        _, _, _, cls, _, _ = pltutils.read_one_output(filename, vec=vecs[i])
         cycles.append(cls)
         pass
     cycles = np.array(cycles)
@@ -41,14 +41,14 @@ def stacked_bar_plot(filenames, xticklabels=None):
 
 
 colors2 = ['red', 'blue', 'orange', 'yellow', 'cyan']
-def bar_plot(filenames, legends=None):
+def bar_plot(filenames, vecs, legends=None):
     width = 1 / (len(filenames) + 1.)   # width of bars
     ind = np.arange(len(fns))
     fig, ax = plt.subplots()
     p = [None] * len(filenames)
     for i, filename in enumerate(filenames):
         pltutils.set_corpus_stats(dirname(filename))
-        _, _, _, cycles, _ = pltutils.read_one_output(filename)
+        _, _, _, cycles, _, _ = pltutils.read_one_output(filename, vec=vecs[i])
         p[i] = ax.bar(ind + i * width, cycles, width, color = colors2[i])
 
     ax.set_ylabel('cycle count')
@@ -61,7 +61,27 @@ def bar_plot(filenames, legends=None):
     ax.grid(linestyle='--', linewidth=2, axis='y')
     plt.show()
 
-def perf_plot(filenames, legends=None):
+def avgc_plot(filenames, vecs, legends=None):
+    width = 1 / (len(filenames) + 1.)   # width of bars
+    ind = np.arange(len(fns))
+    fig, ax = plt.subplots()
+    p = [None] * len(filenames)
+    for i, filename in enumerate(filenames):
+        pltutils.set_corpus_stats(dirname(filename))
+        _, _, _, _, avg_cycles, _ = pltutils.read_one_output(filename, vec=vecs[i])
+        p[i] = ax.bar(ind + i * width, avg_cycles, width, color = colors2[i])
+
+    ax.set_ylabel('avg cycle count')
+    ax.set_title('Avg Cycles counts for different runs per group')
+    ax.set_xticks(ind)
+    ax.set_xticklabels(fns)
+    ax.set_yscale("log")
+    if legends is not None:
+        plt.legend(p, legends)
+    ax.grid(linestyle='--', linewidth=2, axis='y')
+    plt.show()
+
+def perf_plot(filenames, vecs, legends=None):
     width = 1 / (len(filenames) + 1.)   # width of bars
     ind = np.arange(len(fns))
     fig, ax = plt.subplots()
@@ -69,7 +89,7 @@ def perf_plot(filenames, legends=None):
     #print(fns)
     for i, filename in enumerate(filenames):
         pltutils.set_corpus_stats(dirname(filename))
-        _, _, flp, cls, perf = pltutils.read_one_output(filename)
+        _, _, flp, cls, _, perf = pltutils.read_one_output(filename, vec=vecs[i])
         #print(perf)
         #print(flp)
         #print(cls)
@@ -78,6 +98,26 @@ def perf_plot(filenames, legends=None):
     ax.set_title('performance for different runs per group')
     ax.set_xticks(ind)
     ax.set_xticklabels(fns)
+    if legends is not None:
+        plt.legend(p, legends)
+    ax.grid(linestyle='--', linewidth=2, axis='y')
+    plt.show()
+
+def conv_plot(filenames, vecs, legends=None):
+    width = 1 / (len(filenames) + 1.)   # width of bars
+    its = list(pltutils.iters.keys())
+    ind = np.arange(len(its))
+    fig, ax = plt.subplots()
+    p = [None] * len(filenames)
+    for i, filename in enumerate(filenames):
+        pltutils.set_corpus_stats(dirname(filename))
+        pltutils.read_one_output(filename, vec=vecs[i])
+        convs = [pltutils.iters[it] for it in its]
+        p[i] = ax.bar(ind + i * width, convs, width, color = colors2[i])
+    ax.set_ylabel('#convergence iters')
+    ax.set_title('#convergence iters for different runs per group')
+    ax.set_xticks(ind)
+    ax.set_xticklabels(its)
     if legends is not None:
         plt.legend(p, legends)
     ax.grid(linestyle='--', linewidth=2, axis='y')
@@ -92,8 +132,16 @@ def usage_and_quit():
 if __name__ == "__main__":
     if str(sys.argv[1]) in {"-h", "--help"} or len(sys.argv) == 1:
         usage_and_quit()
-    filenames = sys.argv[1:]
+    filenames = []
     legends = []
+    vecs = []
+    
+    for arg in sys.argv[1:]:
+        if arg in {"vec", "no-vec"}:
+            vecs[-1] = True if arg == "vec" else False
+        else:
+            filenames.append(arg)
+            vecs.append(False)
 
     for filename in filenames:
 
@@ -101,6 +149,8 @@ if __name__ == "__main__":
         something = pname.split('.')[0].split('_')
         legends.append(something[0] + " " + something[2] + " " + something[3])
 
-    bar_plot(filenames, legends)
-    perf_plot(filenames, legends)
-    stacked_bar_plot(filenames, legends)
+    bar_plot(filenames, vecs, legends)
+    avgc_plot(filenames, vecs, legends)
+    conv_plot(filenames, vecs, legends)
+    perf_plot(filenames, vecs, legends)
+    stacked_bar_plot(filenames, vecs, legends)

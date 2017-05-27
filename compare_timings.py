@@ -15,7 +15,7 @@ def read_one_timer_all_Ns(path, timer_name, label="", xaxis='N'):
     for filename in listdir(path):
             if("timings" in filename):
                 fname = join(path, filename)
-                K, N, _, _, perf = pltutils.read_one_output(fname)
+                K, N, _, _, _, perf = pltutils.read_one_output(fname)
                 data['x'].append(K if xaxis == 'K' else N)
                 data['y'].append(perf[fns.index(timer_name)])
 
