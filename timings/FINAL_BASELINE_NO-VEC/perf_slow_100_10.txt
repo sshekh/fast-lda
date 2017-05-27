@@ -1,0 +1,18 @@
+
+ Performance counter stats for './slow-lda/lda est 10 1 100 master-settings.txt ./slow-lda/europarl_fi/europarl_fi.dat random ./slow-lda/logfiles ./results/timings_2017-05-26_19-51-32.csv':
+
+ 5,612,713,065,853      instructions              #    0.58  insn per cycle           (41.67%)
+ 9,694,032,779,593      cycles                                                        (50.00%)
+    92,608,284,489      cache-references                                              (50.00%)
+    59,877,195,763      cache-misses              #   64.656 % of all cache refs      (50.00%)
+    19,602,581,999      LLC-loads                                                     (50.00%)
+     7,637,870,362      LLC-load-misses           #   38.96% of all LL-cache hits     (50.00%)
+       853,199,503      LLC-stores                                                    (16.67%)
+       160,289,465      LLC-store-misses                                              (16.67%)
+ 1,296,818,869,195      dTLB-loads                                                    (25.00%)
+     1,536,845,335      dTLB-load-misses          #    0.12% of all dTLB cache hits   (33.33%)
+   623,850,752,153      dTLB-stores                                                   (33.33%)
+        44,767,601      dTLB-store-misses                                             (33.33%)
+
+    2466.992019353 seconds time elapsed
+
