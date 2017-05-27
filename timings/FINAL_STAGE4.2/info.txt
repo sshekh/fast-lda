@@ -1,0 +1,41 @@
+Bench run 2017-05-27_12-23-44
+Ran with the command-line `bench --n=10 --k=100,400,100 -fla`
+Comment: "stage 4.2 xl final run"
+===============================
+
+OPTIONS
+use_long=True
+use_icc=True
+use_doubles=True
+END OPTIONS
+
+Latest commit at time of writing:
+690ee2eb (on branch Stage4.2-VecInline)
+
+Additionally, the repo contained the following untracked files:
+	timings/2017-05-26_00-05-44/fast_timings_400_10.csv
+	timings/2017-05-26_00-05-44/info.txt
+	timings/2017-05-26_00-05-44/perf_fast_400_10.txt
+	timings/2017-05-26_00-23-19/info.txt
+	timings/2017-05-26_00-23-19/perf_slow_100_10.txt
+	timings/2017-05-26_00-23-19/slow_timings_100_10.csv
+	timings/2017-05-26_15-20-04/info.txt
+	timings/2017-05-26_15-20-04/perf_fast_28_500.txt
+	timings/2017-05-27_12-07-29/info.txt
+	timings/2017-05-27_12-07-29/perf_slow_10_100.txt
+	timings/2017-05-27_12-07-29/slow_timings_10_100.csv
+	timings/2017-05-27_12-23-44/info.txt
+
+The diff, if any, follows:
+
+
+
+===============================
+
+Settings file:
+var max iter 20
+var convergence 1e-6
+em max iter 100
+em convergence 1e-4
+alpha estimate
+
