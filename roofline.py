@@ -181,7 +181,7 @@ def parse_perf_files(dir_path):
                 k1, n1, flops, _, _, perf = pltutils.read_one_output(fullname)
                 assert k1 == K and n1 == N, "Wrong file"
                 flop_count[ num_docs.index((K, N)) ] = flops[ fns.index("RUN_EM") ]
-                data['x'].append(N)
+                data['x'].append((K,N))
                 data['y'].append(perf[ fns.index("RUN_EM") ])
                 #print(flop_count)
                 pass
@@ -193,9 +193,9 @@ def parse_perf_files(dir_path):
     plt_op = []
     plt_perf = []
     for i in range(len(num_docs)):
-        n = num_docs[i][1]
-        if n in data['x']:
-            idx = data['x'].index(n)
+        kn = num_docs[i]
+        if kn in data['x']:
+            idx = data['x'].index(kn)
             assert flop_count[i] is not 0
             plt_op.append(operational_intensity[i])
             plt_perf.append(data['y'][idx])
