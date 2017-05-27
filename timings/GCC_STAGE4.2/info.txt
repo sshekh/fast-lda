@@ -1,0 +1,32 @@
+Bench run 2017-05-27_17-27-35
+Ran with the command-line `bench --n=1000 --k=48 -fag`
+Comment: "stage 4.2 small corpus n=1000 k=48, gcc"
+===============================
+
+OPTIONS
+use_icc=False
+use_doubles=True
+use_long=False
+END OPTIONS
+
+Latest commit at time of writing:
+ad47bd03 (on branch Stage4.2-VecInline)
+
+Additionally, the repo contained the following untracked files:
+	fast-lda/opt_report-stage3.txt
+	fast-lda/opt_report.txt
+	timings/2017-05-27_17-27-35/info.txt
+
+The diff, if any, follows:
+
+
+
+===============================
+
+Settings file:
+var max iter 20
+var convergence 1e-6
+em max iter 100
+em convergence 1e-4
+alpha estimate
+
