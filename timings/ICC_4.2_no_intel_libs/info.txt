@@ -1,0 +1,32 @@
+Bench run 2017-05-27_18-01-52
+Ran with the command-line `bench --n=1000 --k=48 -fa --no-intel`
+Comment: "stage 4.2 small corpus n=1000 k=48, icc but no intel libs"
+===============================
+
+OPTIONS
+use_icc=True
+use_long=False
+use_doubles=True
+END OPTIONS
+
+Latest commit at time of writing:
+4735ca0b (on branch 4.2no_intel)
+
+Additionally, the repo contained the following untracked files:
+	fast-lda/opt_report-stage3.txt
+	fast-lda/opt_report.txt
+	timings/2017-05-27_18-01-52/info.txt
+
+The diff, if any, follows:
+
+
+
+===============================
+
+Settings file:
+var max iter 20
+var convergence 1e-6
+em max iter 100
+em convergence 1e-4
+alpha estimate
+
