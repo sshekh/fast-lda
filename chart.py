@@ -40,7 +40,7 @@ def stacked_bar_plot(filenames, vecs, xticklabels=None):
     plt.show()
 
 
-colors2 = ['red', 'blue', 'orange', 'yellow', 'cyan']
+colors2 = ['red', 'blue', 'orange', 'yellow', 'cyan', "#5E6382", "#00bcd4"]
 def bar_plot(filenames, vecs, legends=None):
     width = 1 / (len(filenames) + 1.)   # width of bars
     ind = np.arange(len(fns))
