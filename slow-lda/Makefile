@@ -25,7 +25,7 @@ OUTNAME=-olda
 # CC should be either gcc (default), icc (intel linux) or icl (intel windows)
 #_CRT_SECURE_NO_WARNINGS: silence warnings about scanf, fopen and other stuff.
 ifeq ($(CC),gcc)
-	CFLAGS= -O3 -Wall -g -std=c99 -D_CRT_SECURE_NO_WARNINGS -march=core-avx2 -fno-vectorize -fno-tree-vectorize -fno-slp-vectorize
+	CFLAGS= -O3 -Wall -g -std=c99 -D_CRT_SECURE_NO_WARNINGS -march=core-avx2 -fno-tree-vectorize
 	LDFLAGS= -lm
 else
 	ifeq ($(CC),icl)

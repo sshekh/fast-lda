@@ -308,9 +308,12 @@ def construct_make_command(which, defines, use_icc, use_compiler_vec):
             if which=='fast' and not use_compiler_vec:
                 vecflags = '-no-vec'
     else:
-        compiler = ' CC=gcc' #gcc by default but better be explicit
-        if which=='fast' and not use_compiler_vec:
-            vecflags = '-fno-vectorize -fno-tree-vectorize -fno-slp-vectorize'
+        compiler = ' CC=gcc'
+        if which == 'fast' and not use_compiler_vec:
+            if sys.platform == 'darwin':
+                vecflags = '-fno-vectorize -fno-tree-vectorize -fno-slp-vectorize'
+            else:
+                vecflags = '-fno-tree-vectorize'
 
     # Construct the actual make command
     compile_command += ' make'
