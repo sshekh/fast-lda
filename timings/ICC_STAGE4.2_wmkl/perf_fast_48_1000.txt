@@ -1,0 +1,20 @@
+mkdir: cannot create directory ‘./fast-lda/logfiles’: File exists
+mkdir: cannot create directory ‘results’: File exists
+
+ Performance counter stats for './fast-lda/lda est 1000 1 48 master-settings.txt ./fast-lda/ap/ap.dat random ./fast-lda/logfiles':
+
+   339,122,738,738      instructions              #    1.53  insn per cycle           (41.67%)
+   221,036,932,031      cycles                                                        (50.00%)
+       945,330,622      cache-references                                              (50.00%)
+        33,522,968      cache-misses              #    3.546 % of all cache refs      (50.00%)
+       103,189,698      LLC-loads                                                     (50.00%)
+         7,418,045      LLC-load-misses           #    7.19% of all LL-cache hits     (50.01%)
+        58,202,995      LLC-stores                                                    (16.67%)
+           840,361      LLC-store-misses                                              (16.66%)
+   103,889,091,524      dTLB-loads                                                    (25.00%)
+            25,184      dTLB-load-misses          #    0.00% of all dTLB cache hits   (33.33%)
+    37,634,993,094      dTLB-stores                                                   (33.33%)
+             9,341      dTLB-store-misses                                             (33.34%)
+
+      55.988938791 seconds time elapsed
+

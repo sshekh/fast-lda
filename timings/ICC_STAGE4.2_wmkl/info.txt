@@ -1,0 +1,30 @@
+Bench run 2017-05-27_17-33-19
+Ran with the command-line `bench -fa --k=48 --n=1000`
+Comment: "stage 4.2 small icc"
+===============================
+
+OPTIONS
+use_icc=True
+use_long=False
+use_doubles=True
+END OPTIONS
+
+Latest commit at time of writing:
+ad47bd03 (on branch Stage4.2-VecInline)
+
+Additionally, the repo contained the following untracked files:
+	timings/2017-05-27_17-33-19/info.txt
+
+The diff, if any, follows:
+
+
+
+===============================
+
+Settings file:
+var max iter 20
+var convergence 1e-6
+em max iter 100
+em convergence 1e-4
+alpha estimate
+
