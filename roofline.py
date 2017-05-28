@@ -7,7 +7,7 @@ import os
 from os.path import join
 
 
-X_MAX_LIM = 2**(9)
+X_MAX_LIM = 2**(7)
 X_MIN_LIM = 2**(-4)
 Y_MIN_LIM = 2**(-4)
 Y_MAX_LIM = 2**(6)
@@ -31,24 +31,27 @@ def create_roofline(paths):
     make_axes(axes)
     plot_roofs(axes, 'f') # Fred: we'll see later if we want to change this
 
-    colors = [(0.8, 0.0, 0.0), (0.0, 0.8, 0.0), (0.0, 0.0, 0.8),
-              (0.8, 0.8, 0.0), (0.0, 0.8, 0.8), (0.8, 0.0, 0.8),
-              (0.8, 0.8, 0.8)]
+    # colors = [(0.8, 0.0, 0.0), (0.0, 0.8, 0.0), (0.0, 0.0, 0.8),
+    #           (0.8, 0.8, 0.0), (0.0, 0.8, 0.8), (0.8, 0.0, 0.8),
+    #           (0.8, 0.8, 0.8)]
 
+    colors = ["darkred", "green", "orangered", "blue", "deeppink", "darkviolet"]
     for run, col in zip(runs, colors):
         plot_run(run, col)
 
     plt.show()
 
 def make_axes(axes):
-    axes.set_xlabel('Operational Intensity [Flops/Byte]')
+    axes.tick_params(labelsize='x-large')
+    axes.set_xlabel('Operational Intensity [Flops/Byte]', size='xx-large')
     axes.set_axisbelow(True)
     axes.yaxis.grid(color='white', linestyle='solid')
+    axes.xaxis.grid(color='white', linestyle='solid')
     axes.set_facecolor((211.0/255,211.0/255,211.0/255))
     #axes.set_ylim(X_MIN_LIM, Y_MAX_LIM)
     #axes.set_xlim(X_MIN_LIM, X_MAX_LIM)
 
-    plt.ylabel('Performance [flops/cycle]',rotation="0")
+    plt.ylabel('Performance [Flops/Cycle]',rotation="0", size='xx-large')
     axes.yaxis.set_label_coords(0.09,1.02)
     axes.spines['left'].set_color('#dddddd')
     axes.spines['right'].set_color('#dddddd')
@@ -79,16 +82,24 @@ def plot_roofs(axes, precision):
     beta_line_y = pi
     beta_line_y.append(X_MIN_LIM * beta)
 
-    axes.loglog(beta_line_x, beta_line_y, basex=2, basey=2,color='black', linewidth=0.8)
+    axes.loglog(beta_line_x, beta_line_y, basex=2, basey=2,color='black', linewidth=2)
 
 def plot_perf_roof(pi, beta, name, axes):
     roof_pi_y = [pi, pi]
     roof_pi_x = [X_MIN_LIM, X_MAX_LIM]
-    axes.plot(roof_pi_x, roof_pi_y, color='black', linestyle='solid', linewidth=0.8)
+    roof_compute_x = [pi / beta, X_MAX_LIM]
+    #axes.plot(roof_pi_x, roof_pi_y, color='black', linestyle='solid', linewidth=0.8)
+    if 'vector' in name:
+        axes.plot(roof_compute_x, roof_pi_y, color='black', linestyle='solid', linewidth=2)
+        # axes.plot([roof_compute_x[0], roof_compute_x[0]], [pi, Y_MIN_LIM], color='white', linestyle='--', linewidth=1)
+    else:
+        axes.plot(roof_compute_x, roof_pi_y, color='black', linestyle='solid', linewidth=2)
+        # axes.plot([roof_compute_x[0], roof_compute_x[0]], [pi, Y_MIN_LIM], color='white', linestyle='--', linewidth=1)
+
     # We want to offset the text by a small amount above.
     # But since we're in log-log world, we must scale this offset by how high we
     # are so that it's the same for all lines.
-    axes.text(5, pi + (pi * 0.2), name)
+    axes.text(5, pi + (pi * 0.2), name, size='x-large')
 
 
 def plot_run(run, col):
@@ -102,31 +113,31 @@ def plot_run(run, col):
         run.perfs,
         color=col,
         marker="o",
-        markersize=4,
-        linewidth=1,
+        markersize=6,
+        linewidth=1.5,
         antialiased=True)
 
     # Arrow to the first element
     plt.annotate(
-        str(run.nums_docs[0]),
-        xy=(run.opints[0], run.perfs[0]), xytext=(0, -20),
+        str(run.nums_docs[0][0]),
+        xy=(run.opints[0], run.perfs[0]), xytext=(0, -25),
         textcoords='offset points', ha='center', va='bottom',
-        size='x-small',
+        size='medium',
         arrowprops=dict(arrowstyle = '-'))
 
     # Arrow to the last element
     plt.annotate(
-        str(run.nums_docs[-1]),
-        xy=(run.opints[-1], run.perfs[-1]), xytext=(0, -20),
+        str(run.nums_docs[-1][0]),
+        xy=(run.opints[-1], run.perfs[-1]), xytext=(0, -25),
         textcoords='offset points', ha='center', va='bottom',
-        size='x-small',
+        size='medium',
         arrowprops=dict(arrowstyle = '-'))
 
     # Label is to the right of the first element, since in general we go
     # left as we go further in the series
-    xlab = run.opints[0] + 2
+    xlab = run.opints[0] * 1.2
     ylab = run.perfs[0]
-    plt.text(xlab, ylab, run.label, color=col, ha='left', va='center', size='x-small')
+    plt.text(xlab, ylab, run.label, color=col, ha='left', va='center', size='x-large')
 
 def parse_perf_files(dir_path):
     pltutils.set_corpus_stats(dir_path)
@@ -168,7 +179,9 @@ def parse_perf_files(dir_path):
 
     flop_count = [0] * len(bytes_transfers)
 
-    num_docs, bytes_transfers = (zip(*sorted(zip(num_docs, bytes_transfers))))
+    tuples_sorted = sorted(zip(num_docs, bytes_transfers))
+    num_docs = [x[0] for x in tuples_sorted]
+    bytes_transfers = [x[1] for x in tuples_sorted]
 
     #Get the flop count and the performance from the timings
     data = {'x' : [], 'y' : []}

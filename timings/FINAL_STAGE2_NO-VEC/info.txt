@@ -1,6 +1,6 @@
-Bench run 2017-05-28_00-28-41
-Ran with the command-line `bench -fal --no-vec --k=100,400,100 --n=10`
-Comment: "stage 2 novec tlb corrected fuck this project"
+Bench run 2017-05-26_17-44-31
+Ran with the command-line `bench -fal --k=100,400,100 --n=10 --no-vec`
+Comment: "Memory optimizations"
 ===============================
 
 OPTIONS
