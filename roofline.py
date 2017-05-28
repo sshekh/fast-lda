@@ -36,8 +36,9 @@ def create_roofline(paths):
     #           (0.8, 0.8, 0.8)]
 
     colors = ["darkred", "green", "orangered", "blue", "deeppink", "darkviolet"]
-    for run, col in zip(runs, colors):
-        plot_run(run, col)
+    extra_label_offsets = [(1,1), (1,0.8), (1.0,1.2), (1.1,0.8), (1.2,1), (1,1.4)]
+    for run, col, offsets in zip(runs, colors, extra_label_offsets):
+        plot_run(run, col, offsets)
 
     plt.show()
 
@@ -102,7 +103,7 @@ def plot_perf_roof(pi, beta, name, axes):
     axes.text(5, pi + (pi * 0.2), name, size='x-large')
 
 
-def plot_run(run, col):
+def plot_run(run, col, offsets):
 
     #print(run.opints)
     #print(run.perfs)
@@ -117,26 +118,26 @@ def plot_run(run, col):
         linewidth=1.5,
         antialiased=True)
 
-    # Arrow to the first element
-    plt.annotate(
-        str(run.nums_docs[0][0]),
-        xy=(run.opints[0], run.perfs[0]), xytext=(0, -25),
-        textcoords='offset points', ha='center', va='bottom',
-        size='medium',
-        arrowprops=dict(arrowstyle = '-'))
+    # # Arrow to the first element
+    # plt.annotate(
+    #     str(run.nums_docs[0][0]),
+    #     xy=(run.opints[0], run.perfs[0]), xytext=(0, -25),
+    #     textcoords='offset points', ha='center', va='bottom',
+    #     size='medium',
+    #     arrowprops=dict(arrowstyle = '-'))
 
-    # Arrow to the last element
-    plt.annotate(
-        str(run.nums_docs[-1][0]),
-        xy=(run.opints[-1], run.perfs[-1]), xytext=(0, -25),
-        textcoords='offset points', ha='center', va='bottom',
-        size='medium',
-        arrowprops=dict(arrowstyle = '-'))
+    # # Arrow to the last element
+    # plt.annotate(
+    #     str(run.nums_docs[-1][0]),
+    #     xy=(run.opints[-1], run.perfs[-1]), xytext=(0, -25),
+    #     textcoords='offset points', ha='center', va='bottom',
+    #     size='medium',
+    #     arrowprops=dict(arrowstyle = '-'))
 
     # Label is to the right of the first element, since in general we go
     # left as we go further in the series
-    xlab = run.opints[0] * 1.2
-    ylab = run.perfs[0]
+    xlab = run.opints[0] * 1.2 * offsets[0]
+    ylab = run.perfs[0] * offsets[1]
     plt.text(xlab, ylab, run.label, color=col, ha='left', va='center', size='x-large')
 
 def parse_perf_files(dir_path):

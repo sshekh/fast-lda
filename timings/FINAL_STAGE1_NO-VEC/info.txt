@@ -1,6 +1,6 @@
 Bench run 2017-05-26_19-21-12
 Ran with the command-line `bench --n=10 --k=100,400,100 -fla --no-vec`
-Comment: "novec xl stage 1"
+Comment: "1) Transposition"
 ===============================
 
 OPTIONS

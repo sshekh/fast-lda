@@ -40,7 +40,7 @@ def stacked_bar_plot(filenames, vecs, xticklabels=None):
     plt.show()
 
 
-colors2 = ['red', 'blue', 'orange', 'yellow', 'cyan', "#5E6382", "#00bcd4"]
+colors2 = ["darkred", "green", "orangered", 'yellow', 'cyan', "#5E6382", "#00bcd4"]
 def bar_plot(filenames, vecs, legends=None):
     width = 1 / (len(filenames) + 1.)   # width of bars
     ind = np.arange(len(fns))
@@ -149,8 +149,8 @@ if __name__ == "__main__":
         something = pname.split('.')[0].split('_')
         legends.append(something[0] + " " + something[2] + " " + something[3])
 
-    bar_plot(filenames, vecs, legends)
-    avgc_plot(filenames, vecs, legends)
-    conv_plot(filenames, vecs, legends)
+    #bar_plot(filenames, vecs, legends)
+    #avgc_plot(filenames, vecs, legends)
+    #conv_plot(filenames, vecs, legends)
     perf_plot(filenames, vecs, legends)
-    stacked_bar_plot(filenames, vecs, legends)
+    #stacked_bar_plot(filenames, vecs, legends)

@@ -1,6 +1,6 @@
 Bench run 2017-05-26_17-44-31
 Ran with the command-line `bench -fal --k=100,400,100 --n=10 --no-vec`
-Comment: "Memory optimizations"
+Comment: "2) Gathering"
 ===============================
 
 OPTIONS
