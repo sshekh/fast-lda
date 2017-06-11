@@ -29,7 +29,7 @@ def create_roofline(paths):
 
     fig, axes = plt.subplots()
     make_axes(axes)
-    plot_roofs(axes, 'f') # Fred: we'll see later if we want to change this
+    plot_roofs(axes, 'd') # Fred: we'll see later if we want to change this
 
     # colors = [(0.8, 0.0, 0.0), (0.0, 0.8, 0.0), (0.0, 0.0, 0.8),
     #           (0.8, 0.8, 0.0), (0.0, 0.8, 0.8), (0.8, 0.0, 0.8),
