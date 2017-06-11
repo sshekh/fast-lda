@@ -1,0 +1,89 @@
+Bench run 2017-06-11_17-57-40
+Ran with the command-line `bench --k=48 --n=1000 -fa --no-intel`
+Comment: "icc, use mkl but deactivate svml"
+===============================
+
+OPTIONS
+use_doubles=True
+use_icc=True
+use_long=False
+END OPTIONS
+
+Latest commit at time of writing:
+4735ca0b (on branch 4.2no_intel)
+
+Additionally, the repo contained the following untracked files:
+	fast-lda/opt_report-stage3.txt
+	fast-lda/opt_report.txt
+	timings/2017-05-28_16-55-31/fast_timings_300_10.csv
+	timings/2017-05-28_16-55-31/info.txt
+	timings/2017-05-28_16-55-31/perf_fast_300_10.txt
+	timings/2017-06-11_10-54-45/fast_timings_20_10.csv
+	timings/2017-06-11_10-54-45/info.txt
+	timings/2017-06-11_10-54-45/perf_fast_20_10.txt
+	timings/2017-06-11_11-01-34/fast_timings_50_10.csv
+	timings/2017-06-11_11-01-34/info.txt
+	timings/2017-06-11_11-01-34/perf_fast_50_10.txt
+	timings/2017-06-11_13-26-27/fast_timings_48_1000.csv
+	timings/2017-06-11_13-26-27/info.txt
+	timings/2017-06-11_13-26-27/perf_fast_48_1000.txt
+	timings/2017-06-11_14-54-22/fast_timings_48_1000.csv
+	timings/2017-06-11_14-54-22/info.txt
+	timings/2017-06-11_14-54-22/perf_fast_48_1000.txt
+	timings/2017-06-11_14-58-06/info.txt
+	timings/2017-06-11_14-58-06/perf_fast_48_1000.txt
+	timings/2017-06-11_14-58-18/info.txt
+	timings/2017-06-11_14-58-18/perf_fast_48_1000.txt
+	timings/2017-06-11_14-59-35/info.txt
+	timings/2017-06-11_14-59-35/perf_fast_48_1000.txt
+	timings/2017-06-11_15-03-56/info.txt
+	timings/2017-06-11_15-03-56/perf_fast_48_1000.txt
+	timings/2017-06-11_15-04-19/info.txt
+	timings/2017-06-11_15-04-19/perf_fast_48_1000.txt
+	timings/2017-06-11_15-38-14/fast_timings_48_1000.csv
+	timings/2017-06-11_15-38-14/info.txt
+	timings/2017-06-11_15-38-14/perf_fast_48_1000.txt
+	timings/2017-06-11_17-54-43/fast_timings_48_1000.csv
+	timings/2017-06-11_17-54-43/info.txt
+	timings/2017-06-11_17-54-43/perf_fast_48_1000.txt
+	timings/2017-06-11_17-57-40/info.txt
+
+The diff, if any, follows:
+
+diff --git a/runner.py b/runner.py
+index 930c264..5c00f44 100644
+--- a/runner.py
++++ b/runner.py
+@@ -270,7 +270,8 @@ def usage_and_quit():
+     print('\t-g: Compile with gcc instead of icc.')
+     print('\t-l: Use long documents (europarl finnish corpus)')
+     print('\t--no-vec: No compiler vectorization')
+-
++    print('\t-x: Do not use MKL library functions (vectorized lgamma)')
++    print('\t--no-intel: Do not use SVML library functions (exp, log)')
+     sys.exit()
+ 
+ def list_from_range(r):
+@@ -404,9 +405,11 @@ if __name__ == '__main__':
+         if silence_output:
+             defines_fast.append('IGNORE_PRINTF')
+             defines_slow.append('IGNORE_PRINTF')
+-        if not use_mkl or no_intel:
++        if not use_mkl:
+             defines_fast.append('NO_MKL')
+             defines_slow.append('NO_MKL')
++		
++
+ 
+         # Actually make the programs
+         print('Preparing the fast...')
+
+===============================
+
+Settings file:
+var max iter 20
+var convergence 1e-6
+em max iter 100
+em convergence 1e-4
+alpha estimate
+
