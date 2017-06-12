@@ -1,6 +1,6 @@
 Bench run 2017-06-11_17-57-40
 Ran with the command-line `bench --k=48 --n=1000 -fa --no-intel`
-Comment: "icc, use mkl but deactivate svml"
+Comment: "icc + MKL"
 ===============================
 
 OPTIONS
