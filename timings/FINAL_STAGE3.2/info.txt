@@ -1,6 +1,6 @@
 Bench run 2017-05-27_16-01-04
 Ran with the command-line `bench --n=10 --k=100,400,100 -fla`
-Comment: "4) Aligned memory"
+Comment: "Aligned memory"
 ===============================
 
 OPTIONS

@@ -1,6 +1,6 @@
 Bench run 2017-05-27_17-33-19
 Ran with the command-line `bench -fa --k=48 --n=1000`
-Comment: "stage 4.2 small icc"
+Comment: "icc + MKL + SVML"
 ===============================
 
 OPTIONS

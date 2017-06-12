@@ -1,6 +1,6 @@
 Bench run 2017-05-27_17-27-35
 Ran with the command-line `bench --n=1000 --k=48 -fag`
-Comment: "stage 4.2 small corpus n=1000 k=48, gcc"
+Comment: "gcc"
 ===============================
 
 OPTIONS
