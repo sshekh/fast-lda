@@ -97,44 +97,49 @@ def perf_plot(filenames, vecs, legends=None):
     for i, filename in enumerate(filenames):
         pltutils.set_corpus_stats(dirname(filename))
         _, _, flp, cls, _, perf = pltutils.read_one_output(filename, vec=vecs[i])
-        #print(perf)
-        #print(flp)
-        #print(cls)
         p[i] = ax.bar(ind + i * width, perf[:-3], width, color = colors2[i])
-    ax.set_ylabel('Performance [Flops/Cycle]',rotation="0", size=28)
-    ax.yaxis.set_label_coords(0.1, 1.03)
-    # ax.set_title('performance for different runs per group')
-    ax.set_facecolor((211.0/255,211.0/255,211.0/255))
+
     ax.set_xticks(ind)
     ax.set_xticklabels(fns)
+    plt.setp(ax.get_xticklabels(), rotation=30, horizontalalignment='center')
+
+    ax.set_ylabel('Performance [Flops/Cycle]',rotation="0", size=28)
+    ax.yaxis.set_label_coords(0.22, 1.03)
+    fig.tight_layout()
+    # ax.set_title('performance for different runs per group')
+    ax.tick_params(axis='x', labelsize=20)
+    ax.tick_params(axis='y', labelsize=24)
+    ax.set_facecolor((211.0/255,211.0/255,211.0/255))
+    
+
     if legends is not None:
-        plt.legend(p, legends)
+        plt.legend(p, legends, prop={'size':22})
     ax.grid(linestyle='--', linewidth=2, axis='y')
     plt.show()
 
 
 
 # for icc vs gcc
-def perf_plot(filenames, vecs, legends=None):
-    width = 1 / (len(filenames) + 1.)   # width of bars
-    ind = np.arange(len(fns[:1]))
-    fig, ax = plt.subplots()
-    p = [None] * len(filenames)
-    for i, filename in enumerate(filenames):
-        pltutils.set_corpus_stats(dirname(filename))
-        _, _, flp, cls, _, perf = pltutils.read_one_output(filename, vec=vecs[i])
-        p[i] = ax.bar(ind + 1.5 * i * width, perf[:1], width, color = colors2[i])
-    ax.set_ylabel('Performance [Flops/Cycle]',rotation="0", size=28)
-    ax.yaxis.set_label_coords(0.1, 1.03)
-    #ax.set_title('performance for different runs per group')
-    ax.tick_params(labelsize=24)
-    ax.set_facecolor((211.0/255,211.0/255,211.0/255))
-    ax.set_xticklabels(legends)
-    ax.set_xticks([ind + 1.5 * i * width for i in range(len(filenames))])
-    #if legends is not None:
-    #    plt.legend(p, legends, prop={'size':24})
-    ax.grid(linestyle='--', linewidth=2, axis='y')
-    plt.show()
+# def perf_plot(filenames, vecs, legends=None):
+#     width = 1 / (len(filenames) + 1.)   # width of bars
+#     ind = np.arange(len(fns[:1]))
+#     fig, ax = plt.subplots()
+#     p = [None] * len(filenames)
+#     for i, filename in enumerate(filenames):
+#         pltutils.set_corpus_stats(dirname(filename))
+#         _, _, flp, cls, _, perf = pltutils.read_one_output(filename, vec=vecs[i])
+#         p[i] = ax.bar(ind + 1.5 * i * width, perf[:1], width, color = colors2[i])
+#     ax.set_ylabel('Performance [Flops/Cycle]',rotation="0", size=28)
+#     ax.yaxis.set_label_coords(0.1, 1.03)
+#     #ax.set_title('performance for different runs per group')
+#     ax.tick_params(labelsize=24)
+#     ax.set_facecolor((211.0/255,211.0/255,211.0/255))
+#     ax.set_xticklabels(legends)
+#     ax.set_xticks([ind + 1.5 * i * width for i in range(len(filenames))])
+#     #if legends is not None:
+#     #    plt.legend(p, legends, prop={'size':24})
+#     ax.grid(linestyle='--', linewidth=2, axis='y')
+#     plt.show()
 
 def run_comp(filenames, vecs, legends=None):
     ind = np.arange(len(filenames))
