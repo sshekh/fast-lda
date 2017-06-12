@@ -36,6 +36,7 @@ def create_roofline(paths):
     #           (0.8, 0.8, 0.8)]
 
     colors = ["darkred", "green", "orangered", "blue", "deeppink", "darkviolet"]
+    ax.set_xticks(ind + width)
     extra_label_offsets = [(1,1), (1,0.8), (1.0,1.2), (1.1,0.8), (1.2,1), (1,1.4)]
     for run, col, offsets in zip(runs, colors, extra_label_offsets):
         plot_run(run, col, offsets)
