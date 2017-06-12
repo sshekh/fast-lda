@@ -7,7 +7,6 @@ from os.path import dirname
 import pltutils
 from pltutils import fns
 import os
-from scipy.misc import imread
 
 colors = { "RUN_EM" : "green", "LDA_INFERENCE" : "blue", "DIGAMMA" : "black", "LOG_SUM" : "purple",
         "LOG_GAMMA" : "purple", "TRIGAMMA" : "cyan", "DOC_E_STEP" : "orange", "LIKELIHOOD" : "red", "MLE" : "#5E6382", "OPT_ALPHA" : "#00bcd4"}
@@ -87,6 +86,35 @@ def avgc_plot(filenames, vecs, legends=None):
     ax.grid(linestyle='--', linewidth=2, axis='y')
     plt.show()
 
+
+# regular perf plot
+def perf_plot(filenames, vecs, legends=None):
+    width = 1 / (len(filenames) + 1.)   # width of bars
+    ind = np.arange(len(fns[:-3]))
+    fig, ax = plt.subplots()
+    p = [None] * len(filenames)
+    #print(fns)
+    for i, filename in enumerate(filenames):
+        pltutils.set_corpus_stats(dirname(filename))
+        _, _, flp, cls, _, perf = pltutils.read_one_output(filename, vec=vecs[i])
+        #print(perf)
+        #print(flp)
+        #print(cls)
+        p[i] = ax.bar(ind + i * width, perf[:-3], width, color = colors2[i])
+    ax.set_ylabel('Performance [Flops/Cycle]',rotation="0", size=28)
+    ax.yaxis.set_label_coords(0.1, 1.03)
+    # ax.set_title('performance for different runs per group')
+    ax.set_facecolor((211.0/255,211.0/255,211.0/255))
+    ax.set_xticks(ind)
+    ax.set_xticklabels(fns)
+    if legends is not None:
+        plt.legend(p, legends)
+    ax.grid(linestyle='--', linewidth=2, axis='y')
+    plt.show()
+
+
+
+# for icc vs gcc
 def perf_plot(filenames, vecs, legends=None):
     width = 1 / (len(filenames) + 1.)   # width of bars
     ind = np.arange(len(fns[:1]))
