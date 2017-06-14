@@ -1,0 +1,39 @@
+Bench run 2017-06-14_17-24-17
+Ran with the command-line `bench --k=100 --n=10 -sal --no-vec`
+Comment: "Mindblow for 100 topics"
+===============================
+
+OPTIONS
+use_icc=True
+use_doubles=True
+use_long=True
+END OPTIONS
+
+Latest commit at time of writing:
+5abe4ab5 (on branch MindBlow)
+
+Additionally, the repo contained the following untracked files:
+	timings/2017-05-27_21-11-17/fast_timings_400_10.csv
+	timings/2017-05-27_21-11-17/info.txt
+	timings/2017-05-27_21-11-17/perf_fast_400_10.txt
+	timings/2017-06-12_17-43-53/info.txt
+	timings/2017-06-12_17-43-53/perf_fast_10_50.txt
+	timings/2017-06-14_14-24-07/info.txt
+	timings/2017-06-14_14-24-07/perf_fast_200_10.txt
+	timings/2017-06-14_14-24-26/info.txt
+	timings/2017-06-14_14-24-26/perf_fast_200_1.txt
+	timings/2017-06-14_17-24-17/info.txt
+
+The diff, if any, follows:
+
+
+
+===============================
+
+Settings file:
+var max iter 20
+var convergence 1e-6
+em max iter 100
+em convergence 1e-4
+alpha estimate
+
