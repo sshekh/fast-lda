@@ -7,10 +7,10 @@ import os
 from os.path import join
 
 
-X_MAX_LIM = 2**(7)
-X_MIN_LIM = 2**(-4)
+X_MAX_LIM = 2**(4)
+X_MIN_LIM = 2**(-3)
 Y_MIN_LIM = 2**(-4)
-Y_MAX_LIM = 2**(6)
+Y_MAX_LIM = 2**(5)
 
 class Run:
     def __init__(self, opints, perfs, nums_docs, label):
@@ -36,25 +36,25 @@ def create_roofline(paths):
     #           (0.8, 0.8, 0.8)]
 
     colors = ["darkred", "green", "orangered", "blue", "deeppink", "darkviolet"]
-    ax.set_xticks(ind + width)
-    extra_label_offsets = [(1,1), (1,0.8), (1.0,1.2), (1.1,0.8), (1.2,1), (1,1.4)]
+    # axes.set_xticks(ind + width)
+    extra_label_offsets = [(1/4,1.3), (1,1), (1/8,1.4), (1/11,0.7), (1/10,1), (1/12,1.6)]
     for run, col, offsets in zip(runs, colors, extra_label_offsets):
         plot_run(run, col, offsets)
 
     plt.show()
 
 def make_axes(axes):
-    axes.tick_params(labelsize='x-large')
-    axes.set_xlabel('Operational Intensity [Flops/Byte]', size='xx-large')
+    axes.tick_params(labelsize=24)
+    axes.set_xlabel('Operational Intensity [Flops/Byte]', size=28)
     axes.set_axisbelow(True)
     axes.yaxis.grid(color='white', linestyle='solid')
     axes.xaxis.grid(color='white', linestyle='solid')
     axes.set_facecolor((211.0/255,211.0/255,211.0/255))
-    #axes.set_ylim(X_MIN_LIM, Y_MAX_LIM)
+    axes.set_ylim(Y_MIN_LIM, Y_MAX_LIM)
     #axes.set_xlim(X_MIN_LIM, X_MAX_LIM)
 
-    plt.ylabel('Performance [Flops/Cycle]',rotation="0", size='xx-large')
-    axes.yaxis.set_label_coords(0.09,1.02)
+    plt.ylabel('Performance [Flops/Cycle]',rotation="0", size=28)
+    axes.yaxis.set_label_coords(0.2,1.02)
     axes.spines['left'].set_color('#dddddd')
     axes.spines['right'].set_color('#dddddd')
     axes.spines['top'].set_color('#dddddd')
@@ -101,7 +101,7 @@ def plot_perf_roof(pi, beta, name, axes):
     # We want to offset the text by a small amount above.
     # But since we're in log-log world, we must scale this offset by how high we
     # are so that it's the same for all lines.
-    axes.text(5, pi + (pi * 0.2), name, size='x-large')
+    axes.text(3, pi + (pi * 0.2), name, size=24)
 
 
 def plot_run(run, col, offsets):
@@ -139,7 +139,7 @@ def plot_run(run, col, offsets):
     # left as we go further in the series
     xlab = run.opints[0] * 1.2 * offsets[0]
     ylab = run.perfs[0] * offsets[1]
-    plt.text(xlab, ylab, run.label, color=col, ha='left', va='center', size='x-large')
+    plt.text(xlab, ylab, run.label, color=col, ha='left', va='center', size='22')
 
 def parse_perf_files(dir_path):
     pltutils.set_corpus_stats(dir_path)

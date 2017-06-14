@@ -1,6 +1,6 @@
 Bench run 2017-06-14_17-24-17
 Ran with the command-line `bench --k=100 --n=10 -sal --no-vec`
-Comment: "Mindblow for 100 topics"
+Comment: "1) Gather/Scatter"
 ===============================
 
 OPTIONS
