@@ -161,7 +161,7 @@ def lda_inference(N, K):
             likelihood(N, K) + Cost(adds=1, divs=1))
 
 def doc_e_step(N, K):
-    return lda_inference(N, K) + K * Cost(adds=2) + Cost(adds=1, muls=1) + digamma(N, K) + K * N * Cost(adds=2, muls=2)
+    return lda_inference(N, K) + K * Cost(adds=2) + Cost(adds=1, muls=1) + (K + 1) * digamma(N, K) + K * D * Cost(adds=2, muls=2)
 
 def run_em(N, K):
     return random_initialize_ss(N, K) + mle(N, K) + iters["EM_CONVERGE"] * (N * doc_e_step(N, K) + Cost(adds=N) + \
@@ -207,7 +207,7 @@ def plda_inference(N, K):
             ZERO + Cost(adds=1, divs=1))
 
 def pdoc_e_step(N, K):
-    return ZERO + K * Cost(adds=2) + Cost(adds=1, muls=1) + ZERO + K * N * Cost(adds=2, muls=2)
+    return ZERO + K * Cost(adds=2) + Cost(adds=1, muls=1) + ZERO + K * D * Cost(adds=2, muls=2)
 
 def prun_em(N, K):
     return random_initialize_ss(N, K) + ZERO + iters["EM_CONVERGE"] * (N * ZERO + Cost(adds=N) + \
@@ -253,7 +253,7 @@ def ilda_inference(N, K):
             avg_cycles["LIKELIHOOD"] + 0)
 
 def idoc_e_step(N, K):
-    return avg_cycles["LDA_INFERENCE"] + K * 0 + 0 + avg_cycles["DIGAMMA"] + K * N * 0
+    return avg_cycles["LDA_INFERENCE"] + K * 0 + 0 + (K + 1) * avg_cycles["DIGAMMA"] + K * D * 0
 
 def irun_em(N, K):
     return 0 + avg_cycles["MLE"] + iters["EM_CONVERGE"] * (N * avg_cycles["DOC_E_STEP"] + 0 + \
@@ -313,21 +313,22 @@ def read_one_output(fname, vec=False, debug=False):
     ret_perf_list = [0] * len(fns)
     for i, fn in enumerate(fns):
         if PURIFY:
-            pur_cycles[fn] = tot_cycles[fn] - impurity[fn](N, K)
-            #print("cycles ", fn, tot_cycles[fn], pur_cycles[fn])
-            ret_tot_cycle_list[i] = pur_cycles[fn]
+            pur_cycles[fn] = avg_cycles[fn] - impurity[fn](N, K)
+            ret_avg_cycle_list[i] = pur_cycles[fn]
             ret_flop_list[i] = pure_flops[fn](N, K).full()
         else:
-            ret_tot_cycle_list[i] = tot_cycles[fn]
+            ret_avg_cycle_list[i] = avg_cycles[fn]
             ret_flop_list[i] = flops[fn](N, K).full()
-        if isnz(tot_cycles[fn]):
-            ret_avg_cycle_list[i] = (avg_cycles[fn] / tot_cycles[fn]) * ret_tot_cycle_list[i]
+        if isnz(avg_cycles[fn]):
+            ret_tot_cycle_list[i] = (tot_cycles[fn] / avg_cycles[fn]) * ret_avg_cycle_list[i]
             if vec:
                 ret_perf_list[i] = (ret_flop_list[i] * vec_strides(fn)) / ret_avg_cycle_list[i]
             else:
                 ret_perf_list[i] = ret_flop_list[i] / ret_avg_cycle_list[i]
 
     if debug:
+        print(fns)
+        print(ret_avg_cycle_list)
         print([str(flops[fn](N, K).full()) for fn in fns])
     return K, N, ret_flop_list, ret_tot_cycle_list, ret_avg_cycle_list, ret_perf_list
 

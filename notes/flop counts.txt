@@ -71,8 +71,8 @@ DOC_E_STEP
       LDA_INFERENCE
     + K * 2         (2+)
     + 2             (1+, 1*)
-    + DIGAMMA
-    + K * N * 4     (2+, 2*)
+    + (K + 1) * DIGAMMA
+    + K * D * 4     (2+, 2*)
 
     = VAR_MAX_ITER * (50KD + 42K + 143) + KD + 34K
       + 2K + 2 + 32 + 4KN + 1

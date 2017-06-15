@@ -59,7 +59,7 @@ DOC_E_STEP
       LDA_INFERENCE
     + K * 2         (2+)
     + 2             (1+, 1*)
-    + DIGAMMA
+    + (K + 1) * DIGAMMA
     + K * N * 4     (2+, 2*)
     + 1             (1+)
 
