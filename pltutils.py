@@ -8,7 +8,7 @@ PURIFY <- return pure flops/cycles
 D, V <- #doc length, #voc size
 USE_DOUBLES <- using doubles, stride is 4
 """
-PURIFY = False
+PURIFY = True
 D = None
 V = None
 USE_DOUBLES = True
@@ -35,7 +35,7 @@ iters = {"EM_CONVERGE" : 1, "INFERENCE_CONVERGE" : 1., "ALPHA_CONVERGE" : 1.}  #
 """
 Every list returned is in this order
 """
-fns = ["RUN_EM", "LDA_INFERENCE", "DIGAMMA", "LOG_SUM", "DOC_E_STEP", "LIKELIHOOD", "MLE", "OPT_ALPHA", "TRIGAMMA", "LOG_GAMMA"]
+fns = ["RUN_EM", "DOC_E_STEP", "LDA_INFERENCE", "LIKELIHOOD", "MLE", "LOG_SUM", "DIGAMMA", "OPT_ALPHA", "TRIGAMMA", "LOG_GAMMA"]
 
 """
 Setting corpus stats like D, K

@@ -1,6 +1,6 @@
 Bench run 2017-05-26_19-51-32
 Ran with the command-line `bench -sal --k=100,400,100 --n=10 --no-vec`
-Comment: "Baseline xlarge no vec hopefully last"
+Comment: "0) Baseline"
 ===============================
 
 OPTIONS

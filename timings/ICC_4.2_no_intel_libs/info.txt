@@ -1,6 +1,6 @@
 Bench run 2017-05-27_18-01-52
 Ran with the command-line `bench --n=1000 --k=48 -fa --no-intel`
-Comment: "stage 4.2 small corpus n=1000 k=48, icc but no intel libs"
+Comment: "icc"
 ===============================
 
 OPTIONS
