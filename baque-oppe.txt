@@ -1,0 +1,330 @@
+% IEEE standard conference template; to be used with:
+%   spconf.sty  - LaTeX style file, and
+%   IEEEbib.bst - IEEE bibliography style file.
+% --------------------------------------------------------------------------
+
+\documentclass[letterpaper]{article}
+\usepackage{spconf,amsmath,amssymb,graphicx}
+\usepackage{color,soul}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage[font=small,skip=4pt]{caption}
+
+% Example definitions.
+% --------------------
+% nice symbols for real and complex numbers
+\newcommand{\R}[0]{\mathbb{R}}
+\newcommand{\C}[0]{\mathbb{C}}
+\newcommand{\TODO}{\hl{\textbf{TODO}}}
+
+% bold paragraph titles
+\newcommand{\mypar}[1]{{\bf #1.}}
+
+% Title.
+% ------
+\title{Fast Latent Dirichlet Allocation}
+%
+% Single address.
+% ---------------
+\name{Bianca-Cristina Cristescu, Benjamin Gallusser, Fr\'{e}d\'{e}ric Lafrance, Saurav Shekhar}
+\address{Department of Computer Science\\ ETH Z\"urich\\Z\"urich, Switzerland}
+
+% For example:
+% ------------
+%\address{School\\
+%		 Department\\
+%		 Address}
+%
+% Two addresses (uncomment and modify for two-address case).
+% ----------------------------------------------------------
+%\twoauthors
+%  {A. Author-one, B. Author-two\sthanks{Thanks to XYZ agency for funding.}}
+%		 {School A-B\\
+%		 Department A-B\\
+%		 Address A-B}
+%  {C. Author-three, D. Author-four\sthanks{The fourth author performed the work
+%		 while at ...}}
+%		 {School C-D\\
+%		 Department C-D\\
+%		 Address C-D}
+%
+
+\pagenumbering{arabic}
+\pagestyle{plain}
+
+\begin{document}
+%\ninept
+%
+\maketitle
+%
+
+\begin{abstract}
+\textbf{The problem of automatically discovering and concisely representing what a document is ``about'', known as topic modeling, has applications in domains such as text mining, object recognition and recommender systems. Latent Dirichlet Allocation is one of the most popular algorithms to tackle this problem. However, most optimized implementations focus on parallelization or mathematical approaches. In this work, we focus on enhancing the performance of the algorithm on a single core. By employing standard approaches to optimization such as memory usage improvements and the use of SIMD instructions, we achieve large single-core gains. On our target architecture, we achieve a performance increase of more than 11X.}
+\end{abstract}
+
+\section{Introduction}\label{sec:intro}
+
+The amount of data available for mining has been growing at an increasingly rapid pace which shows no sign of slowing down. In order to take advantage of this data, it must be accessible, organized and usable. Just as libraries used to index books by category and topic to allow for more efficient searching, Latent Dirichlet Allocation (LDA) provides a method to determine a ``short description'' \cite{LDATextImageMusic} of the documents of a collection through a generative probabilistic model. The original implementation \cite{Blei} was designed to discover topics in text corpora such as news articles, but LDA has been applied to other tasks: object recognition, natural language processing, video analysis, collaborative filtering, spam filtering, web-mining, authorship disambiguation, and dialogue segmentation \cite{LDATextImageMusic}. LDA is an unsupervised algorithm and requires minimal preprocessing of data, thus making it very useful in handling large datasets.
+
+The sheer amount of data to manipulate and the demand of users to perform these kinds of tasks on mobile devices require a high-performance implementation of LDA. Thus, in this work we identify which performance optimizations can be applied, implement them and measure their effects.
+
+\subsection{Related work}
+
+Most of the efforts in the scientific community have been focused on improving the algorithmic complexity of LDA \cite{CollapsedVarInference} \cite{FastGibbs} \cite{MemBoundTopicModels}. Topic modeling requires inference algorithms that must run over the entire collection of data. Therefore, to parallelize LDA one must undertake a distributed sampling \cite{ParallelGibbs} or variational inference \cite{ParallelVarEM} strategy. The distributed variational EM implementation shows little speed-up and does not discuss possible precision or accuracy losses. The distributed Gibbs sampling implementation preserves the predictive performance obtained by a one-core LDA implementation, and also shows potential speed-up. The approach presented in \cite{PLDA} used well-known distributed programming models, MapReduce and MPI, to parallelize LDA; results indicate that communication costs dominate the parallel LDA algorithm.
+
+In contrast to the existing LDA performance improvements, our contribution is based on one-core optimizations. Our expectation is that the results obtained on one core can be transferred to a future parallel implementation.
+
+\section{Description of the algorithm}\label{sec:background}
+
+In this section, we outline the main operations performed by LDA, the data structures on which these operations are performed on and the cost measure we use to quantify these operations.
+
+\subsection{Operations} \label{sec:ops}
+
+As previously explained, LDA automatically discovers a user-given number of topics (modeled as probability distributions over words) in a corpus of unlabeled documents. Additionally, it infers the topic mixture of each document and the topic affinities of individual words in the documents. These two tasks are called respectively \textit{estimation} and \textit{inference}. They are not independent: inference requires the corpus-wide information produced by estimation, and estimation requires the document-specific information produced by inference, as part of an expectation-maximization procedure. LDA is therefore an iterative algorithm, where corpus and document data are updated in turn to give progressively better topic and word assignment estimates. Furthermore, estimation and inference are themselves iterative: they loop multiple times over the data they operate on.
+
+\subsection{Data} \label{sec:data}
+
+The data is represented by various matrices of floating point values. Their dimensions depend on the number of topics $K$, the number of unique words in the vocabulary $V$, the number of documents $N$ and the maximum length of a document in the corpus $D$. The main matrices are:
+\begin{itemize}
+\item Two corpus-wide matrices to record topic probability distributions (dimension $K \times V$).
+\vspace{-0.1cm}
+\item One corpus-wide matrix to record topic mixtures for all documents (dimension $N \times K$).
+\vspace{-0.1cm}
+\item For each document, one matrix to indicate the topic affinities for each word of the document (dimension $D\times K$).
+\end{itemize}
+
+Our working set typically consists of the information related to one document, namely the topic affinity matrix, and the columns of the topic-word probabilities corresponding to the words in the document. The algorithm iterates over this data multiple times in the inference procedure. In contrast, the estimation procedure runs over the topic-word matrix only once after having called the inference on each document (it then iteratively updates a scalar parameter of the corpus-wide topic distribution). Therefore, in order to fill the cache during the inference procedure, it is necessary to have long documents with many unique words. To this end, we use data from the European Parliament proceedings \cite{koehn2005europarl} in Finnish to create a small corpus of synthetic documents with these criteria. Unless mentioned otherwise, all results reported in this paper use this corpus, which has the following parameters: $N = 10$, $V \approx 200,000$, with a maximum of $D \approx 50,000$ unique words per document. Note that such an amount of unique words is possible thanks to the nature of Finnish.
+
+\subsection{Cost analysis} \label{sec:cost}
+
+The computation is dominated by basic floating-point operations as well as logarithms and exponentials. Thus, the cost measure accounts for these operations separately. They are given equal weighting since we have no way of determining the exact cost of a $\log$ or $\exp$ in terms of the other operations. This leads to the following cost measure, determined by analyzing the code:
+
+\[C(N, K) = \lbrace \text{ adds}(N, K), \text{ muls}(N, K),\]
+\[\text{ divs}(N, K), \text{ exps}(N, K), \text{ logs}(N, K)\ \rbrace\]
+
+The individual cost of most functions depends on the cost of other functions. In addition, the overall algorithm cost depends on the number of convergence iterations over the corpus $\Gamma$, and over a single document $\Delta$. Due to the length and complexity of the precise cost formula, we only present the asymptotic one:
+\[O\big(\Gamma \cdot K \cdot (\Delta \cdot N \cdot D + V + N^2)\big)\]
+
+
+\section{Methodology}\label{sec:methodology}
+
+In this section we describe the optimizations we performed, how we validate them, and a motivation for each optimization together with the expected results.
+
+\subsection{Initial analysis} \label{sec:optiapp}
+
+We start from the existing C implementation provided by the authors of LDA \cite{baseimplementation}, which we assume to be reasonably optimized in terms of mathematical and complexity optimizations. We instrument the code using Intel's \texttt{rdtsc} counter to perform runtime profiling. We profile each major function separately, excluding input-output operations and adding counters to determine the number of convergence iterations. The baseline implementation profiling results are shown in Figure \ref{fig:InitialRuntimePieChart}. Using the code analysis supplemented by profiling information, we make the following observations:
+\begin{itemize}
+\item The inference function, which iterates multiple times over a large $(K \times V)$ matrix and uses many expensive mathematical operations ($\log$, $\exp$), is very costly in terms of runtime.
+\vspace{-0.1cm}
+\item For some mathematical functions, such as \texttt{digamma} and \texttt{log\_sum} we measure billions of calls. Thus, they represent a large share of the total runtime.
+\vspace{-0.1cm}
+\item Most of the matrix accesses are not stride-one and therefore not amenable to vectorization.
+\vspace{-0.1cm}
+\item There are very few opportunities for ILP and scalar replacement in the algorithm. This is because most computation does not reduce multiple values into one, but rather updates each value in turn, using operations which cannot be broken down further. Therefore, there is nothing that we can do that the compiler cannot do itself.
+\end{itemize}
+
+\begin{figure}\centering
+  \includegraphics[scale=0.4]{initial_runtime_pie.png}
+  \caption{Initial Runtime Analysis}
+  \label{fig:InitialRuntimePieChart}
+  \vspace{-0.2cm}
+\end{figure}
+
+
+We decide to focus on architectural/memory optimizations first since they imply a restructuring of the code, which might affect the way we apply the subsequent computational optimizations. This is supported by a preliminary roofline analysis, in which we observe that LDA is memory-bound in respect to the computational vectorized roof.
+
+\subsection{Validation}\label{sec:validation}
+In order to ensure our optimizations are sound, we perform a semantic validation on the output by comparing the top words in each topic with output from the reference implementation. We require an overlap of at least $80\%$ among the top 20 words for each topic.
+
+\subsection{Memory optimizations}
+
+\subsubsection{Spatial locality}
+We first note that one of the corpus-wide matrices (dimension $K\times V$), which is accessed many times for each document during the inference procedure, is accessed in a column-wise pattern. This is a reasonable choice by the authors since it captures intuitively the operation to be done (each column corresponds to a word, and we update topic affinities based on each word of the document). However, not all columns of the matrix are accessed, and the pattern of access varies for each document; it might not be contiguous or even sequential, meaning that we essentially access a set of random columns for each document. In addition, rows are allocated separately. These conditions create a recipe for a cache miss at every access: there is no spatial locality within a column, and the next column we access will probably not be in the same block of 8 columns that was loaded into cache.
+
+\mypar{Gather/Scatter} The first approach to solve this issue is to \textit{gather} for each document the columns of the matrix in a smaller matrix, which contains only the columns needed for one document, on which we can iterate sequentially and then \textit{scatter} back into the larger matrix. These operations must be done respectively before and after every call to the inference procedure. Since inference iterates multiple times over the matrix in a convergence loop, the initial additional data movement is justified. We expect to see a reduction in the cache miss rate by eight times (or 12.5\% of the previous rate) for the large matrices. Moreover, given the dimensions of the matrices are $K\times V$ which is in the range of millions and that the elements are accessed in a random order, the number of page faults can be rather large. Short calculations show that gathering can reduce expensive TLB misses by several orders of magnitude.
+
+\mypar{Transposition} One problem with the Gather/Scatter approach is that the matrices are still accessed column-wise, which requires the use of shuffles to enable vectorizing the algorithm. We restructure the entire code so that the matrices have a different representation (transposed version of the original) to access whole rows and not whole columns. To use this matrix representation we perform loop interchanges in order to obtain a stride-one access everywhere in the algorithm. We expect the same improvement in the cache miss rate as in the Gather/Scatter approach.
+
+In both of the optimizations we allocate the matrices contiguously to  reduce the number of memory accesses by a factor of two.
+
+\subsubsection{Temporal locality}
+We also investigate the feasibility of temporal locality optimizations such as blocking. Unfortunately, we find that we cannot apply them without making a substantial change to the algorithm. This is due to its two convergence loops: inside the loops, matrices containing probability estimates are updated sequentially. Only across convergence iterations, big chunks of data are actually reused and optimizations to improve temporal locality could potentially benefit performance. However, the stopping criterion of the convergence loops is based on the entire working set that gets updated per iteration. Even if we try to split such a convergence loop in parts, it is not clear that convergence of all individual parts implies convergence of the whole.
+
+We also investigate the feasibility of temporal locality optimizations such as blocking. Unfortunately, we find that we cannot apply them without making a substantial change to the algorithm. This is because chunks of data are reused only across convergence iterations. Inside a convergence iteration matrices are accessed sequentially. It is not mathematically proper to split a convergence into two just to force temporal locality.
+
+\subsection{Computational Optimizations}
+\subsubsection{Vectorization}
+After implementing the memory optimizations, we perform another roofline analysis and find that the improved LDA is now in the compute-bound region. Taking into account the aforementioned limited possibilities for ILP, the consequent step is to vectorize the algorithm using AVX-2. Most of it is readily vectorizable thanks to the fact that we access the matrices sequentially (i.e. shuffles are not required). Given our prior bottleneck analysis (see section \ref{sec:optiapp}), we decide to exclude from vectorization a few functions (\texttt{trigamma}, \texttt{opt\_alpha}) for which vectorization impact would be minimal.
+
+\subsubsection{Approximations}
+In parallel with the vectorization efforts, we look into using various approximations. Since LDA is a probabilistic algorithm, we may be able to find an appropriate speed/precision trade-off, without influencing the final results. We attempt the following approximation strategies:
+
+\mypar{Single precision floats} The original algorithm uses double precision floating-point values. We modify the code to include a compile-time switch between single and double precision, since using single precision will increase our performance by a factor of two when using vectorization\footnote{With the exception of a few intrinsics which only exist for single or double precision, and minor custom operations that require different shuffles.}.
+
+\mypar{Lookup tables} We note that after memory optimizations, our operational intensity is fairly high; we can therefore afford additional memory accesses in the form of lookup tables to reduce the amount of computations required. This is made possible by the fact that some mathematical functions we use have a restricted domain. Specifically, a substantial part of the high-impact function \texttt{log\_sum} consists of computing $\log (1 + x)$, and has a domain between $0.0$ and $1.0$. This call has a latency of around 55 cycles. We implement a lookup table for this function as follows:
+\begin{algorithm}[ht]
+	\caption{Log Lookup}\label{alg:a}
+	\begin{algorithmic}[1]
+		\State Multiply the input $x$ by the number of bins
+		\State Cast the result to integer to obtain the bin index
+		\State Load the slope and intercept of the appropriate bin
+		\State Perform one FMA to linearly interpolate within the bin
+	\end{algorithmic}
+\end{algorithm}
+This procedure requires equidistant bins between $0$ and $1$. Overall the cost is reduced to approximatively 20 cycles assuming the table resides in L1 cache. This means that in practice, we select a relatively small number of bins (e.g. 100) since we must share cache space with the rest of the data.
+
+\mypar{Asymptotic series} For some mathematical functions, it is not feasible to use lookup tables, because they have a large domain which would require uneven bins to capture them accurately which in addition would not fit in cache. Figure \ref{fig:DigammaPlot} illustrates this with the digamma function $\psi(x)$, where many bins between $0$ and $5$ would be required and fewer after $5$ (the domain of this function in the algorithm goes up to $2000$). Thus, we try to approximate this kind of functions (i.e.  digamma and $\log (1 + x)$) using asymptotic series.
+
+\begin{figure}\centering
+  \includegraphics[scale=0.4]{digamma.png}
+  \caption{Digamma function}
+  \label{fig:DigammaPlot}
+  \vspace{-0.5cm}
+\end{figure}
+
+To compute digamma, the baseline code uses the following asymptotic series expansion from \cite{abramowitz1964handbook}
+\footnotesize
+\begin{align}
+\psi(z) &\sim \ln z - \frac{1}{2z} - \sum_{n=1}^{\infty}\frac{B_{2n}}{nz^{2n}} \nonumber \\
+		&= \ln z - \frac{1}{2z} - \big( \frac{1}{12z^{2}} + \frac{1}{120z^4} - \frac{1}{252z^6} + \cdots \big) \label{eq1}
+\end{align}
+
+\normalsize
+where $B_i$ is $i^{th}$ Bernoulli number. For faster convergence, the authors of the baseline set $z = x + 6$ and use
+\footnotesize
+\begin{align}
+\psi(x + 1) &= \psi(x) + \frac{1}{x} \nonumber \\
+\Rightarrow \psi(x) &= \psi(z) - \frac{1}{z - 1} - \frac{1}{z - 2} - \frac{1}{z - 3} \nonumber \\
+					&- \frac{1}{z - 4} + \frac{1}{z - 5} + \frac{1}{z - 6} \label{eq2}
+\end{align}
+
+\normalsize
+Equation \ref{eq2} brings a lot of divisions in the code (equation \ref{eq1} can be reduced to multiplications with $p = \frac{1}{z^2}$). We try substituting $\hat z = x + 4$ to reduce the number of divisions from 6 to 4. We can increase the number of terms in equation \ref{eq1} to keep the same precision ($4^8 \approx 6^6$), or use the same number of terms to achieve more speed.
+
+Furthermore, we remove some data dependencies in the base implementation of the polynomial in equation \ref{eq1} in order to achieve better ILP.
+
+\subsubsection{Memory alignment}
+It has been reported \cite{agnerfogunalignedmemory} that there is a small penalty on unaligned loads from cache on our architecture. Since most of our memory accesses fall into cache after applying other optimizations, we change the code to use aligned allocations, loads and stores. Note that this means we need to restrict the number of topics to multiples of 4 (which is not a problem since the number of topics is a relatively arbitrary input).
+
+\subsubsection{Inlining}
+As mentioned before in \ref{sec:optiapp}, the small utility math functions are not expensive by themselves, but they are called billions of times. For a small function the procedure call overhead is considerable. To reduce the overhead, we declare them as inline which should have an impact on the callers of these functions.
+
+\section{Experimental Results}\label{sec:exp}
+
+\subsection{Setup} \label{sec:setup}
+The experiments were run on a Intel Core i7-6700 processor (Skylake architecture, 3.4Ghz, 8MB L3 cache, 34.1 GB/s theoretical memory bandwidth). Hyperthreading and all cores but one have been disabled in order to ensure comparable and reproducible results. The compiler settings were: \texttt{gcc (4.8.7) -O3 -std=c99 -march=core-avx2 \\-fno-tree-vectorize} and \texttt{icc (14.0.1) -O3 \\-std=c99 -march=core-avx2 -mkl -no-vec\\}.
+When using flags for more aggressive optimizations (for example unsafe math optimizations) we find no measurable differences in performance.
+
+The peak performance of our system is 2 flops/cycle on sequential code and 16 flops/cycle on vectorized code and FMA with doubles. For our program, the actual peak performance is lower because of our operation mix: we have a relatively large amount of $\exp$ and $\log$ calls. However, as explained in the cost analysis \ref{sec:cost}, they decompose into more basic instructions whose effect is hard to quantify. Therefore, we use the above numbers as peak.
+
+Unless mentioned otherwise, we run our experiments with the following parameters. As input data, we use the synthetic corpus described in section \ref{sec:data}. Since the amount of documents does not change the size of the working set, we instead vary the number of topics between $100$ and $400$ in increments of $100$. Larger amounts of topics are impractical since running the reference implementation already takes 2.5h.
+
+\begin{figure}[t]\centering
+	\includegraphics[width=\columnwidth]{icc_gcc.png}
+    \caption{Performance of the optimized LDA with different compiler setups
+    \label{fig:icc_gcc}}
+    \vspace{-0.4cm}
+\end{figure}
+
+
+\subsection{Compiler comparison}
+We decide to use the Intel C Compiler (\texttt{icc}), in order to be able to use specific vectorized intrinsics for $\log$, $\exp$ (available in SVML\footnote{Short Vector Math Library, available with \texttt{icc}}) and \texttt{lgamma} (available in MKL\footnote{Intel Math Kernel Lirbary}). We also implement non-vectorized versions of these functions to enable compilation with other compilers. We compare the overall performance of our final code on \texttt{gcc}, \texttt{icc}, \texttt{icc + MKL} and also \texttt{icc + MKL + SVML} . The results in Figure \ref{fig:icc_gcc} show that the mere switch to \texttt{icc} results in an improvement of 2x in performance. This can be explained by the fact that \texttt{icc} is more aggressive in the optimizations performed for \texttt{-O3} (e.g. inlining). Using the MKL vectorized \texttt{lgamma} function does not impact the overall performance, mainly because it is a low impact function. Adding SVML for the $\log$ and $\exp$ intrinsics offers a 2.5x improvement on performance since the basic operations are heavily used by \texttt{LOG\_SUM}, \texttt{LIKELIHOOD}, and \texttt{MLE}.
+
+
+\begin{figure}[t]\centering
+  \includegraphics[width=\columnwidth]{final_roofline.png}
+  \caption{Roofline plot with optimization stages 1 to 5.
+  		\label{fig:complete_roofline}}
+    \vspace{-0.4cm}
+\end{figure}
+
+\subsection{Results for memory optimizations}
+
+The memory optimizations are applied to increase the operational intensity and move the algorithm into the compute bound area. The results in \ref{fig:complete_roofline} show that the baseline implementation is memory bound in respect to the vectorized roof. The Gather/Scatter optimization increases the operational intensity as expected, but we do not see a large improvement in performance in the cache miss rate as shown in \ref{table:CacheMiss}. This is because there is still column-wise access and cache lines might be ejected because of conflicts generated by other operations performed before the next column is accessed. This intuition is confirmed by the results of the Transposition optimization in \ref{table:CacheMiss} which, in addition to increasing the operational intensity, it improves performance by a factor of 4x as a result of row-wise access. This allows for a more accurate cache miss rate estimation. Looking at the TLB results \ref{table:TLBMiss}, the Gather/Scatter optimization reduces the misses drastically confirming the theoretical calculations. This proves that the accessed columns are indeed scattered over the matrix. The overhead of copying the columns needed for one document is absorbed by the temporal locality in the INFERENCE convergence iterations. The transposition approach does not add a small improvement to the TLB miss rate since row-wise access results in sequential access of a page as opposed to column-wise access which might  .
+
+\begin{table}[h!tb]
+\centering
+\small{
+\begin{tabular}{|l|r|r|r|}
+\hline & \textbf{References} & \textbf{Cache misses} & \textbf{Miss Rate} \\
+\hline Baseline & $264e9$ & $39e9$ & $14.7\:\%$ \\
+\hline Gather/Scatter  & $144e9$ & $11e9$ & $13\:\%$ \\
+\hline Transposition & $3.6e9$ & $133e6$ & $3.6\:\%$ \\
+\hline
+\end{tabular}
+}
+\caption{Cache miss rate improvements}
+\label{table:CacheMiss}
+\end{table}
+
+\begin{table}[h!tb]
+\centering
+\small{
+\begin{tabular}{|l|r|r|r|}
+\hline & \textbf{References} & \textbf{TLB misses} & \textbf{Miss Rate} \\
+\hline Baseline &  $4.5e12$ & $3.5e9$ & $0.08\:\%$ \\
+\hline Gather/Scatter  & $4.5e11$ & $44.7e4$ & $9.8\mathrm{e}{-8}\:\%$  \\
+\hline Transposition & $3.3e11$ & $10e4$ & $3.1\mathrm{e}{-7}\:\%$ \\
+\hline
+\end{tabular}
+}
+\caption{TLB miss rate improvements}
+\label{table:TLBMiss}
+\end{table}
+
+
+
+\subsection{Results for computational optimizations}
+
+\subsubsection{Vectorization}
+A performance comparison with just the memory optimized version can be seen in Figure \ref{fig:vec_results}.
+The expected speedup is about 4x (4 doubles in one vector), which we roughly achieve in all vectorized functions and also for the entire program. The function
+\texttt{MLE} has a low performance because it is memory bound and \texttt{LOG\_SUM} has a lot of $\log$ operations, which means its actual cost is more than the number of flops calculated in section \ref{sec:cost}. \texttt{LIKELIHOOD} has a high base performance due to a favorable instruction mix, easily vectorizable loops, as well as some opportunities for ILP and common subexpression elimination. Some common subexpression elimination in \texttt{LIKELIHOOD} was simultaneously applied with vectorization, which explains its slightly bigger than 4x speedup in Figure \ref{fig:vec_results}.
+
+The roofline plot is in figure \ref{fig:complete_roofline}. We get a 4x speedup, but are still well below the roof. It is mostly because, as mentioned in \ref{sec:optiapp}, we have few opportunities for ILP and we count expensive operations like $\log$ and $\exp$ as a single flop even though they are more costly and contribute to a significant portion of our runtime.
+
+\subsubsection{Approximations}
+Since LDA is a highly iterative algorithm, any errors will tend to accumulate and potentially lead to numerical instability or invalid results. We observe this with our attempts at using approximations. Switching from doubles to floats, for instance, removes enough precision that the inferred topics often fail validation and some convergence loops finish much later. The same effect occurs when we attempt to reduce the precision of the asymptotic series.
+
+Using lookup tables for \texttt{digamma} and \texttt{log\_sum} has a more dramatic effect. Since we linearly interpolate between two points of the function, we systematically approximate a value lower than the actual value of the function (this follows from Jensen's inequality). Therefore, all errors accumulate on ``one side'' only, which often leads to NaN values during the execution of the algorithm. We decide not to use more bins in the lookup tables since we want them to stay completely in cache.
+
+\subsubsection{Memory alignment \& Inlining}
+We find that neither memory alignment nor inlining bring significant improvements. The penalty saved by using aligned memory is small and does not affect performance much on our set-up architecture. Improvments with inlining are minor because \texttt{icc} already does some inlining without explicitly telling it to do so.
+
+% \begin{figure}\centering
+% 	\includegraphics[width=\columnwidth]{roofline_0_2_5.png}
+% 	\caption{\TODO change to correct picture). Roofline plot with memory and computational optimizations.
+% 			\label{fig:vec_roofline}}
+% \end{figure}
+
+
+\begin{figure}[t]\centering
+  \includegraphics[width=\columnwidth]{vectorization_perf.png}
+  \caption{Performance improvement with vectorization split by function, with the overall performance of the program on the very left. \label{fig:vec_results}}
+    \vspace{-1cm}
+\end{figure}
+
+\begin{figure}[h]\centering
+	\includegraphics[width=\columnwidth]{final_runtime_2.png}
+    \caption{Runtime comparison of the base implementation and the optimized version, with the overall runtime of the program on the very left
+    \label{fig:final_runtime}}
+      \vspace{-1cm}
+\end{figure}
+
+\section{Conclusions}
+
+
+
+
+% References should be produced using the bibtex program from suitable
+% BiBTeX files (here: bibl_conf). The IEEEbib.bst bibliography
+% style file from IEEE produces unsorted bibliography list.
+% -------------------------------------------------------------------------
+\bibliographystyle{IEEEbib}
+\bibliography{bibl_conf}
+
+\end{document}
+
+
