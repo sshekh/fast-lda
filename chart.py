@@ -39,6 +39,54 @@ def stacked_bar_plot(filenames, vecs, xticklabels=None):
     ax.set_xticks(ind)
     plt.show()
 
+def pie_chart(filenames, vecs, xticklabels=None):
+    if len(filenames) > 1:
+        print("Pie chart can only be done for one file")
+        sys.exit()
+    cycles = []
+    pltutils.set_corpus_stats(dirname(filenames[0]))
+    _, _, _, cls, _, _ = pltutils.read_one_output(filenames[0], vec=vecs[0])
+    cycles = cls
+    # cycles = np.array(cycles)
+    # cycles = np.transpose(cycles)
+    # print(cycles)
+
+    select_cycles = np.array(cycles)
+    # Manually pick the functions we want
+    select_cycles = select_cycles[np.array([1,2,3,5,6])]
+    # print(select_cycles)
+
+    # width = 0.75
+    ind = np.arange(len(filenames))
+    # bottom = np.zeros(len(ind))
+    print(plt.style.available)
+    plt.style.use('seaborn-colorblind')
+    fig, ax = plt.subplots()
+
+    # p = [None] * len(fns)
+    select_fns = np.array(fns)
+    select_fns = select_fns[np.array([1,2,3,5,6])]
+    # print(select_fns)
+        # p[i] = ax.bar(ind, cycles[i], width, bottom=bottom, color=colors[fns[i]])
+
+    ax.pie(select_cycles, explode=None, labels=select_fns, autopct='%1.1f%%',
+    pctdistance = 0.7, startangle=45, labeldistance=1.1, textprops={'fontsize': 13})
+    ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+
+
+        # bottom = np.sum([bottom, cycles[i]], axis=0)
+
+    # plt.legend(p, fns)
+    # if xticklabels is not None:
+        # ax.set_xticklabels(xticklabels)
+
+    # ax.set_ylabel('cycle component')
+    # ax.set_title('Distribution of the total runtime over functions', fontdict={'fontsize': 18})
+    # ax.set_xticks(ind)
+    
+
+    plt.show()
+
 
 #colors2 = ["darkred", "green", "darkviolet", "blue", "deeppink", "orangered"]
 colors2 = ["#0F007F", "#7867FF", "#BCB3FF", "blue", "deeppink", "orangered"]
@@ -214,6 +262,7 @@ if __name__ == "__main__":
     #bar_plot(filenames, vecs, legends)
     #avgc_plot(filenames, vecs, legends)
     #conv_plot(filenames, vecs, legends)
-    perf_plot(filenames, vecs, legends)
+    # perf_plot(filenames, vecs, legends)
     #run_comp(filenames, vecs, legends)
-    #stacked_bar_plot(filenames, vecs, legends)
+    # stacked_bar_plot(filenames, vecs, legends)
+    pie_chart(filenames, vecs, legends)

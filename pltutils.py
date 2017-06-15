@@ -8,7 +8,7 @@ PURIFY <- return pure flops/cycles
 D, V <- #doc length, #voc size
 USE_DOUBLES <- using doubles, stride is 4
 """
-PURIFY = False
+PURIFY = True
 D = None
 V = None
 USE_DOUBLES = True

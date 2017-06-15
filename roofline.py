@@ -9,7 +9,7 @@ from os.path import join
 
 X_MAX_LIM = 2**(4)
 X_MIN_LIM = 2**(-3)
-Y_MIN_LIM = 2**(-4)
+Y_MIN_LIM = 2**(-5)
 Y_MAX_LIM = 2**(5)
 
 class Run:
@@ -37,7 +37,7 @@ def create_roofline(paths):
 
     colors = ["darkred", "green", "orangered", "blue", "deeppink", "darkviolet"]
     # axes.set_xticks(ind + width)
-    extra_label_offsets = [(1/4,1.3), (1,1), (1/8,1.4), (1/11,0.7), (1/10,1), (1/12,1.6)]
+    extra_label_offsets = [(1/4,1.3), (1,1), (1/8,1.4), (1/24,0.7), (1/10,1), (1/12,1.6)]
     for run, col, offsets in zip(runs, colors, extra_label_offsets):
         plot_run(run, col, offsets)
 
@@ -106,8 +106,8 @@ def plot_perf_roof(pi, beta, name, axes):
 
 def plot_run(run, col, offsets):
 
-    #print(run.opints)
-    #print(run.perfs)
+    # print(run.opints)
+    # print(run.perfs)
 
     #Plot our op intensity
     plt.plot(
@@ -115,25 +115,25 @@ def plot_run(run, col, offsets):
         run.perfs,
         color=col,
         marker="o",
-        markersize=6,
-        linewidth=1.5,
+        markersize=8,
+        linewidth=2,
         antialiased=True)
 
-    # # Arrow to the first element
-    # plt.annotate(
-    #     str(run.nums_docs[0][0]),
-    #     xy=(run.opints[0], run.perfs[0]), xytext=(0, -25),
-    #     textcoords='offset points', ha='center', va='bottom',
-    #     size='medium',
-    #     arrowprops=dict(arrowstyle = '-'))
+    # Arrow to the first element
+    plt.annotate(
+        str(run.nums_docs[0][0]),
+        xy=(run.opints[0], run.perfs[0]), xytext=(0, -30),
+        textcoords='offset points', ha='center', va='bottom',
+        size='16',
+        arrowprops=dict(arrowstyle='-',lw=2))
 
-    # # Arrow to the last element
-    # plt.annotate(
-    #     str(run.nums_docs[-1][0]),
-    #     xy=(run.opints[-1], run.perfs[-1]), xytext=(0, -25),
-    #     textcoords='offset points', ha='center', va='bottom',
-    #     size='medium',
-    #     arrowprops=dict(arrowstyle = '-'))
+    # Arrow to the last element
+    plt.annotate(
+        str(run.nums_docs[-1][0]),
+        xy=(run.opints[-1], run.perfs[-1]), xytext=(0, -30),
+        textcoords='offset points', ha='center', va='bottom',
+        size='16',
+        arrowprops=dict(arrowstyle='-',lw=2))
 
     # Label is to the right of the first element, since in general we go
     # left as we go further in the series
