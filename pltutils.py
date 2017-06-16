@@ -146,14 +146,14 @@ def opt_alpha(N, K):
     return iters["ALPHA_CONVERGE"] * ( \
             Cost(adds=2, muls=1, divs=1, exps=1) + Cost(adds=3, muls=4) + 2 * log_gamma(N, K) + \
             Cost(adds=2, muls=4) + 2 * digamma(N, K) + Cost(adds=1, muls=5) + 2 * trigamma(N, K)) + \
-            Cost(exps=1) # poor lonely exp
+            Cost(exps=1) + Cost(logs=1) # poor lonely exp
 
 def mle(N, K):
     return V * K * Cost(adds=2, logs=2) + opt_alpha(N, K)
 
 def likelihood(N, K):
     return K * digamma(N, K) + Cost(adds=K) + digamma(N, K) + Cost(adds=2, muls=2) + 3 * log_gamma(N, K) + \
-            K * Cost(adds=7, muls=2) + K * D * 6 * Cost(adds=4, muls=2, logs=1)
+            K * Cost(adds=7, muls=2) + K * D * Cost(adds=4, muls=2, logs=1)
 
 def lda_inference(N, K):
     return K * Cost(adds=1, divs=1) + K * digamma(N, K) + K * D * Cost(divs=1) + \
@@ -192,14 +192,14 @@ def popt_alpha(N, K):
     return iters["ALPHA_CONVERGE"] * ( \
             Cost(adds=2, muls=1, divs=1, exps=1) + Cost(adds=3, muls=4) + 2 * ZERO + \
             Cost(adds=2, muls=4) + 2 * ZERO + Cost(adds=1, muls=5) + 2 * ZERO) + \
-            Cost(exps=1) # poor lonely exp
+            Cost(exps=1) + Cost(logs=1) # poor lonely exp
 
 def pmle(N, K):
     return V * K * Cost(adds=2, logs=2) + ZERO
 
 def plikelihood(N, K):
     return K * ZERO + Cost(adds=K) + ZERO + Cost(adds=2, muls=2) + 3 * ZERO + \
-            K * Cost(adds=7, muls=2) + K * D * 6 * Cost(adds=4, muls=2, logs=1)
+            K * Cost(adds=7, muls=2) + K * D * Cost(adds=4, muls=2, logs=1)
 
 def plda_inference(N, K):
     return K * Cost(adds=1, divs=1) + K * ZERO + K * D * Cost(divs=1) + \
@@ -238,14 +238,14 @@ def iopt_alpha(N, K):
     return iters["ALPHA_CONVERGE"] * ( \
             0 + 0 + 2 * avg_cycles["LOG_GAMMA"] + \
             0 + 2 * avg_cycles["DIGAMMA"] + 0 + 2 * avg_cycles["TRIGAMMA"]) + \
-            0 # poor lonely exp
+            0 + 0# poor lonely exp
 
 def imle(N, K):
     return V * K * 0 + avg_cycles["OPT_ALPHA"]
 
 def ilikelihood(N, K):
     return K * avg_cycles["DIGAMMA"] + 0 + avg_cycles["DIGAMMA"] + 0 + 3 * avg_cycles["LOG_GAMMA"] + \
-            K * 0 + K * D * 6 * 0
+            K * 0 + K * D * 0
 
 def ilda_inference(N, K):
     return K * 0 + K * avg_cycles["DIGAMMA"] + K * D * 0 + \
